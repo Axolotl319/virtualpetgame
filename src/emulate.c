@@ -10,10 +10,18 @@ int main(int argc, char **argv)
 {
 	//argc = 2 or 3, ./emulate is 1st arg
   	FILE *inFile = fopen(argv[1], "r");
+	FILE *outFile;
 	if(inFile == NULL){
 		perror("Couldn't open input file.");
 		return 1;
 	}
+
+	if(argc >= 3){
+		outFile = fopen(argv[2], "w");
+	}else{
+		outFile = stdout;
+	}
+
 
 	int MEM_SIZE = 1 << 18;
 	char *buffer; //1 char = 1 byte = 8 bits
