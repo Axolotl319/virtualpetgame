@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 
-#define WORD_SIZE 4; // 1 word = 4 bytes
-const int MEM_SIZE = 1 << 21; // ARMv8 has 2MB memory 
+const int WORD_SIZE = 4; 	// 1 word = 4 bytes
+const int MEM_SIZE = 1 << 21; 	// ARMv8 has 2MB memory 
 
 void decode(char *instruction) {
 
@@ -34,31 +34,23 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	// Obtains size of file 
-	fseek(inFile, 0, SEEK_END); 
-	int filesize = ftell(inFile); 
-	rewind(inFile);
+	// Obtains size of file, kept in case needed later 
+	// fseek(inFile, 0, SEEK_END); 
+	// int filesize = ftell(inFile); 
+	// rewind(inFile);
 	
 	// Reads contents of file into buffer 
 	fgets(buffer, MEM_SIZE, inFile);	
 	fclose(inFile);
-	
+		
 	// Decodes each instruction 
-	for(int i=0; i<filesize; i+=4) {
-		decode( &buffer[i] );
-	        printf("%02x ", buffer[i]); 	
-	}
-
-	/*
-	char *current = buffer;	
-
-	while(*current != 0){ 
-		decode(current); //function to be written
-		printf("%02x ", *current); 
-		current += WORD_SIZE; //next instruction
-	}
-	*/
-
+	char *current = buffer; 
+	while( (*(current+WORD_SIZE-1) & 0xff) != 0x8a ) {
+		decode( current ); 
+		printf( "%02x ", *current ); 
+		current += WORD_SIZE; 
+	}	
+	
 	printf("\n"); 
 	free(buffer);
 	return EXIT_SUCCESS;
