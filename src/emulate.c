@@ -55,7 +55,7 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 }
 // Given the starting address of an instruction, determines the instruction type 
 // and passes the instruction to the corresponding function to handle. 
-// Returns 1 if decoding unsuccessful, returns 0 if successful.  
+// Returns -1 if halting instruction reached or decoding unsuccessful, returns 0 if successful. 
 int decode(char *instruction) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
@@ -63,6 +63,11 @@ int decode(char *instruction) {
 		| ((0xff & *(instruction+2)) << 16) 
 		| ((0xff & *(instruction+1)) << 8) 
 		| ((0xff & *instruction));
+
+	// Checks for halting instruction 
+	if (result == 0x8a000000) {
+		return -1; 
+	}
 
 	// Obtain op0 -- comments used for debugging purposes. 
 	int opzero = (result >> 25) & 0xf;
@@ -97,38 +102,13 @@ int decode(char *instruction) {
 			break; 
 		default: 
 			perror("Bad opcode (op0).\n");
-			return 1;
+			return -1;
 			break; 
 	}
 
 	return 0; 
-	
-	/*
-	if (opzero == 8 || opzero == 9) {
-		printf("This is data processing (immediate).\n");
-		immdp( result ); 
-	} else if (opzero == 5 || opzero == 13) {
-		printf("This is data processing (registers).\n");
-		regdp( result ); 
-	} else if (opzero == 4 || opzero == 6 || opzero == 12 || opzero == 14) {
-		printf("This is single data transfer.\n"); 
-		int temp = 0xf & (result >> 31); 
-		if (temp) {
-			datatransfer( result ); 
-		} else {
-			loadliteral( result ); 
-		}
-	} else if (opzero == 10 || opzero == 11) {
-		printf("This is branch.\n"); 
-		branch( result ); 
-	} else {
-		perror("Bad opcode (op0).\n");
-		return 1; 
-	}
-	
-	return 0;
-       	*/	
-}
+}	
+
 
 int main(int argc, char **argv) 
 {
@@ -174,10 +154,8 @@ int main(int argc, char **argv)
 		
 	// Decodes each instruction 
 	char *current = buffer; 
-	while( (*(current+WORD_SIZE-1) & 0xff) != 0x8a ) {
-		if ( decode( current ) ) {
-			return 1; 
-		}	
+	int status = 0;
+	while( decode(current) != -1 ) {
 		current += WORD_SIZE; 
 	}	
 	
