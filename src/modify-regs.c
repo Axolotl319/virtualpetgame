@@ -12,7 +12,11 @@ int check_reg_bounds(int reg_num) {
 
 
 //32 bit register operations - read and write
-//Reads to a pointer - returns 1 if failure, 0 if success
+
+//Read
+//Takes arguments: armv8 state, register number, 32 bit int pointer to store data
+//Reads to the pointer 
+//Returns 1 if failure, 0 if success
 int read_32(armv8_state *armv8, int reg_num, uint32_t *data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
@@ -24,6 +28,9 @@ int read_32(armv8_state *armv8, int reg_num, uint32_t *data) {
 	return 0;
 }
 
+//Write
+//Takes arguments armv8 state, register number, data to write
+//Returns 1 if failure, 0 if success
 int write_32(armv8_state *armv8, int reg_num, uint32_t data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
@@ -34,6 +41,9 @@ int write_32(armv8_state *armv8, int reg_num, uint32_t data) {
 }
 
 //64 bit register operations - read and write
+
+//Read
+//Arguments same as 32 bit
 int read_64(armv8_state *armv8, int reg_num, uint64_t *data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
@@ -43,6 +53,8 @@ int read_64(armv8_state *armv8, int reg_num, uint64_t *data) {
 	return 0;
 }
 
+//Write 
+//Arguments same as 32 bit
 int write_64(armv8_state *armv8, int reg_num, uint64_t data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
@@ -52,7 +64,7 @@ int write_64(armv8_state *armv8, int reg_num, uint64_t data) {
 	return 0;
 }
 
-//PC operations
+//PC operations - increment and set
 int incrementPC(armv8_state *armv8) {
 	if (armv8->PC + WORD_SIZE >= MEM_SIZE) { 
 		fprintf(stderr, "PC out of bounds\n");
@@ -62,11 +74,15 @@ int incrementPC(armv8_state *armv8) {
 	return 0;
 }
 
-int modifyPC(armv8_state *armv8, uint64_t addr) {
-	if (addr >= MEM_SIZE) {
+int setPC(armv8_state *armv8, uint64_t addr) {
+	if (addr >= MEM_SIZE) { //PC too large
 		fprintf(stderr, "Address out of bounds\n");
 		return 1;
+	} else if (addr % 4 != 0) { //PC not multiple of 4
+		fprintf(stderr, "Invalid address\n");
+		return 1;
 	}
+
 	armv8->PC = addr;
 	return 0;
 }
