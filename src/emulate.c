@@ -67,7 +67,8 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 
 // Given the starting address of an instruction, determines the instruction type 
 // and passes the instruction to the corresponding function to handle. 
-// Returns 1 if decoding unsuccessful, returns 0 if successful.  
+// Returns 1 if decoding unsuccessful, returns 0 if successful.
+// Returns -1 if halting instruction reached or decoding unsuccessful, returns 0 if successful.  
 int decode(uint8_t *instruction) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
@@ -75,6 +76,11 @@ int decode(uint8_t *instruction) {
 		| ((uint32_t) *(instruction+2) << 16) 
 		| ((uint32_t) *(instruction+1) << 8) 
 		| ((uint32_t) *instruction);
+
+	// Checks for halting instruction 
+	if (result == 0x8a000000) {
+		return -1; 
+	}
 
 	// Obtain op0 -- comments used for debugging purposes. 
 	int opzero = (result >> 25) & 0xf;
@@ -109,48 +115,40 @@ int decode(uint8_t *instruction) {
 			break; 
 		default: 
 			perror("Bad opcode (op0).\n");
-			return 1;
+			return -1;
 			break; 
 	}
 
 	return 0; 
-	
-	/*
-	if (opzero == 8 || opzero == 9) {
-		printf("This is data processing (immediate).\n");
-		immdp( result ); 
-	} else if (opzero == 5 || opzero == 13) {
-		printf("This is data processing (registers).\n");
-		regdp( result ); 
-	} else if (opzero == 4 || opzero == 6 || opzero == 12 || opzero == 14) {
-		printf("This is single data transfer.\n"); 
-		int temp = 0xf & (result >> 31); 
-		if (temp) {
-			datatransfer( result ); 
-		} else {
-			loadliteral( result ); 
-		}
-	} else if (opzero == 10 || opzero == 11) {
-		printf("This is branch.\n"); 
-		branch( result ); 
-	} else {
-		perror("Bad opcode (op0).\n");
-		return 1; 
-	}
-	
-	return 0;
-       	*/	
-}
+}	
+
 
 
 //Fetches instructions based on PC, passes each instruction to decode
 //Returns 1 if unsuccessful, 0 if successful
 int fetch(armv8_state *armv8) {
+ 
+	int status = 0;
+
 	// Decodes each instruction  
-	while( (armv8->memory[armv8->PC + WORD_SIZE - 1] & 0xff) != 0x8a ) {
-		if ( decode(&armv8->memory[armv8->PC] ) ) {
+	while(1) {
+		uint8_t *current = &armv8->memory[armv8->PC];		
+		
+		//if PC is out of bounds
+		if (armv8->PC + WORD_SIZE > MEM_SIZE) {
+			perror("PC out of bounds");
+			return 1;
+		}
+
+		status = decode(current);
+	
+		if ( status == -1 ) { //HALT
+			break;
+		} else if ( status != 0) { //Decode failed
 			return 1; 
-		} 	
+		}
+
+		//Increment PC - NEED TO CHANGE WHEN IMPLEMENTING BRANCH 	
 		armv8->PC += WORD_SIZE; 
 	}
 	return 0;
@@ -197,10 +195,10 @@ int main(int argc, char **argv)
 	fread(armv8.memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
 
-	//Calls fetch function
+	//Calls fetch function, which calls decode
 	if (fetch(&armv8)) {
 		perror("Couldn't execute the instruction");
-	}
+	}	
 
 	//print armv8 state
 	print_state(&armv8, outFile);
