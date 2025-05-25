@@ -59,7 +59,7 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 			| ((uint32_t)armv8->memory[addr + 3] << 24);
 
 		if (word != 0) {
-			fprintf(outFile, "0x%08x: %08x\n", addr, word);
+			fprintf(outFile, "0x%08x: 0x%08x\n", addr, word);
 		}
 	}
 
