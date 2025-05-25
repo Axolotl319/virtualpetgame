@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "execute.h"
 
 const int WORD_SIZE = 4; 	// 1 word = 4 bytes
 const int MEM_SIZE = 1 << 21; 	// ARMv8 has 2MB memory 
@@ -51,15 +52,7 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 	fprintf(outFile, "Non-zero memory:\n");
 	//have not implemented memory yet
 
-}	
-
-// TODO -- the execution 
-void immdp(int instr) {} 
-void regdp(int instr) {}
-void loadliteral(int instr) {} 
-void datatransfer(int instr) {}
-void branch(int instr) {}
-
+}
 // Given the starting address of an instruction, determines the instruction type 
 // and passes the instruction to the corresponding function to handle. 
 // Returns 1 if decoding unsuccessful, returns 0 if successful.  

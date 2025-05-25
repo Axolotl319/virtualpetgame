@@ -10,9 +10,9 @@ CFLAGS  ?= -std=c17 -g\
 all: assemble emulate
 
 assemble: assemble.o
-emulate: emulate.o execute.o registers.o
+emulate: emulate.o execute.o
 
-emulate.o: registers.c emulate.c execute.c
+emulate.o: emulate.c execute.c
 
 clean:
 	$(RM) *.o assemble emulate

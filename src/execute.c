@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "execute.h"
 
 // TODO -- the execution
 void immdp(int instr) {}
