@@ -53,8 +53,23 @@ int write_64(armv8_state *armv8, int reg_num, uint64_t data) {
 }
 
 //PC operations
-//int incrementPC(armv8_state *armv8) {}
-//int modifyPC(armv8_state *armv8) {}
+int incrementPC(armv8_state *armv8) {
+	if (armv8->PC + WORD_SIZE >= MEM_SIZE) { 
+		fprintf(stderr, "PC out of bounds\n");
+		return 1;
+	}
+	armv8->PC+=WORD_SIZE;
+	return 0;
+}
+
+int modifyPC(armv8_state *armv8, uint64_t addr) {
+	if (addr >= MEM_SIZE) {
+		fprintf(stderr, "Address out of bounds\n");
+		return 1;
+	}
+	armv8->PC = addr;
+	return 0;
+}
 
 //Pstate operations
 

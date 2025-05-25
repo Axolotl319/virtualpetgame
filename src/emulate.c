@@ -5,10 +5,7 @@
 #include <string.h>
 #include "execute.h"
 #include "modify-regs.h"
-#include "armv8.h"
-
-const int WORD_SIZE = 4; 	// 1 word = 4 bytes
-const int MEM_SIZE = 1 << 21; 	// ARMv8 has 2MB memory 
+#include "armv8.h" 
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 void initialise(armv8_state *armv8) {
@@ -138,7 +135,7 @@ int fetch(armv8_state *armv8) {
 		}
 
 		//Increment PC - NEED TO CHANGE WHEN IMPLEMENTING BRANCH 	
-		armv8->PC += WORD_SIZE; 
+		incrementPC(armv8); 
 	}
 	return 0;
 }
