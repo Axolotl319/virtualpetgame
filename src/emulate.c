@@ -4,26 +4,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include "execute.h"
+#include "modify-regs.h"
+#include "armv8.h"
 
 const int WORD_SIZE = 4; 	// 1 word = 4 bytes
 const int MEM_SIZE = 1 << 21; 	// ARMv8 has 2MB memory 
-#define NUM_GP_REGS 31 //number of general purpose registers
-
-//PSTATE register
-typedef struct Pstate {
-	bool N; //Negative flag
-	bool Z; //Zero condition flag
-	bool C; //Carry condition flag
-	bool V; //Overflow condition flag
-} pstate;
-
-//All the registers and memory - state of the machine
-typedef struct State {
-	uint8_t *memory; //Memory
-	uint64_t GP_regs[NUM_GP_REGS]; //General purpose registers R0..R30
-	uint64_t PC; //Program Counter
-	pstate PSTATE; //PSTATE struct
-} armv8_state;
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 void initialise(armv8_state *armv8) {
@@ -36,7 +21,11 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 	//General Purpose Registers
 	fprintf(outFile, "Registers:\n");
 	for (int i = 0; i < NUM_GP_REGS; i++) {
-		fprintf(outFile, "X%02d = %016lx\n", i, armv8->GP_regs[i]);
+		uint64_t data;
+		if (!read_64(armv8, i, &data)) {	
+			fprintf(outFile, "X%02d = %016lx\n", i, data);
+	
+		}
 	}
 
 	//PC
@@ -114,7 +103,7 @@ int decode(uint8_t *instruction) {
 			branch( result );
 			break; 
 		default: 
-			perror("Bad opcode (op0).\n");
+			fprintf(stderr, "Bad opcode (op0).\n");
 			return -1;
 			break; 
 	}
@@ -136,7 +125,7 @@ int fetch(armv8_state *armv8) {
 		
 		//if PC is out of bounds
 		if (armv8->PC + WORD_SIZE > MEM_SIZE) {
-			perror("PC out of bounds");
+			fprintf(stderr, "PC out of bounds\n");
 			return 1;
 		}
 
@@ -197,8 +186,8 @@ int main(int argc, char **argv)
 
 	//Calls fetch function, which calls decode
 	if (fetch(&armv8)) {
-		perror("Couldn't execute the instruction");
-	}	
+		fprintf(stderr, "Couldn't execute the instruction\n");
+	}
 
 	//print armv8 state
 	print_state(&armv8, outFile);
