@@ -17,14 +17,15 @@ typedef struct Pstate {
 	bool V; //Overflow condition flag
 } pstate;
 
-//All the registers - state of the machine
-typedef struct Registers {
+//All the registers and memory - state of the machine
+typedef struct State {
+	uint8_t *memory; //Memory
 	uint64_t GP_regs[NUM_GP_REGS]; //General purpose registers R0..R30
 	uint64_t PC; //Program Counter
 	pstate PSTATE; //PSTATE struct
 } armv8_state;
 
-//initialise the registers to 0. Set PSTATE Z flag to 1.
+//initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 void initialise(armv8_state *armv8) {
 	memset(armv8, 0, sizeof(*armv8));
 	armv8->PSTATE.Z = true;
@@ -50,19 +51,30 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
-	//have not implemented memory yet
+	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE); addr+=WORD_SIZE) {
+		uint32_t word = 
+			((uint32_t)armv8->memory[addr])
+			| ((uint32_t)armv8->memory[addr + 1] << 8)
+			| ((uint32_t)armv8->memory[addr + 2] << 16)
+			| ((uint32_t)armv8->memory[addr + 3] << 24);
+
+		if (word != 0) {
+			fprintf(outFile, "0x%08x: %08x\n", addr, word);
+		}
+	}
 
 }
+
 // Given the starting address of an instruction, determines the instruction type 
 // and passes the instruction to the corresponding function to handle. 
 // Returns 1 if decoding unsuccessful, returns 0 if successful.  
-int decode(char *instruction) {
+int decode(uint8_t *instruction) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
-	int result = ((0xff & *(instruction+3)) << 24) 
-		| ((0xff & *(instruction+2)) << 16) 
-		| ((0xff & *(instruction+1)) << 8) 
-		| ((0xff & *instruction));
+	uint32_t result = ((uint32_t) *(instruction+3) << 24) 
+		| ((uint32_t) *(instruction+2) << 16) 
+		| ((uint32_t) *(instruction+1) << 8) 
+		| ((uint32_t) *instruction);
 
 	// Obtain op0 -- comments used for debugging purposes. 
 	int opzero = (result >> 25) & 0xf;
@@ -130,6 +142,20 @@ int decode(char *instruction) {
        	*/	
 }
 
+
+//Fetches instructions based on PC, passes each instruction to decode
+//Returns 1 if unsuccessful, 0 if successful
+int fetch(armv8_state *armv8) {
+	// Decodes each instruction  
+	while( (armv8->memory[armv8->PC + WORD_SIZE - 1] & 0xff) != 0x8a ) {
+		if ( decode(&armv8->memory[armv8->PC] ) ) {
+			return 1; 
+		} 	
+		armv8->PC += WORD_SIZE; 
+	}
+	return 0;
+}
+
 int main(int argc, char **argv) 
 {
 	//create an armv8 state and initialise the registers
@@ -154,10 +180,9 @@ int main(int argc, char **argv)
 		perror("Couldn't open output file.");
 		return 1;
 	}
-
-	char *buffer; // 1 char = 1 byte = 8 bits
-	buffer = malloc(MEM_SIZE);
-	if(buffer == NULL){
+	
+	armv8.memory = malloc(MEM_SIZE);
+	if(armv8.memory == NULL){
 		perror("Couldn't allocate buffer memory");
 		fclose(inFile);
 		return 1;
@@ -169,22 +194,18 @@ int main(int argc, char **argv)
 	// rewind(inFile);
 	
 	// Reads contents of file into buffer 
-	fgets(buffer, MEM_SIZE, inFile);	
+	fread(armv8.memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
-		
-	// Decodes each instruction 
-	char *current = buffer; 
-	while( (*(current+WORD_SIZE-1) & 0xff) != 0x8a ) {
-		if ( decode( current ) ) {
-			return 1; 
-		}	
-		current += WORD_SIZE; 
-	}	
-	
-	free(buffer);
+
+	//Calls fetch function
+	if (fetch(&armv8)) {
+		perror("Couldn't execute the instruction");
+	}
 
 	//print armv8 state
 	print_state(&armv8, outFile);
 
+	free(armv8.memory);
+	
 	return EXIT_SUCCESS;
 }
