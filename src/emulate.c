@@ -74,6 +74,43 @@ int decode(char *instruction) {
 	// Obtain op0 -- comments used for debugging purposes. 
 	int opzero = (result >> 25) & 0xf;
         printf("%u ", opzero);	
+	switch (opzero) {
+		case 8:
+		case 9:
+			printf("This is data processing (immediate).\n"); 
+			immdp( result ); 
+			break; 
+		case 5:
+		case 13:
+			printf("This is data processing (registers).\n");
+			regdp( result );
+		        break; 
+		case 4:
+		case 6:
+		case 12: 
+		case 14: 
+			printf("This is single data transfer.\n"); 
+			int temp = 0xf & (result >> 31); 
+			if (temp) {
+				datatransfer( result ); 
+			} else {
+				loadliteral( result ); 
+			}
+			break; 
+		case 10:
+		case 11:
+			printf("This is branch.\n"); 
+			branch( result );
+			break; 
+		default: 
+			perror("Bad opcode (op0).\n");
+			return 1;
+			break; 
+	}
+
+	return 0; 
+	
+	/*
 	if (opzero == 8 || opzero == 9) {
 		printf("This is data processing (immediate).\n");
 		immdp( result ); 
@@ -96,7 +133,8 @@ int decode(char *instruction) {
 		return 1; 
 	}
 	
-	return 0; 
+	return 0;
+       	*/	
 }
 
 int main(int argc, char **argv) 
