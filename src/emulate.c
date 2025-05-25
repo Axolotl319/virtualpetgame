@@ -17,12 +17,8 @@ void initialise(armv8_state *armv8) {
 void print_state(armv8_state *armv8, FILE *outFile) {
 	//General Purpose Registers
 	fprintf(outFile, "Registers:\n");
-	for (int i = 0; i < NUM_GP_REGS; i++) {
-		uint64_t data;
-		if (!read_64(armv8, i, &data)) {	
-			fprintf(outFile, "X%02d = %016lx\n", i, data);
-	
-		}
+	for (int i = 0; i < NUM_GP_REGS; i++) {	
+		fprintf(outFile, "X%02d = %016lx\n", i, armv8->GP_regs[i]);
 	}
 
 	//PC
@@ -185,7 +181,7 @@ int main(int argc, char **argv)
 	if (fetch(&armv8)) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
 	}
-
+	
 	//print armv8 state
 	print_state(&armv8, outFile);
 
