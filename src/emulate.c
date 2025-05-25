@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	if (fetch(&armv8)) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
 	}
-
+	
 	//print armv8 state
 	print_state(&armv8, outFile);
 
