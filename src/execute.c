@@ -25,29 +25,50 @@ void branch(int instr, armv8_state *armv8) {
 	// Unconditional (offset) 
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
-			setPC(armv8, armv8->PC + offset); 
+			printf("%lu\n", armv8->PC);
+			setPC(armv8, armv8->PC + offset);
+		        printf("After: %lu\n", armv8->PC); 	
 			break; 
 
 	// Conditional 
 		case 1: 
 			cond = instr & 0xf;
-			offset = (instr >> 5) & 0x13; // Mask bits 20 onwards 
+			offset = ((instr >> 5) & 0x13)*4; // Mask bits 20 onwards 
 			
 			// Determines which PSTATE flag to check
 			switch(cond) {
 				case 0: 
+					if (armv8->PSTATE.Z == true) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 1: 
+					if (armv8->PSTATE.Z == false) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 10: 
+					if (armv8->PSTATE.N == armv8->PSTATE.V) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 11: 
+					if (armv8->PSTATE.N != armv8->PSTATE.V) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 12: 
+					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 13: 
+					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
+						setPC(armv8, armv8->PC + offset); 
+					}
 					break; 
 				case 14: 
+					setPC(armv8, armv8->PC + offset); 
 					break; 
 				default: 
 					printf("Invalid condition code in branch.");
