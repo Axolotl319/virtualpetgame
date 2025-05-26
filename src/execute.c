@@ -9,17 +9,17 @@
 
 // TODO -- the execution
 void immdp(int instr, armv8_armstate *armv8) {
-	int width = 32 + 32*(instr >> 31); //32 if sf = 0, 64 if sf = 1
+	int width = instr >> 31;
 	int opi = (instr >> 22) & 0x7;
 	int opc = (instr >> 29) & 0x3;
-	int rd = instr & 0xf;
+	unsigned int rd = instr & 0x1f;
 	int result;
 
 	switch(opi){
 		case 2: //arithmetic
 			int shift = 12 * ((instr >> 22) & 0x1);
-			uint32_t imm = ((instr >> 10) & 0x7ff) << shift;
-			int rn = (instr >> 5) & 0x1f;
+			int imm = ((instr >> 10) & 0xfff) << shift;
+			unsigned int rn = (instr >> 5) & 0x1f;
 			switch(opc){
 				case 0: //add Rd = Rn + Op2
 					result = imm + armv8->GP_regs[rn];
@@ -43,21 +43,24 @@ void immdp(int instr, armv8_armstate *armv8) {
 
 		case 5: //wide move
 			int shift = 16 * ((instr >> 21) & 0x3);
-			uint32_t imm = ((instr >> 5) & 0xffff) << shift;
+			int16_t imm = ((instr >> 5) & 0xffff);
 			switch(opc){
 				case 0: //move wide with NOT
-					result = ~imm;
+					result = ~(imm << shift);
 					break;
 
 				case 2: //move wide with zero
-					result = imm;
+					result = imm << shift;
 					break;
 
 				case 3: //move wide with keep
-					imm = imm >> shift;
-					result = (armv8->GP_regs[rd]) & ~(0xff * shift); //set appropriate 16 bits to zero
+					result = (armv8->GP_regs[rd]) & ~(0xffff * shift); //set appropriate 16 bits to zero
 					result = result | imm; //move imm into these 16 bits
 					break;
+
+				default:
+					fprintf(stderr, "Unknown OPC for wide move instruction.");
+					return 1;
 			}
 			break;
 
@@ -68,9 +71,9 @@ void immdp(int instr, armv8_armstate *armv8) {
 	}
 
 
-	if(width == 32){
+	if(width == 0){ //sf = 0 -> 32-bit
 		write_reg32(armv8, rd, result);
-	}else{
+	}else{ //64-bit
 		write_reg64(armv8, rd, result);
 	}
 	return 0;
