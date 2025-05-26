@@ -11,3 +11,8 @@ extern void update_pstate_sub32( pstate * PSTATE, uint32_t op1, uint32_t op2, ui
 extern void update_pstate_sub64( pstate * PSTATE, uint64_t op1, uint64_t op2, uint64_t result );
 extern void update_pstate_logic32( pstate * PSTATE, uint32_t result );
 extern void update_pstate_logic64( pstate * PSTATE, uint64_t result );
+extern void logical_shift_left(armv8_state *armv8, int reg_num, int width);
+extern void logical_shift_right(armv8_state *armv8, int reg_num, int width);
+extern void arithmetic_shift_left(armv8_state *armv8, int reg_num, int width);
+extern void rotate_right(armv8_state *armv8, int reg_num, int width);
+extern int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width);
