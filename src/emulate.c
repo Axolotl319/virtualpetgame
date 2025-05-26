@@ -51,7 +51,7 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 // and passes the instruction to the corresponding function to handle. 
 // Returns 1 if decoding unsuccessful, returns 0 if successful.
 // Returns -1 if halting instruction reached or decoding unsuccessful, returns 0 if successful.  
-int decode(uint8_t *instruction) {
+int decode(uint8_t *instruction, armv8_state *armv8) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
 	uint32_t result = ((uint32_t) *(instruction+3) << 24) 
@@ -71,12 +71,12 @@ int decode(uint8_t *instruction) {
 		case 8:
 		case 9:
 			printf("This is data processing (immediate).\n"); 
-			immdp( result ); 
+			immdp( result, armv8 ); 
 			break; 
 		case 5:
 		case 13:
 			printf("This is data processing (registers).\n");
-			regdp( result );
+			regdp( result, armv8 );
 		        break; 
 		case 4:
 		case 6:
@@ -85,15 +85,15 @@ int decode(uint8_t *instruction) {
 			printf("This is single data transfer.\n"); 
 			int temp = 0xf & (result >> 31); 
 			if (temp) {
-				datatransfer( result ); 
+				datatransfer( result, armv8 ); 
 			} else {
-				loadliteral( result ); 
+				loadliteral( result, armv8 ); 
 			}
 			break; 
 		case 10:
 		case 11:
 			printf("This is branch.\n"); 
-			branch( result );
+			branch( result, armv8 );
 			break; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
@@ -122,7 +122,7 @@ int fetch(armv8_state *armv8) {
 			return 1;
 		}
 
-		status = decode(current);
+		status = decode(current, armv8);
 	
 		if ( status == -1 ) { //HALT
 			break;

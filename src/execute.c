@@ -79,7 +79,7 @@ void immdp(int instr, armv8_armstate *armv8) {
 	return 0;
 }
 
-void regdp(int instr) {}
-void loadliteral(int instr) {}
-void datatransfer(int instr) {}
-void branch(int instr) {}
+void regdp(int instr, armv8_state *armv8) {}
+void loadliteral(int instr, armv8_state *armv8) {}
+void datatransfer(int instr, armv8_state *armv8) {}
+void branch(int instr, armv8_state *armv8) {}
