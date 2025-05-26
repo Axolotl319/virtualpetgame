@@ -15,4 +15,3 @@ extern void logical_shift_left(armv8_state *armv8, int reg_num, int width);
 extern void logical_shift_right(armv8_state *armv8, int reg_num, int width);
 extern void arithmetic_shift_left(armv8_state *armv8, int reg_num, int width);
 extern void rotate_right(armv8_state *armv8, int reg_num, int width);
-extern int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width);

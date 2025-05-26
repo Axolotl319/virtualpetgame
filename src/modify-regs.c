@@ -172,31 +172,4 @@ void update_pstate_logic64(pstate *PSTATE, uint64_t result){
 	update_pstate(PSTATE, 0, 0, result, OP_LOGIC, 64);
 }
 
-int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width){
-	int result = INT_MAX;
-	switch(opcode){
-		case 0: //add
-			result = arg1 + arg2;
-			break;
-
-		case 1: //adds
-			result = arg1 + arg2;
-			update_pstate(armv8->pstate, arg1, arg2, result, OP_ADD, width);
-			break;
-
-		case 2: //sub
-			result = arg1 - arg2;
-			break;
-
-		case 3: //subs
-			result = arg1 - arg2;
-			update_pstate(armv8->pstate, arg1, arg2, result, OP_SUB, width);
-			break;
-
-		default:
-			perror("Error. Unknown arithmetic opcode.");
-			break;
-	}
-	return result;
-}
 

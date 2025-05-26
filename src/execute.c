@@ -8,6 +8,35 @@
 #include "armv8.h"
 
 // TODO -- the execution
+int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width){
+	int result = INT_MAX;
+	switch(opcode){
+		case 0: //add
+			result = arg1 + arg2;
+			break;
+
+		case 1: //adds
+			result = arg1 + arg2;
+			update_pstate(armv8->pstate, arg1, arg2, result, OP_ADD, width);
+			break;
+
+		case 2: //sub
+			result = arg1 - arg2;
+			break;
+
+		case 3: //subs
+			result = arg1 - arg2;
+			update_pstate(armv8->pstate, arg1, arg2, result, OP_SUB, width);
+			break;
+
+		default:
+			perror("Error. Unknown arithmetic opcode.");
+			break;
+	}
+	return result;
+}
+
+
 void immdp(int instr, armv8_armstate *armv8) {
 	unsigned int width = 32 * (instr >> 31);
 	unsigned int opi = (instr >> 22) & 0x7;
@@ -141,6 +170,13 @@ void regdp(int instr, armv8_state *armv8) {
 
 	}else if(type == 24){
 		//multiply
+		bool negate = (instr >> 15) & 0x1; //madd if 0/false, msub if 1/true
+		unsigned int ra = (instr >> 10) &0x1f;
+		if(negate){
+			result = armv8->GP_regs[ra] - (armv8->GP_regs[rn] * armv8->GP_regs[rm]);
+		}else{
+			result = armv8->GP_regs[ra] + (armv8->GP_regs[rn] * armv8->GP_regs[rm]);
+		}
 	}else{
 		fprintf(stderr, "Unknown type of data processing register instruction.");
 	}
