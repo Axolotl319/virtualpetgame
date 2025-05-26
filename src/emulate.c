@@ -48,10 +48,11 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 }
 
 // Given the starting address of an instruction, determines the instruction type 
-// and passes the instruction to the corresponding function to handle. 
-// Returns 1 if decoding unsuccessful, returns 0 if successful.
-// Returns -1 if halting instruction reached or decoding unsuccessful, returns 0 if successful.  
-int decode(uint8_t *instruction) {
+// and passes the instruction to the corresponding function to handle.
+// Returns 1 if halting condition reached. 
+// Returns 2 if branch statement.  
+// Returns -1 if decoding unsuccessful, returns 0 if successful.  
+int decode(uint8_t *instruction, armv8_state *armv8) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
 	uint32_t result = ((uint32_t) *(instruction+3) << 24) 
@@ -61,7 +62,7 @@ int decode(uint8_t *instruction) {
 
 	// Checks for halting instruction 
 	if (result == 0x8a000000) {
-		return -1; 
+		return 1; 
 	}
 
 	// Obtain op0 -- comments used for debugging purposes. 
@@ -93,7 +94,8 @@ int decode(uint8_t *instruction) {
 		case 10:
 		case 11:
 			printf("This is branch.\n"); 
-			branch( result );
+			branch( result, armv8 );
+			return 2; 
 			break; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
@@ -114,6 +116,7 @@ int fetch(armv8_state *armv8) {
 
 	// Decodes each instruction  
 	while(1) {
+		printf("PC: %lx\n", armv8->PC); 
 		uint8_t *current = &armv8->memory[armv8->PC];		
 		
 		//if PC is out of bounds
@@ -122,16 +125,18 @@ int fetch(armv8_state *armv8) {
 			return 1;
 		}
 
-		status = decode(current);
-	
-		if ( status == -1 ) { //HALT
+		status = decode(current, armv8);
+
+		if ( status == 1 ) { 	//HALT
 			break;
-		} else if ( status != 0) { //Decode failed
+		} 
+		if ( status < 0 ) {	//Decode failed
 			return 1; 
 		}
 
-		//Increment PC - NEED TO CHANGE WHEN IMPLEMENTING BRANCH 	
-		incrementPC(armv8); 
+		if ( status == 0 ) {	//Increment PC if decode success and not branch
+			incrementPC(armv8); 
+		} 
 	}
 	return 0;
 }
