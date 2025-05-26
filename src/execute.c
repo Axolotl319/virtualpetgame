@@ -50,7 +50,8 @@ void branch(int instr, armv8_state *armv8) {
 			}
 			break; 
 	// Unconditional (register)
-		case 3:
+		case 3: 
+			unsigned int reg = (instr >> 5) & 0x1f; 
 		        break; 	
 	} 
 }
