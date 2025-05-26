@@ -129,11 +129,11 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 
 	if(width == 32){ //32-bit
-		if (!write_reg32(armv8, rd, result)) return 1;
+		return write_reg32(armv8, rd, result);
 	}else{ //64-bit
-		if (!write_reg64(armv8, rd, result)) return 1;
+		return write_reg64(armv8, rd, result);
 	}
-	return 0;
+
 }
 
 int regdp(uint32_t instr, armv8_state *armv8) {
@@ -269,12 +269,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	
 	
 	if(width == 32){ 
-		if (!write_reg32(armv8, rd, result)) return 1;
+		return write_reg32(armv8, rd, result);
 	}else{ //64-bit
-		if (!write_reg64(armv8, rd, result)) return 1;
+		return write_reg64(armv8, rd, result);
 	}
 
-	return 0;
 }
 
 void loadliteral(int instr, armv8_state *armv8) {}
