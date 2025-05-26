@@ -116,7 +116,6 @@ int fetch(armv8_state *armv8) {
 
 	// Decodes each instruction  
 	while(1) {
-		printf("PC: %lx\n", armv8->PC); 
 		uint8_t *current = &armv8->memory[armv8->PC];		
 		
 		//if PC is out of bounds

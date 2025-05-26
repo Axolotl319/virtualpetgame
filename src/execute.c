@@ -25,9 +25,7 @@ void branch(int instr, armv8_state *armv8) {
 	// Unconditional (offset) 
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
-			printf("%lu\n", armv8->PC);
-			setPC(armv8, armv8->PC + offset);
-		        printf("After: %lu\n", armv8->PC); 	
+			setPC(armv8, armv8->PC + offset); 
 			break; 
 
 	// Conditional 
@@ -79,9 +77,8 @@ void branch(int instr, armv8_state *armv8) {
 		case 3: 
 			reg = (instr >> 5) & 0x1f; 
 		        // 0x1f is the zero register, does not need to be handled
-			if (reg != 0x1f) {
-				read_reg64(armv8, reg, addr); 
-				setPC(armv8, *addr); 	
+			if (reg != 0x1f && read_reg64(armv8, reg, addr) == 0) {
+				setPC(armv8, *addr);
 			}
 			break; 	
 		default: 
