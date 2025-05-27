@@ -7,6 +7,8 @@
 #include "modify-regs.h"
 #include "armv8.h" 
 
+static size_t num_bytes_read = 0; 
+
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 static void initialise(armv8_state *armv8) {
 	memset(armv8, 0, sizeof(*armv8));
@@ -171,14 +173,9 @@ int main(int argc, char **argv)
 		fclose(inFile);
 		return 1;
 	}
-
-	// Obtains size of file, kept in case needed later 
-	// fseek(inFile, 0, SEEK_END); 
-	// int filesize = ftell(inFile); 
-	// rewind(inFile);
 	
 	// Reads contents of file into buffer 
-	fread(armv8.memory, 1, MEM_SIZE, inFile);	
+	num_bytes_read = fread(armv8.memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
 
 	//Calls fetch function, which calls decode

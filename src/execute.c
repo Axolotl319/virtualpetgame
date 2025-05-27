@@ -52,7 +52,7 @@ static int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2
 //Returns 0 for success, 1 for failure
 int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int width = ((instr >> 31) & 0x1) ? 64 : 32; //MSB = 1: Width = 64, MSB = 0: Width = 32
-	unsigned int opi = (instr >> 22) & 0x7; //Data processing operation 010=Arithmetic, 101=Wide move
+	unsigned int opi = (instr >> 23) & 0x7; //Data processing operation 010=Arithmetic, 101=Wide move
 	unsigned int opc = (instr >> 29) & 0x3; //Operation code
 	unsigned int rd = instr & 0x1f; //Destination register
 	uint64_t result;
@@ -166,6 +166,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	if(type < 8){
 		//logical
 		bool negate = opr & 0x1;
+		/*
 		switch(opr & 0x6){ //shift rm bits
 			case 0: { //lsl
 				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
@@ -192,6 +193,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 				return 1;
 			}
 		}
+		*/
 			
 		if(negate){
 			op2 = ~op2;
@@ -222,6 +224,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 	}else if(type < 16 && type % 2 == 0){
 		//arithmetic 
+		/*
 		switch(opr & 0x6){ //shift bits
 			case 0: { //lsl
 				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
@@ -244,6 +247,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 				break;
 			}
 		}
+		*/
 
 		result = perform_arithmetic(armv8, opc, op1, op2, width); 
 					    
