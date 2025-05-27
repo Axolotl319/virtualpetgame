@@ -8,13 +8,10 @@
 #include "armv8.h"
 #include <limits.h>
 
-//TODO: Make it explicitly handle 32/64 bit width in the best way possible
-
 // Performs arithmetic instructions
 // Takes arguments: armv8 state pointer, opcode, 1st argument, 2nd argument, bit width
-static int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width){
+static int perform_arithmetic(armv8_state *armv8, int opcode, unsigned int arg1, unsigned int arg2, int width){
 	uint64_t result = UINT64_MAX;
-
 
 	switch(opcode){
 		case 0: { //add
@@ -64,18 +61,13 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
 			
 			//performs arithmetic based on bit width
-			uint32_t val32;
-			uint64_t val64;
+			uint64_t op = 0;
+			int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op) : read_reg64(armv8, rn, &op);
+		        if (status) return 1;	
 
-			if (width == 32) {
-				int status = read_reg32(armv8, rn, &val32);
-				if (status) return 1;
-				result = perform_arithmetic(armv8, opc, val32, (uint32_t) imm, width);
-			} else {
-				int status = read_reg64(armv8, rn, &val64);
-				if (status) return 1;
-				result = perform_arithmetic(armv8, opc, val64, imm, width);
-			}
+			result = (width == 32) ? 
+				perform_arithmetic(armv8, opc, (uint32_t) op, (uint32_t) imm, width) :
+				perform_arithmetic(armv8, opc, op, imm, width);
 
 			break;
 		}
@@ -144,8 +136,8 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rn = (instr >> 5) & 0x1f; //register operand
 	unsigned int rm = (instr >> 16) & 0x1f; //register that shift is performed on
 	unsigned int opc = (instr >> 29) & 0x3; //opcode
-	uint64_t op1; //first operand
-	uint64_t op2; //second operand
+	uint64_t op1 = 0; //first operand
+	uint64_t op2 = 0; //second operand
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	uint64_t result;
 
@@ -156,11 +148,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 
 	//reads register rn into op1
-	int status = read_reg64(armv8, rn, &op1);
+	int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op1) : read_reg64(armv8, rn, &op1);	
         if (status) return 1;
 
 	//reads register rm into op2
-        status = read_reg64(armv8, rm, &op2);
+	status = (width == 32) ? read_reg32(armv8, rm, (uint32_t *)&op2) : read_reg64(armv8, rm, &op2);
         if (status) return 1;
 
 	if(type < 8){
@@ -169,22 +161,22 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		/*
 		switch(opr & 0x6){ //shift rm bits
 			case 0: { //lsl
-				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = logical_shift_left(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
 			}
 
 			case 1: { //lsr
-				op2 = logical_shift_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = logical_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
 			}
 
 			case 2: { //asr
-				op2 = arithmetic_shift_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = arithmetic_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
 			}
 
 			case 3: { //ror
-				op2 = rotate_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = rotate_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
 			}
 			
@@ -227,17 +219,17 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		/*
 		switch(opr & 0x6){ //shift bits
 			case 0: { //lsl
-				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = logical_shift_left(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
 			}
 
 			case 1: { //lsr
-				op2 = logical_shift_right(armv8, rm, operand, width);
+				op2 = logical_shift_right(armv8, op2, operand, width);
 				break;
 			}
 
 			case 2: { //asr
-				op2 = arithmetic_shift_right(armv8, rm, operand, width);
+				op2 = arithmetic_shift_right(armv8, op2, operand, width);
 				break;
 			}
 
@@ -249,7 +241,9 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		}
 		*/
 
-		result = perform_arithmetic(armv8, opc, op1, op2, width); 
+		result = (width == 32) ?
+		        perform_arithmetic(armv8, opc, (uint32_t) op1, (uint32_t) op2, width) :	
+			perform_arithmetic(armv8, opc, op1, op2, width); 
 					    
 	}else if(type == 24){
 		//multiply
@@ -257,8 +251,8 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		unsigned int ra = operand & 0x1f;
 
 		//read in ra register
-		uint64_t op3;
-		status = read_reg64(armv8, ra, &op3);
+		uint64_t op3 = 0;
+		status = (width == 32) ? read_reg32(armv8, ra, (uint32_t *) &op3) : read_reg64(armv8, ra, &op3);
 		if (status) return 1;
 
 		if(negate){
