@@ -128,6 +128,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
+
 int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int opr = (instr >> 21) & 0xf; //opr = bits 21-24 of instruction
 	unsigned int type = opr | (((instr >> 28) & 0x1) << 3); //M-opr: type of instruction (M = bit 28)
