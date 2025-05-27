@@ -8,13 +8,13 @@
 #include "armv8.h" 
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
-void initialise(armv8_state *armv8) {
+static void initialise(armv8_state *armv8) {
 	memset(armv8, 0, sizeof(*armv8));
 	armv8->PSTATE.Z = true;
 }
 
 //print the armv8 state
-void print_state(armv8_state *armv8, FILE *outFile) {
+static void print_state(armv8_state *armv8, FILE *outFile) {
 	//General Purpose Registers
 	fprintf(outFile, "Registers:\n");
 	for (int i = 0; i < NUM_GP_REGS; i++) {	
@@ -52,7 +52,7 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 // Returns 1 if halting condition reached. 
 // Returns 2 if branch statement.  
 // Returns -1 if decoding unsuccessful, returns 0 if successful.  
-int decode(uint8_t *instruction, armv8_state *armv8) {
+static int decode(uint8_t *instruction, armv8_state *armv8) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
 	uint32_t result = ((uint32_t) *(instruction+3) << 24) 
@@ -110,7 +110,7 @@ int decode(uint8_t *instruction, armv8_state *armv8) {
 
 //Fetches instructions based on PC, passes each instruction to decode
 //Returns 1 if unsuccessful, 0 if successful
-int fetch(armv8_state *armv8) {
+static int fetch(armv8_state *armv8) {
  
 	int status = 0;
 
