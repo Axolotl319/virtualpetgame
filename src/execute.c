@@ -15,32 +15,28 @@ static uint64_t perform_arithmetic(armv8_state *armv8, int opcode, unsigned int 
 	uint64_t result = UINT64_MAX;
 
 	switch(opcode){
-		case 0: { //add
+		case 0:  //add
 			result = arg1 + arg2;
 			break;
-		}
-
-		case 1: { //adds
+		
+		case 1:  //adds
 			result = arg1 + arg2;
 			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_ADD, width);
 			break;
-		}
 
-		case 2: { //sub
+		case 2:  //sub
 			result = arg1 - arg2;
 			break;
-		}
 
-		case 3: { //subs
+		case 3:  //subs
 			result = arg1 - arg2;
 			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_SUB, width);
 			break;
-		}
 
-		default: {
+		default: 
 			fprintf(stderr, "Error. Unknown arithmetic opcode.");
+			return 1;
 			break;
-		}
 	}
 	return result;
 }
@@ -86,15 +82,13 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 			uint64_t imm = ((instr >> 5) & 0xffff) << shift; // shifted immediate value
 			switch(opc){
-				case 0: { //move wide with NOT
+				case 0: //move wide with NOT
 					result = ~(imm);
 					break;
-				}
-
-				case 2: { //move wide with zero
+				
+				case 2: //move wide with zero
 					result = imm;
 					break;
-				}
 
 				case 3: { //move wide with keep
 					
@@ -108,10 +102,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 					break;
 				}
 
-				default: {
+				default:
 					fprintf(stderr, "Unknown OPC for wide move instruction.");
 					return 1;
-				}
 			}
 			break;
 		}
@@ -171,22 +164,19 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	if(type != 24) {
 		/*
 		switch(opr & 0x6){ //shift rm bits
-			case 0: { //lsl
+			case 0: //lsl
 				op2 = logical_shift_left(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
-			}
 
-			case 1: { //lsr
+			case 1: //lsr
 				op2 = logical_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
-			}
 
-			case 2: { //asr
+			case 2: //asr
 				op2 = arithmetic_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
-			}
 
-			case 3: { //ror
+			case 3: //ror
 				if (type < 8) {
 					op2 = rotate_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				} else {
@@ -194,12 +184,10 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 					return 1;
 				}
 				break;
-			}
 			
-			default: {
+			default: 
 			        fprintf(stderr, "Unknown shift type");
 				return 1;
-			}
 		}*/
 		
 	}
@@ -213,26 +201,22 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		}
 
 		switch(opc){ //specifies operation
-			case 0: { //and
+			case 0: //and
 				result = op1 & op2;
 				break;
-			}
 
-			case 1: { //or
+			case 1: //or
 				result = op1 | op2;
 				break;
-			}
 
-			case 2: { //xor
+			case 2: //xor
 				result = op1 ^ op2;
 				break;
-			}
 
-			case 3: { //and, set flags
+			case 3: //and, set flags
 				result = op1 & op2;
 				update_pstate(&armv8->PSTATE, op1, op2, result, OP_LOGIC, width);
 				break;
-			}
 		}
 
 	}else if(type < 16 && type % 2 == 0){
