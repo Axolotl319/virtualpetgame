@@ -10,7 +10,8 @@
 
 // Performs arithmetic instructions
 // Takes arguments: armv8 state pointer, opcode, 1st argument, 2nd argument, bit width
-static int perform_arithmetic(armv8_state *armv8, int opcode, unsigned int arg1, unsigned int arg2, int width){
+// Returns 64 bit result
+static uint64_t perform_arithmetic(armv8_state *armv8, int opcode, unsigned int arg1, unsigned int arg2, int width){
 	uint64_t result = UINT64_MAX;
 
 	switch(opcode){
@@ -53,6 +54,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int opc = (instr >> 29) & 0x3; //Operation code
 	unsigned int rd = instr & 0x1f; //Destination register
 	uint64_t result;
+
+	//Handle Zero register
+	if (rd == 0x1f) return 0;
 
 	switch(opi){
 		case 2: { //arithmetic
@@ -141,6 +145,9 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	uint64_t op2 = 0; //second operand
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	uint64_t result;
+	
+	//Handles destination register being ZR
+	if (rd == 0x1f) return 0;
 
 	//check that operand is in the valid range
 	if (operand > 63 || (type != 24 && (width == 32 && operand > 31))) {
@@ -148,17 +155,20 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		return 1;
 	}
 
-	//reads register rn into op1
-	int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op1) : read_reg64(armv8, rn, &op1);	
-        if (status) return 1;
+	//reads register rn into op1, if rn is not ZR
+	if (rn != 0x1f) {
+		int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op1) : read_reg64(armv8, rn, &op1);	
+        	if (status) return 1;
+	}
 
-	//reads register rm into op2
-	status = (width == 32) ? read_reg32(armv8, rm, (uint32_t *)&op2) : read_reg64(armv8, rm, &op2);
-        if (status) return 1;
+	//reads register rm into op2, if rm is not ZR
+	if (rm != 0x1f) {
+		int status = (width == 32) ? read_reg32(armv8, rm, (uint32_t *)&op2) : read_reg64(armv8, rm, &op2);
+        	if (status) return 1;
+	}
 
-	if(type < 8){
-		//logical
-		bool negate = opr & 0x1;
+	//perform shift
+	if(type != 24) {
 		/*
 		switch(opr & 0x6){ //shift rm bits
 			case 0: { //lsl
@@ -177,7 +187,12 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			}
 
 			case 3: { //ror
-				op2 = rotate_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				if (type < 8) {
+					op2 = rotate_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				} else {
+					fprintf(stderr, "Unknown shift type for arithmetic instructions");
+					return 1;
+				}
 				break;
 			}
 			
@@ -185,9 +200,14 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			        fprintf(stderr, "Unknown shift type");
 				return 1;
 			}
-		}
-		*/
-			
+		}*/
+		
+	}
+
+	if(type < 8){
+		//logical
+		bool negate = opr & 0x1;
+		
 		if(negate){
 			op2 = ~op2;
 		}
@@ -217,32 +237,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 	}else if(type < 16 && type % 2 == 0){
 		//arithmetic 
-		/*
-		switch(opr & 0x6){ //shift bits
-			case 0: { //lsl
-				op2 = logical_shift_left(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-
-			case 1: { //lsr
-				op2 = logical_shift_right(armv8, op2, operand, width);
-				break;
-			}
-
-			case 2: { //asr
-				op2 = arithmetic_shift_right(armv8, op2, operand, width);
-				break;
-			}
-
-			default: {
-				fprintf(stderr, "Unknown shift type for arithmetic dpr instruction.");
-				return 1;
-				break;
-			}
-		}
-		*/
-
-		result = (width == 32) ?
+			result = (width == 32) ?
 		        perform_arithmetic(armv8, opc, (uint32_t) op1, (uint32_t) op2, width) :	
 			perform_arithmetic(armv8, opc, op1, op2, width); 
 					    
@@ -251,10 +246,12 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		bool negate = (operand >> 6) & 0x1; //madd if 0/false, msub if 1/true
 		unsigned int ra = operand & 0x1f;
 
-		//read in ra register
+		//read in ra register, if ra is not ZR
 		uint64_t op3 = 0;
-		status = (width == 32) ? read_reg32(armv8, ra, (uint32_t *) &op3) : read_reg64(armv8, ra, &op3);
-		if (status) return 1;
+		if (ra != 0x1f) {
+			int status = (width == 32) ? read_reg32(armv8, ra, (uint32_t *) &op3) : read_reg64(armv8, ra, &op3);
+			if (status) return 1;
+		}
 
 		if(negate){
 			result = op3 - (op1 * op2);
