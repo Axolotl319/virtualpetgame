@@ -5,7 +5,6 @@
 #include <string.h>
 #include "execute.h"
 #include "modify-regs.h"
-<<<<<<< src/execute.c
 #include "armv8.h"
 #include <limits.h>
 
@@ -353,4 +352,3 @@ void branch(int instr, armv8_state *armv8) {
 			printf("Invalid branch instruction.");
 	} 
 }
->>>>>>> src/execute.c
