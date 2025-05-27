@@ -38,7 +38,7 @@ static uint64_t perform_arithmetic(armv8_state *armv8, int opcode, unsigned int 
 		}
 
 		default: {
-			perror("Error. Unknown arithmetic opcode.");
+			fprintf(stderr, "Error. Unknown arithmetic opcode.");
 			break;
 		}
 	}
