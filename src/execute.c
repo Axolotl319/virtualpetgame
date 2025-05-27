@@ -59,7 +59,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 	switch(opi){
 		case 2: { //arithmetic
-			unsigned int shift = 12 * ((instr >> 22) & 0x1); //shift by 12 if bit 23 = 1 
+			unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
 			uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
 			unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
 			
@@ -81,7 +81,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 		}
 
 		case 5: { //wide move
-			int shift = 16 * ((instr >> 21) & 0x3); //logical shift left by 16 * bits 22-23
+			int shift = 16 * ((instr >> 21) & 0x3); //logical shift left by 16 * bits 21-22
 			
 			if (width == 32 && shift > 1) {
 				fprintf(stderr, "Invalid shift for 32 bit");
@@ -137,8 +137,8 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 }
 
 int regdp(uint32_t instr, armv8_state *armv8) {
-	unsigned int opr = (instr >> 21) & 0xffff; 
-	unsigned int type = opr | (((instr >> 28) & 0x1) << 3); //M-opr: type of instruction
+	unsigned int opr = (instr >> 21) & 0xf; //opr = bits 21-24 of instruction
+	unsigned int type = opr | (((instr >> 28) & 0x1) << 3); //M-opr: type of instruction (M = bit 28)
 	unsigned int operand = (instr >> 10) & 0x3f; //last operand
 	unsigned int rd = instr & 0x1f; //destination register
 	unsigned int rn = (instr >> 5) & 0x1f; //register operand
@@ -166,7 +166,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	if(type < 8){
 		//logical
 		bool negate = opr & 0x1;
-		switch(opr & 0x6){ //shift bits
+		switch(opr & 0x6){ //shift rm bits
 			case 0: { //lsl
 				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
 				break;
