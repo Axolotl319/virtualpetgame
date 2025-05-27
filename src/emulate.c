@@ -48,9 +48,10 @@ void print_state(armv8_state *armv8, FILE *outFile) {
 }
 
 // Given the starting address of an instruction, determines the instruction type 
-// and passes the instruction to the corresponding function to handle. 
-// Returns 1 if decoding unsuccessful, returns 0 if successful.
-// Returns -1 if halting instruction reached or decoding unsuccessful, returns 0 if successful.  
+// and passes the instruction to the corresponding function to handle.
+// Returns 1 if halting condition reached. 
+// Returns 2 if branch statement.  
+// Returns -1 if decoding unsuccessful, returns 0 if successful.  
 int decode(uint8_t *instruction, armv8_state *armv8) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
@@ -61,7 +62,7 @@ int decode(uint8_t *instruction, armv8_state *armv8) {
 
 	// Checks for halting instruction 
 	if (result == 0x8a000000) {
-		return -1; 
+		return 1; 
 	}
 
 	// Obtain op0 -- comments used for debugging purposes. 
@@ -94,6 +95,7 @@ int decode(uint8_t *instruction, armv8_state *armv8) {
 		case 11:
 			printf("This is branch.\n"); 
 			branch( result, armv8 );
+			return 2; 
 			break; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
@@ -123,15 +125,17 @@ int fetch(armv8_state *armv8) {
 		}
 
 		status = decode(current, armv8);
-	
-		if ( status == -1 ) { //HALT
+
+		if ( status == 1 ) { 	//HALT
 			break;
-		} else if ( status != 0) { //Decode failed
+		} 
+		if ( status < 0 ) {	//Decode failed
 			return 1; 
 		}
 
-		//Increment PC - NEED TO CHANGE WHEN IMPLEMENTING BRANCH 	
-		incrementPC(armv8); 
+		if ( status == 0 ) {	//Increment PC if decode success and not branch
+			incrementPC(armv8); 
+		} 
 	}
 	return 0;
 }
