@@ -72,12 +72,12 @@ int decode(uint8_t *instruction, armv8_state *armv8) {
 		case 8:
 		case 9:
 			printf("This is data processing (immediate).\n"); 
-			immdp( result ); 
+			immdp( result, armv8 ); 
 			break; 
 		case 5:
 		case 13:
 			printf("This is data processing (registers).\n");
-			regdp( result );
+			regdp( result, armv8 );
 		        break; 
 		case 4:
 		case 6:
@@ -86,9 +86,9 @@ int decode(uint8_t *instruction, armv8_state *armv8) {
 			printf("This is single data transfer.\n"); 
 			int temp = 0xf & (result >> 31); 
 			if (temp) {
-				datatransfer( result ); 
+				datatransfer( result, armv8 ); 
 			} else {
-				loadliteral( result ); 
+				loadliteral( result, armv8 ); 
 			}
 			break; 
 		case 10:

@@ -5,13 +5,6 @@
 #include "modify-regs.h"
 #include "armv8.h"
 
-//operation types for pstate
-enum operation {
-	OP_ADD,
-	OP_SUB,
-	OP_LOGIC
-};
-
 
 //checks if registers are in bounds - returns 1 if they aren't
 static int check_reg_bounds(int reg_num) {
@@ -37,14 +30,15 @@ int read_reg32(armv8_state *armv8, int reg_num, uint32_t *data) {
 }
 
 //Write
-//Takes arguments armv8 state pointer, register number, data to write
+//Takes arguments armv8 state pointer, register number, 64 bit data to write
 //Returns 1 if failure, 0 if success
-int write_reg32(armv8_state *armv8, int reg_num, uint32_t data) {
+int write_reg32(armv8_state *armv8, int reg_num, uint64_t data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
 	}
-	armv8->GP_regs[reg_num] = ((uint64_t) data); 
+	data &= 0xffffffff;
+	armv8->GP_regs[reg_num] = data; 
 	return 0;
 }
 
@@ -99,9 +93,9 @@ int setPC(armv8_state *armv8, uint64_t addr) {
 
 //Pstate operations
 
-//PRIVATE update pstate function - functions to call defined below
 //updates pstate values depending on the operation and bit width
-static void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, enum operation op_type, int width) {
+//Takes arguments: pstate pointer, 1st operand, 2nd operand, result, operation type, bit width
+void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, enum operation op_type, int width) {
 
 	//Negative and Zero flags
 	PSTATE->N = (result >> (width - 1)) & 1;
@@ -142,34 +136,6 @@ static void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t r
 		}		
 
 	}
-}
-
-
-//Call one of these to update pstate after an addition depending on bit width
-//Takes arguments: pstate pointer, operand 1, operand 2, result
-void update_pstate_add32(pstate *PSTATE, uint32_t op1, uint32_t op2, uint32_t result){
-	update_pstate(PSTATE, (uint64_t) op1 , (uint64_t) op2 , (uint64_t) result, OP_ADD, 32);
-}
-void update_pstate_add64(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result){
-	update_pstate(PSTATE, op1, op2, result, OP_ADD, 64);
-}
-
-//Call one of these to update pstate after a subtraction depending on bit width
-//Takes arguments: pstate pointer, operand 1, operand 2, result
-void update_pstate_sub32(pstate *PSTATE, uint32_t op1, uint32_t op2, uint32_t result){
- 	update_pstate(PSTATE, (uint64_t) op1 , (uint64_t) op2 , (uint64_t) result, OP_SUB, 32);
-}
-void update_pstate_sub64(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result) {
-        update_pstate(PSTATE, op1, op2, result, OP_SUB, 64);
-}
-
-//Call one of these to update pstate after a logical operation depending on bit width
-//Takes arguments: pstate pointer, result
-void update_pstate_logic32(pstate *PSTATE, uint32_t result){
-	update_pstate(PSTATE, 0, 0, (uint64_t) result, OP_LOGIC, 32);
-}
-void update_pstate_logic64(pstate *PSTATE, uint64_t result){
-	update_pstate(PSTATE, 0, 0, result, OP_LOGIC, 64);
 }
 
 
