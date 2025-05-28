@@ -283,16 +283,6 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 void loadliteral(int instr, armv8_state *armv8) {}
 void datatransfer(int instr, armv8_state *armv8) {
-	if(((instr >> 22) & 0x1)  == 0){ 
-		store(instr, armv8);
-	}else{
-		//load(instr, armv8);
-	}
-}
-
-void load(int instr, armv8_state *armv8);
-
-void store(int instr, armv8_state *armv8){
 	int mode; //represents addressing mode
 	if(((instr >> 24) & 0x1) == 1){
 		mode = 0; //unsigned offset
@@ -304,9 +294,7 @@ void store(int instr, armv8_state *armv8){
 		mode = 3; //post-index
 	}
 
-	int transferAddress;
-	int writeBack;
-
+	uint64_t transferAddress;
 	int rt = instr & 0x1f; //target register, contains data to store
 	int base = (instr >> 5) & 0x1f; //base register Xn
 	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
@@ -326,22 +314,82 @@ void store(int instr, armv8_state *armv8){
 			break;
 
 		case 1: //register offset
+			;
+			int xm = (instr >> 16) & 0x1f; //index register offset
+			transferAddress = base + xm;
 			break;
 
+			/*
 		case 2: //pre-index
+			;
+			int simm9 = (instr >> 12) & 0x1ff;
+			transferAddress = base + simm9;
+			switch(width){
+				case 32:
+					write_reg32(armv8, base, transferAddress);
+					break;
+
+				case 64:
+					write_reg64(armv8, base, transferAddress);
+					break;
+			}
 			break;
 
 		case 3: //post-index
+			transferAddress = base;
+			switch(width){
+				case 32:
+					write_reg32(armv8, base, base + simm9);
+					break;
+
+				case 64:
+					write_reg64(armv8, base, base + simm9);
+					break;
+			}
 			break;
+			*/
 	}
 
+
+
+
+	if((instr >> 22) & 0x1){ 
+		load(armv8, width, rt, (uint64_t *) transferAddress);
+	}else{
+		store(armv8, width, rt, (uint64_t *) transferAddress);
+	}
+}
+
+
+//Add read/write reg checks
+void load(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
 	switch(width){
 		case 32:
-			read_reg32(armv8, rt, transferAddress);
+			write_reg32(armv8, rt, *transferAddress);
+			break;
+
+		case 64:
+			write_reg64(armv8, rt, *transferAddress);
+			break;
+
+		default:
+			perror("Width must be 32 or 64 (load instruction)");
+			break;
+	}
+}
+
+void store(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
+	switch(width){
+		case 32:
+			read_reg32(armv8, rt, (uint32_t *) transferAddress);
 			break;
 
 		case 64:
 			read_reg64(armv8, rt, transferAddress);
+			break;
+
+		default:
+			perror("Width must be 32 or 64 (store instruction)");
 			break;
 	}
 }
