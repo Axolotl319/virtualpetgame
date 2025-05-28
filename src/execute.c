@@ -281,95 +281,35 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
-void loadliteral(int instr, armv8_state *armv8) {}
-void datatransfer(int instr, armv8_state *armv8) {
-	int mode; //represents addressing mode
-	if(((instr >> 24) & 0x1) == 1){
-		mode = 0; //unsigned offset
-	}else if(((instr >> 21) & 0x1) == 1){
-		mode = 1; //register offset
-	}else if(((instr >> 11) & 0x1) == 1){
-		mode = 2; //pre-index
-	}else{
-		mode = 3; //post-index
-	}
-
-	uint64_t transferAddress;
-	int rt = instr & 0x1f; //target register, contains data to store
-	int base = (instr >> 5) & 0x1f; //base register Xn
-	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
-	
-	assert(mode >= 0 && mode <= 3);
-	switch(mode){
-		case 0: //unsigned offset
-			switch (width){
-				case 32:
-					transferAddress = base + 4*((instr >> 10) & 0x0fff);
-					break;
-
-				case 64:
-					transferAddress = base + 8*((instr >> 10) & 0x0fff);
-					break;
-			}
-			break;
-
-		case 1: //register offset
-			;
-			int xm = (instr >> 16) & 0x1f; //index register offset
-			transferAddress = base + xm;
-			break;
-
-			/*
-		case 2: //pre-index
-			;
-			int simm9 = (instr >> 12) & 0x1ff;
-			transferAddress = base + simm9;
-			switch(width){
-				case 32:
-					write_reg32(armv8, base, transferAddress);
-					break;
-
-				case 64:
-					write_reg64(armv8, base, transferAddress);
-					break;
-			}
-			break;
-
-		case 3: //post-index
-			transferAddress = base;
-			switch(width){
-				case 32:
-					write_reg32(armv8, base, base + simm9);
-					break;
-
-				case 64:
-					write_reg64(armv8, base, base + simm9);
-					break;
-			}
-			break;
-			*/
-	}
-
-
-
-
-	if((instr >> 22) & 0x1){ 
-		load(armv8, width, rt, (uint64_t *) transferAddress);
-	}else{
-		store(armv8, width, rt, (uint64_t *) transferAddress);
-	}
-}
-
-
 //Add read/write reg checks
-void load(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
+void load(armv8_state *armv8, int width, int rt, uint64_t addr){
+	
+	// uint8_t *addr = &(armv8->memory[transferAddress]); 
+	// printf("Data to write: %p\n", addr); 
+ 
 	switch(width){
 		case 32:
-			write_reg32(armv8, rt, *transferAddress);
+			;
+			uint32_t data1 = 
+			       	((uint32_t)armv8->memory[addr])
+				| ((uint32_t)armv8->memory[addr + 1] << 8) 
+		 		| ((uint32_t)armv8->memory[addr + 2] << 16) 
+				| ((uint32_t)armv8->memory[addr + 3] << 24);		
+			write_reg32(armv8, rt, data1);
 			break;
 
 		case 64:
-			write_reg64(armv8, rt, *transferAddress);
+			;
+			int64_t data2 = 
+			       	((uint64_t)armv8->memory[addr]) 
+				| ((uint64_t)armv8->memory[addr + 1] << 8)
+				| ((uint64_t)armv8->memory[addr + 2] << 16)
+				| ((uint64_t)armv8->memory[addr + 3] << 24)
+				| ((uint64_t)armv8->memory[addr + 4] << 32)
+				| ((uint64_t)armv8->memory[addr + 5] << 40)
+				| ((uint64_t)armv8->memory[addr + 6] << 48)
+				| ((uint64_t)armv8->memory[addr + 7] << 56);	
+			write_reg64(armv8, rt, data2);
 			break;
 
 		default:
@@ -379,6 +319,9 @@ void load(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
 }
 
 void store(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
+	// Obtain the true memory location to which data should be stored
+	// uint64_t *addr = (uint64_t *) armv8->memory + (transferAddress / 4); 
+
 	switch(width){
 		case 32:
 			read_reg32(armv8, rt, (uint32_t *) transferAddress);
@@ -394,6 +337,89 @@ void store(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
 	}
 }
 
+void loadliteral(int instr, armv8_state *armv8) {}
+void datatransfer(int instr, armv8_state *armv8) {
+
+	int mode; //represents addressing mode
+	if(((instr >> 24) & 0x1) == 1){
+		mode = 0; //unsigned offset
+	}else if(((instr >> 21) & 0x1) == 1){
+		mode = 1; //register offset
+	}else if(((instr >> 11) & 0x1) == 1){
+		mode = 2; //pre-index
+	}else{
+		mode = 3; //post-index
+	}
+
+	uint64_t transferAddress = 0;
+	int rt = instr & 0x1f; //target register, contains data to store
+	int xn = (instr >> 5) & 0x1f; //base register Xn
+	read_reg64(armv8, xn, &transferAddress);  // Store base in transferAddress 
+	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
+	
+	// Pre-calculated for unsigned offset
+	unsigned int offset = (instr >> 10) & 0x0fff; 
+
+	// Pre-calculated for register offset
+	int xm = (instr >> 16) & 0x1f; //index register offset
+	uint64_t regoffset = 0; 		
+
+	// Pre-calculated for pre/post index
+	int simm9 = (instr >> 12) & 0x1ff;
+
+	assert(mode >= 0 && mode <= 3);
+        printf("Transfer address: %lu\n", transferAddress); 	
+	switch(mode){
+		case 0: //unsigned offset
+			switch (width){
+				case 32:
+					transferAddress += 4*offset;
+					break;
+
+				case 64:
+					transferAddress += 8*offset;
+					break;
+			}
+			break;
+
+		case 1: //register offset
+			read_reg64(armv8, xm, &regoffset); 
+			transferAddress += regoffset;
+			break;
+
+		case 2: //pre-index
+			transferAddress += simm9;
+			switch(width){
+				case 32:
+					write_reg32(armv8, xn, transferAddress);
+					break;
+
+				case 64:
+					write_reg64(armv8, xn, transferAddress);
+					break;
+			}
+			break;
+
+		case 3: //post-index
+			switch(width){
+				case 32:
+					write_reg32(armv8, xn, transferAddress + simm9);
+					break;
+
+				case 64:
+					write_reg64(armv8, xn, transferAddress + simm9);
+					break;
+			}
+			break;
+	}
+ 
+	if((instr >> 22) & 0x1){ 
+		load(armv8, width, rt, transferAddress);
+	} else{
+		store(armv8, width, rt, &transferAddress);
+	}
+}
+
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 
 void branch(int instr, armv8_state *armv8) {
@@ -401,7 +427,7 @@ void branch(int instr, armv8_state *armv8) {
         int64_t offset = 0; 
 	int cond = 0; 	
 	unsigned int reg = 0; 
-	uint64_t *addr = 0; 
+	uint64_t addr = 0; 
 	switch (op) {
 
 	// Unconditional (offset) 
@@ -459,8 +485,8 @@ void branch(int instr, armv8_state *armv8) {
 		case 3: 
 			reg = (instr >> 5) & 0x1f; 
 		        // 0x1f is the zero register, does not need to be handled
-			if (reg != 0x1f && read_reg64(armv8, reg, addr) == 0) {
-				setPC(armv8, *addr);
+			if (reg != 0x1f && read_reg64(armv8, reg, &addr) == 0) {
+				setPC(armv8, addr);
 			}
 			break; 	
 		default: 
