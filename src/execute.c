@@ -291,76 +291,24 @@ void datatransfer(int instr, armv8_state *armv8) {
 
 void load(int instr, armv8_state *armv8);
 
-void store(int instr, armv8_state *armv8){ //ADD READ REG CHECKS LATER
-	bool unsigned_offset_mode = (instr >> 24) & 0x1;
-	int width = ((instr >> 30) & 0x1) ? 64 : 32; //width depending on bit 30
-	int offset = (instr >> 10) & 0xfff;
-	unsigned int rt = instr & 0x1f; //target register, contains value to be stored
-	unsigned int base_reg = (instr >> 5) & 0x1f; //base register (xn)
-	uint64_t location; //address to store value in
-
-	if(unsigned_offset_mode){
-		switch(width){
-			case 32: 
-				 offset *= 4;
-				 location = base_reg + offset;
-				 read_reg32(armv8, rt, (uint32_t *) location); 
-				 //read value from rt into Reg[xn + offset]
-				 break;
-
-			case 64: 
-				 offset *= 8;
-				 location = base_reg + offset;
-				 read_reg64(armv8, rt, (uint64_t *) location);
-				 break;
-		}
+void store(int instr, armv8_state *armv8){
+	int mode; //represents addressing mode
+	if(((instr >> 24) & 0x1) == 1){
+		mode = 0; //unsigned offset
+	}else if(((instr >> 21) & 0x1) == 1){
+		mode = 1; //register offset
+	}else if(((instr >> 11) & 0x1) == 1){
+		mode = 2; //pre-index
 	}else{
-
-	bool register_offset = ~(offset & 0x1); //1 if register offset, 0 if pre/post
-	if(register_offset){
-		unsigned int xm = (offset >> 6) & 0x1f; //index register
-		location = base_reg + xm;
-		switch(width){
-			case 32:
-			       	read_reg32(armv8, rt, (uint32_t *) location);
-				break;
-			case 64:
-				read_reg64(armv8, rt, (uint64_t *) location);
-		}
-	}else{
-		bool pre = (offset >> 1) & 0x1; //pre- or post-index
-		int simm9 = (offset >> 2) & 0x1ff;
-		location = base_reg + simm9;
-		switch(width){
-			case 32:
-				if(pre){
-					read_reg32(armv8, rt, (uint32_t *) location);
-					//xn + simm9 = value at rt
-				}else{
-					location = base_reg;
-					read_reg32(armv8, rt, (uint32_t *) location);
-					location += simm9;
-					//xn = value at rt
-				}
-				read_reg32(armv8, base_reg, (uint32_t *) &location);
-				//xn = xn + simm9 (imm value)
-				break;
-
-			case 64:
-				if(pre){
-					read_reg64(armv8, rt, (uint64_t *) location);
-				}else{
-					location = base_reg;
-					read_reg64(armv8, rt, (uint64_t *) location);
-					location += simm9;
-				}
-				read_reg64(armv8, base_reg, (uint64_t *) &location);
-				break;
-			
-		}
-	}
+		mode = 3; //post-index
 	}
 
+	int transferAddress;
+	int writeBack;
+
+	int rt = instr & 0x1f; //target register, contains data to store
+	int base = (instr >> 5) & 0x1f; //base register Xn
+	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
 }
 
 // Input: integer representing an instruction 
@@ -382,7 +330,7 @@ void branch(int instr, armv8_state *armv8) {
 	// Conditional 
 		case 1: 
 			cond = instr & 0xf;
-			offset = ((instr >> 5) & 0x13)*4; // Mask bits 20 onwards 
+			offset = ((instr >> 5) & 0x7ffff)*4; // Mask bits 20 onwards 
 			
 			// Determines which PSTATE flag to check
 			switch(cond) {
