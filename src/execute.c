@@ -81,7 +81,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			}
 			int shift = 16 * hw;
 
-			uint64_t imm = ((instr >> 5) & 0xffff) << shift; // shifted immediate value
+			uint64_t imm = ((uint64_t)((instr >> 5) & 0xffff)) << shift; // shifted immediate value
 			switch(opc){
 				case 0: //move wide with NOT
 					result = ~(imm);
