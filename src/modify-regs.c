@@ -139,4 +139,43 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 }
 
 
+//Bitwise shift operations
 
+uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+		return (uint64_t)((uint32_t)(operand) << shift);
+    }
+    return operand << shift;
+}
+
+uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+        return (uint64_t)((uint32_t)(operand) >> shift);
+    }
+    return operand >> shift;
+}
+
+uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+        shift %= 32;
+        int32_t val = (int32_t)(operand & 0xFFFFFFFF);
+        return (uint64_t)(uint32_t)(val >> shift);
+    } else {
+        shift %= 64;
+        int64_t val = (int64_t)operand;
+        return (uint64_t)(val >> shift); 
+    }
+}
+
+uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+	if (width == 32) {
+		shift %= 32;
+		operand = operand & 0xFFFFFFFF;
+		uint32_t rotated_bits = (uint32_t)(operand >> shift) | (uint32_t)(operand << (32 - shift));
+        return rotated_bits;
+	} else {
+		shift %= 64;
+		uint64_t rotated_bits = (operand >> shift) | (operand << (64 - shift));
+        return rotated_bits;
+	}
+}

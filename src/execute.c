@@ -73,12 +73,13 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 		}
 
 		case 5: { //wide move
-			int shift = 16 * ((instr >> 21) & 0x3); //logical shift left by 16 * bits 21-22
+			int hw = ((instr >> 21) & 0x3);
 			
-			if (width == 32 && shift > 1) {
+			if (width == 32 && hw > 1) {
 				fprintf(stderr, "Invalid shift for 32 bit");
 				return 1;
 			}
+			int shift = 16 * hw;
 
 			uint64_t imm = ((instr >> 5) & 0xffff) << shift; // shifted immediate value
 			switch(opc){
@@ -162,23 +163,23 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 	//perform shift
 	if(type != 24) {
-		/*
-		switch(opr & 0x6){ //shift rm bits
+		
+		switch((opr >> 1) & 0x3){ //shift rm bits
 			case 0: //lsl
-				op2 = logical_shift_left(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = logical_shift_left(armv8, op2, operand, width); //defined in modify-regs.c 
 				break;
 
 			case 1: //lsr
-				op2 = logical_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = logical_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
 				break;
 
 			case 2: //asr
-				op2 = arithmetic_shift_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+				op2 = arithmetic_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
 				break;
 
 			case 3: //ror
 				if (type < 8) {
-					op2 = rotate_right(armv8, op2, operand, width); //to be defined in modify-regs.c (see declaration in header)
+					op2 = rotate_right(armv8, op2, operand, width); //defined in modify-regs.c
 				} else {
 					fprintf(stderr, "Unknown shift type for arithmetic instructions");
 					return 1;
@@ -188,7 +189,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			default: 
 			        fprintf(stderr, "Unknown shift type");
 				return 1;
-		}*/
+		}
 		
 	}
 
