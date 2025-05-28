@@ -7,6 +7,7 @@
 #include "modify-regs.h"
 #include "armv8.h"
 #include <limits.h>
+#include <assert.h>
 
 //TODO: Make it explicitly handle 32/64 bit width in the best way possible
 
@@ -309,6 +310,40 @@ void store(int instr, armv8_state *armv8){
 	int rt = instr & 0x1f; //target register, contains data to store
 	int base = (instr >> 5) & 0x1f; //base register Xn
 	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
+	
+	assert(mode >= 0 && mode <= 3);
+	switch(mode){
+		case 0: //unsigned offset
+			switch (width){
+				case 32:
+					transferAddress = base + 4*((instr >> 10) & 0x0fff);
+					break;
+
+				case 64:
+					transferAddress = base + 8*((instr >> 10) & 0x0fff);
+					break;
+			}
+			break;
+
+		case 1: //register offset
+			break;
+
+		case 2: //pre-index
+			break;
+
+		case 3: //post-index
+			break;
+	}
+
+	switch(width){
+		case 32:
+			read_reg32(armv8, rt, transferAddress);
+			break;
+
+		case 64:
+			read_reg64(armv8, rt, transferAddress);
+			break;
+	}
 }
 
 // Input: integer representing an instruction 
