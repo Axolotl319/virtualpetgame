@@ -257,7 +257,19 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
-void loadliteral(int instr, armv8_state *armv8) {}
+// Input: 32-bit instruction and pointer to armv8 state 
+// Loads an immediate value into target register 
+void loadliteral(int instr, armv8_state *armv8) {
+	unsigned int reg = instr & 0x1f; 	// Obtains the target register
+	int imm = ((instr >> 5) & 0x13)*4;	// Obtains the value to load
+	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
+	if (sf) {				// If sf == 1, 64-bit
+		write_reg64(armv8, reg, armv8->PC+imm); 
+	} else {				// Otherwise, 32-bit 
+		write_reg32(armv8, reg, armv8->PC+imm); 
+	}	
+}
+
 void datatransfer(int instr, armv8_state *armv8) {}
 
 // Input: integer representing an instruction 
