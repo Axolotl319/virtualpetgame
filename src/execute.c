@@ -321,35 +321,40 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
+static uint32_t load32bit(armv8_state *armv8, uint64_t addr) {
+	 return ((uint32_t)armv8->memory[addr])
+		| ((uint32_t)armv8->memory[addr + 1] << 8) 
+		| ((uint32_t)armv8->memory[addr + 2] << 16) 
+		| ((uint32_t)armv8->memory[addr + 3] << 24);			
+}	
+
+static uint64_t load64bit(armv8_state *armv8, uint64_t addr) {
+	return ((uint64_t)armv8->memory[addr]) 
+		| ((uint64_t)armv8->memory[addr + 1] << 8)
+		| ((uint64_t)armv8->memory[addr + 2] << 16)
+		| ((uint64_t)armv8->memory[addr + 3] << 24)
+		| ((uint64_t)armv8->memory[addr + 4] << 32)
+		| ((uint64_t)armv8->memory[addr + 5] << 40)
+		| ((uint64_t)armv8->memory[addr + 6] << 48)
+		| ((uint64_t)armv8->memory[addr + 7] << 56);		
+}
 
 //Add read/write reg checks
-static void load(armv8_state *armv8, int width, int rt, uint64_t addr){
-	
+static void load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	// uint8_t *addr = &(armv8->memory[transferAddress]); 
 	// printf("Data to write: %p\n", addr); 
  
 	switch(width){
 		case 32:
 			;
-			uint32_t data1 = 
-			       	((uint32_t)armv8->memory[addr])
-				| ((uint32_t)armv8->memory[addr + 1] << 8) 
-		 		| ((uint32_t)armv8->memory[addr + 2] << 16) 
-				| ((uint32_t)armv8->memory[addr + 3] << 24);		
+			uint32_t data1 = load32bit(armv8, addr);
 			write_reg32(armv8, rt, data1);
 			break;
 
 		case 64:
 			;
-			int64_t data2 = 
-			       	((uint64_t)armv8->memory[addr]) 
-				| ((uint64_t)armv8->memory[addr + 1] << 8)
-				| ((uint64_t)armv8->memory[addr + 2] << 16)
-				| ((uint64_t)armv8->memory[addr + 3] << 24)
-				| ((uint64_t)armv8->memory[addr + 4] << 32)
-				| ((uint64_t)armv8->memory[addr + 5] << 40)
-				| ((uint64_t)armv8->memory[addr + 6] << 48)
-				| ((uint64_t)armv8->memory[addr + 7] << 56);	
+			uint64_t data2 = load64bit(armv8, addr);
+			printf("Data to write: %lu\n", data2); 
 			write_reg64(armv8, rt, data2);
 			break;
 
@@ -395,9 +400,9 @@ void loadliteral(int instr, armv8_state *armv8) {
 	int imm = ((instr >> 5) & 0x13)*4;	// Obtains the value to load
 	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
 	if (sf) {				// If sf == 1, 64-bit
-		write_reg64(armv8, reg, armv8->PC+imm); 
+		write_reg64(armv8, reg, load64bit(armv8, armv8->PC+imm)); 
 	} else {				// Otherwise, 32-bit 
-		write_reg32(armv8, reg, armv8->PC+imm); 
+		write_reg32(armv8, reg, load32bit(armv8, armv8->PC+imm)); 
 	}	
 }
 
