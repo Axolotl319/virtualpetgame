@@ -9,41 +9,98 @@
 #include <limits.h>
 #include <assert.h>
 
-//TODO: Make it explicitly handle 32/64 bit width in the best way possible
+
+
+//Bitwise shift operations
+
+//Shifts operand to the left, inserting zeros from least significant bit.
+static uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+
+		//The operand is masked and then shifted.
+		//Return value is promoted to uint64_t to match function signature so no cast needed.
+		return ((uint32_t)(operand) << shift);
+    }
+    return operand << shift;
+}
+
+//Shifts operand to the right, inserting zeros from most significant bit.
+static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+
+		//The operand is masked and then shifted.
+		//Return value is promoted to uint64_t to match function signature so no cast needed.
+        return ((uint32_t)(operand) >> shift);
+    }
+    return operand >> shift;
+}
+
+//Operand shifted to the right and the most significant bit is copied into vacant positions.
+static uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+        uint32_t version32 = (uint32_t)operand;
+
+        //Mod shift by 32 to ensure shift value is within the valid range 
+        int32_t shifted32 = (int32_t)version32 >> (shift % 32);
+
+        // Zero-extend back to 64 bits
+        return (uint32_t)shifted32;
+    } else {
+        //Mod shift by 64 to ensure shift value is within the valid range
+		//Casting to signed int32 to ensure sign-extension on >>
+        int64_t shifted64 = (int64_t)operand >> (shift % 64);
+        return (uint64_t)(shifted64);
+    }
+}
+
+//Performs a bitwise right rotate on the operand, preserving all bits.
+static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+	if (width == 32) {
+
+		//Mod shift by 32 to ensure shift value is within the valid range 
+		shift %= 32;
+		uint32_t version32 = (uint32_t)operand;
+		uint32_t rotated_bits = (version32 >> shift) | (version32 << (32 - shift));
+		return rotated_bits;
+
+	} else {
+		//Mod shift by 63 to ensure shift value is within the valid range
+		shift %= 64;
+		uint64_t rotated_bits = (operand >> shift) | (operand << (64 - shift));
+		return rotated_bits;
+	}
+}
+
 
 // Performs arithmetic instructions
 // Takes arguments: armv8 state pointer, opcode, 1st argument, 2nd argument, bit width
-static int perform_arithmetic(armv8_state *armv8, int opcode, int arg1, int arg2, int width){
+// Returns 64 bit result
+static uint64_t perform_arithmetic(armv8_state *armv8, int opcode, unsigned int arg1, unsigned int arg2, int width){
 	uint64_t result = UINT64_MAX;
 
-
 	switch(opcode){
-		case 0: { //add
+		case 0:  //add
 			result = arg1 + arg2;
 			break;
-		}
-
-		case 1: { //adds
+		
+		case 1:  //adds
 			result = arg1 + arg2;
 			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_ADD, width);
 			break;
-		}
 
-		case 2: { //sub
+		case 2:  //sub
 			result = arg1 - arg2;
 			break;
-		}
 
-		case 3: { //subs
+		case 3:  //subs
 			result = arg1 - arg2;
 			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_SUB, width);
 			break;
-		}
 
-		default: {
-			perror("Error. Unknown arithmetic opcode.");
+		default: 
+			fprintf(stderr, "Error. Unknown arithmetic opcode.");
+			return 1;
 			break;
-		}
 	}
 	return result;
 }
@@ -65,41 +122,35 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
 			
 			//performs arithmetic based on bit width
-			uint32_t val32;
-			uint64_t val64;
+			uint64_t op = 0;
+			int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op) : read_reg64(armv8, rn, &op);
+		        if (status) return 1;	
 
-			if (width == 32) {
-				int status = read_reg32(armv8, rn, &val32);
-				if (status) return 1;
-				result = perform_arithmetic(armv8, opc, val32, (uint32_t) imm, width);
-			} else {
-				int status = read_reg64(armv8, rn, &val64);
-				if (status) return 1;
-				result = perform_arithmetic(armv8, opc, val64, imm, width);
-			}
+			result = (width == 32) ? 
+				perform_arithmetic(armv8, opc, (uint32_t) op, (uint32_t) imm, width) :
+				perform_arithmetic(armv8, opc, op, imm, width);
 
 			break;
 		}
 
 		case 5: { //wide move
-			int shift = 16 * ((instr >> 21) & 0x3); //logical shift left by 16 * bits 21-22
+			int hw = ((instr >> 21) & 0x3);
 			
-			if (width == 32 && shift > 1) {
+			if (width == 32 && hw > 1) {
 				fprintf(stderr, "Invalid shift for 32 bit");
 				return 1;
 			}
+			int shift = 16 * hw;
 
-			uint64_t imm = ((instr >> 5) & 0xffff) << shift; // shifted immediate value
+			uint64_t imm = ((uint64_t)((instr >> 5) & 0xffff)) << shift; // shifted immediate value
 			switch(opc){
-				case 0: { //move wide with NOT
+				case 0: //move wide with NOT
 					result = ~(imm);
 					break;
-				}
-
-				case 2: { //move wide with zero
+				
+				case 2: //move wide with zero
 					result = imm;
 					break;
-				}
 
 				case 3: { //move wide with keep
 					
@@ -113,10 +164,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 					break;
 				}
 
-				default: {
+				default:
 					fprintf(stderr, "Unknown OPC for wide move instruction.");
 					return 1;
-				}
 			}
 			break;
 		}
@@ -127,7 +177,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			break;
 		}
 	}
-
+	
+	// If destination is 0 register, do not write. 
+	if (rd == 0x1f) return 0;
 
 	if(width == 32){ //32-bit
 		return write_reg32(armv8, rd, result);
@@ -137,6 +189,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
+
 int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int opr = (instr >> 21) & 0xf; //opr = bits 21-24 of instruction
 	unsigned int type = opr | (((instr >> 28) & 0x1) << 3); //M-opr: type of instruction (M = bit 28)
@@ -145,122 +198,105 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rn = (instr >> 5) & 0x1f; //register operand
 	unsigned int rm = (instr >> 16) & 0x1f; //register that shift is performed on
 	unsigned int opc = (instr >> 29) & 0x3; //opcode
-	uint64_t op1; //first operand
-	uint64_t op2; //second operand
+	uint64_t op1 = 0; //first operand
+	uint64_t op2 = 0; //second operand
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	uint64_t result;
-
+	
 	//check that operand is in the valid range
 	if (operand > 63 || (type != 24 && (width == 32 && operand > 31))) {
 		fprintf(stderr, "Invalid operand");
 		return 1;
 	}
 
-	//reads register rn into op1
-	int status = read_reg64(armv8, rn, &op1);
-        if (status) return 1;
+	//reads register rn into op1, if rn is not ZR
+	if (rn != 0x1f) {
+		int status = (width == 32) ? read_reg32(armv8, rn, (uint32_t *)&op1) : read_reg64(armv8, rn, &op1);	
+        	if (status) return 1;
+	}
 
-	//reads register rm into op2
-        status = read_reg64(armv8, rm, &op2);
-        if (status) return 1;
+	//reads register rm into op2, if rm is not ZR
+	if (rm != 0x1f) {
+		int status = (width == 32) ? read_reg32(armv8, rm, (uint32_t *)&op2) : read_reg64(armv8, rm, &op2);
+        	if (status) return 1;
+	}
+
+	//perform shift
+	if(type != 24) {
+		
+		switch((opr >> 1) & 0x3){ //shift rm bits
+			case 0: //lsl
+				op2 = logical_shift_left(armv8, op2, operand, width); //defined in modify-regs.c 
+				break;
+
+			case 1: //lsr
+				op2 = logical_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
+				break;
+
+			case 2: //asr
+				op2 = arithmetic_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
+				break;
+
+			case 3: //ror
+				if (type < 8) {
+					op2 = rotate_right(armv8, op2, operand, width); //defined in modify-regs.c
+				} else {
+					fprintf(stderr, "Unknown shift type for arithmetic instructions");
+					return 1;
+				}
+				break;
+			
+			default: 
+			        fprintf(stderr, "Unknown shift type");
+				return 1;
+		}
+		
+	}
 
 	if(type < 8){
 		//logical
 		bool negate = opr & 0x1;
-		/*
-		switch(opr & 0x6){ //shift rm bits
-			case 0: { //lsl
-				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-
-			case 1: { //lsr
-				op2 = logical_shift_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-
-			case 2: { //asr
-				op2 = arithmetic_shift_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-
-			case 3: { //ror
-				op2 = rotate_right(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-			
-			default: {
-			        fprintf(stderr, "Unknown shift type");
-				return 1;
-			}
-		}
-		*/
-			
+		
 		if(negate){
 			op2 = ~op2;
 		}
 
 		switch(opc){ //specifies operation
-			case 0: { //and
+			case 0: //and
 				result = op1 & op2;
 				break;
-			}
 
-			case 1: { //or
+			case 1: //or
 				result = op1 | op2;
 				break;
-			}
 
-			case 2: { //xor
+			case 2: //xor
 				result = op1 ^ op2;
 				break;
-			}
 
-			case 3: { //and, set flags
+			case 3: //and, set flags
 				result = op1 & op2;
 				update_pstate(&armv8->PSTATE, op1, op2, result, OP_LOGIC, width);
 				break;
-			}
 		}
 
-	}else if(type < 16 && type % 2 == 0){
+	}else if(type < 16 && type % 2 == 0){ 
 		//arithmetic 
-		/*
-		switch(opr & 0x6){ //shift bits
-			case 0: { //lsl
-				op2 = logical_shift_left(armv8, rm, operand, width); //to be defined in modify-regs.c (see declaration in header)
-				break;
-			}
-
-			case 1: { //lsr
-				op2 = logical_shift_right(armv8, rm, operand, width);
-				break;
-			}
-
-			case 2: { //asr
-				op2 = arithmetic_shift_right(armv8, rm, operand, width);
-				break;
-			}
-
-			default: {
-				fprintf(stderr, "Unknown shift type for arithmetic dpr instruction.");
-				return 1;
-				break;
-			}
-		}
-		*/
-
-		result = perform_arithmetic(armv8, opc, op1, op2, width); 
+			result = (width == 32) ?
+		        perform_arithmetic(armv8, opc, (uint32_t) op1, (uint32_t) op2, width) :	
+			perform_arithmetic(armv8, opc, op1, op2, width); 
 					    
 	}else if(type == 24){
 		//multiply
 		bool negate = (operand >> 6) & 0x1; //madd if 0/false, msub if 1/true
 		unsigned int ra = operand & 0x1f;
 
-		//read in ra register
-		uint64_t op3;
-		status = read_reg64(armv8, ra, &op3);
-		if (status) return 1;
+		//read in ra register, if ra is not ZR
+		uint64_t op3 = 0;
+		if (ra != 0x1f) {
+			int status = (width == 32) ? read_reg32(armv8, ra, (uint32_t *) &op3) : read_reg64(armv8, ra, &op3);
+			if (status) return 1;
+		}
 
 		if(negate){
 			result = op3 - (op1 * op2);
@@ -272,7 +308,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		return 1;
 	}
 	
-	
+	// If zero register, do not write 
+	if (rd == 0x1f) {
+		return 0; 
+	}
+
 	if(width == 32){ 
 		return write_reg32(armv8, rd, result);
 	}else{ //64-bit
@@ -281,8 +321,9 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 }
 
+
 //Add read/write reg checks
-void load(armv8_state *armv8, int width, int rt, uint64_t addr){
+static void load(armv8_state *armv8, int width, int rt, uint64_t addr){
 	
 	// uint8_t *addr = &(armv8->memory[transferAddress]); 
 	// printf("Data to write: %p\n", addr); 
@@ -318,7 +359,7 @@ void load(armv8_state *armv8, int width, int rt, uint64_t addr){
 	}
 }
 
-void store(armv8_state *armv8, int width, int rt, uint64_t addr){
+static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	
 	switch(width){
 		case 32:
@@ -347,7 +388,19 @@ void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	}
 }
 
-void loadliteral(int instr, armv8_state *armv8) {}
+// Input: 32-bit instruction and pointer to armv8 state 
+// Loads an immediate value into target register 
+void loadliteral(int instr, armv8_state *armv8) {
+	unsigned int reg = instr & 0x1f; 	// Obtains the target register
+	int imm = ((instr >> 5) & 0x13)*4;	// Obtains the value to load
+	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
+	if (sf) {				// If sf == 1, 64-bit
+		write_reg64(armv8, reg, armv8->PC+imm); 
+	} else {				// Otherwise, 32-bit 
+		write_reg32(armv8, reg, armv8->PC+imm); 
+	}	
+}
+
 void datatransfer(int instr, armv8_state *armv8) {
 
 	int mode; //represents addressing mode
@@ -432,7 +485,10 @@ void datatransfer(int instr, armv8_state *armv8) {
 
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 
-void branch(int instr, armv8_state *armv8) {
+// Returns 1 if branch success and condition met 
+// Returns 0 if success but condition not met 
+// Returns -1 in case of failure 
+int branch(int instr, armv8_state *armv8) {
 	int op = instr >> 30;
         int64_t offset = 0; 
 	int cond = 0; 	
@@ -444,6 +500,7 @@ void branch(int instr, armv8_state *armv8) {
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
 			setPC(armv8, armv8->PC + offset); 
+			return 1; 
 			break; 
 
 	// Conditional 
@@ -456,40 +513,49 @@ void branch(int instr, armv8_state *armv8) {
 				case 0: 
 					if (armv8->PSTATE.Z == true) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1;
 					}
 					break; 
 				case 1: 
 					if (armv8->PSTATE.Z == false) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 10: 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 11: 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 12: 
 					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 13: 
 					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 14: 
 					setPC(armv8, armv8->PC + offset); 
+					return 1; 
 					break; 
 				default: 
 					printf("Invalid condition code in branch.");
+					return -1; 
 					break; 
 			}
+			return 0; 
 			break; 
 	// Unconditional (register)
 		case 3: 
@@ -497,9 +563,12 @@ void branch(int instr, armv8_state *armv8) {
 		        // 0x1f is the zero register, does not need to be handled
 			if (reg != 0x1f && read_reg64(armv8, reg, &addr) == 0) {
 				setPC(armv8, addr);
+				return 1; 
 			}
 			break; 	
 		default: 
 			printf("Invalid branch instruction.");
+			return -1; 
 	} 
+	return 0; 
 }

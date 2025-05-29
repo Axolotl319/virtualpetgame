@@ -25,7 +25,7 @@ int read_reg32(armv8_state *armv8, int reg_num, uint32_t *data) {
 	}
 	
 	//Sets upper 32 bits to 0
-	*data = ((uint32_t)(armv8->GP_regs[reg_num] && 0xffffffff));
+	*data = ((uint32_t)(armv8->GP_regs[reg_num] & 0xffffffff));
 	return 0;
 }
 
@@ -137,6 +137,5 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 
 	}
 }
-
 
 
