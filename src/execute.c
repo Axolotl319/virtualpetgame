@@ -51,9 +51,6 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rd = instr & 0x1f; //Destination register
 	uint64_t result;
 
-	//Handle Zero register
-	if (rd == 0x1f) return 0;
-
 	switch(opi){
 		case 2: { //arithmetic
 			unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
@@ -116,7 +113,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			break;
 		}
 	}
-
+	
+	// If destination is 0 register, do not write. 
+	if (rd == 0x1f) return 0;
 
 	if(width == 32){ //32-bit
 		return write_reg32(armv8, rd, result);
@@ -140,9 +139,6 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	uint64_t result;
 	
-	//Handles destination register being ZR
-	if (rd == 0x1f) return 0;
-
 	//check that operand is in the valid range
 	if (operand > 63 || (type != 24 && (width == 32 && operand > 31))) {
 		fprintf(stderr, "Invalid operand");
@@ -220,7 +216,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 				break;
 		}
 
-	}else if(type < 16 && type % 2 == 0){
+	}else if(type < 16 && type % 2 == 0){ 
 		//arithmetic 
 			result = (width == 32) ?
 		        perform_arithmetic(armv8, opc, (uint32_t) op1, (uint32_t) op2, width) :	
@@ -248,7 +244,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		return 1;
 	}
 	
-	
+	// If zero register, do not write 
+	if (rd == 0x1f) {
+		return 0; 
+	}
+
 	if(width == 32){ 
 		return write_reg32(armv8, rd, result);
 	}else{ //64-bit
