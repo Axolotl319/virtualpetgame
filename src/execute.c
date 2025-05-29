@@ -274,7 +274,10 @@ void datatransfer(int instr, armv8_state *armv8) {}
 
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 
-void branch(int instr, armv8_state *armv8) {
+// Returns 1 if branch success and condition met 
+// Returns 0 if success but condition not met 
+// Returns -1 in case of failure 
+int branch(int instr, armv8_state *armv8) {
 	int op = instr >> 30;
         int64_t offset = 0; 
 	int cond = 0; 	
@@ -286,6 +289,7 @@ void branch(int instr, armv8_state *armv8) {
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
 			setPC(armv8, armv8->PC + offset); 
+			return 1; 
 			break; 
 
 	// Conditional 
@@ -298,40 +302,49 @@ void branch(int instr, armv8_state *armv8) {
 				case 0: 
 					if (armv8->PSTATE.Z == true) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1;
 					}
 					break; 
 				case 1: 
 					if (armv8->PSTATE.Z == false) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 10: 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 11: 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 12: 
 					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 13: 
 					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 14: 
 					setPC(armv8, armv8->PC + offset); 
+					return 1; 
 					break; 
 				default: 
 					printf("Invalid condition code in branch.");
+					return -1; 
 					break; 
 			}
+			return 0; 
 			break; 
 	// Unconditional (register)
 		case 3: 
@@ -339,9 +352,12 @@ void branch(int instr, armv8_state *armv8) {
 		        // 0x1f is the zero register, does not need to be handled
 			if (reg != 0x1f && read_reg64(armv8, reg, addr) == 0) {
 				setPC(armv8, *addr);
+				return 1; 
 			}
 			break; 	
 		default: 
 			printf("Invalid branch instruction.");
+			return -1; 
 	} 
+	return 0; 
 }
