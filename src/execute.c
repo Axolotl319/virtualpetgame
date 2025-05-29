@@ -287,7 +287,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 					    
 	}else if(type == 24){
 		//multiply
-		bool negate = (operand >> 6) & 0x1; //madd if 0/false, msub if 1/true
+		bool negate = (operand >> 5) & 0x1; //madd if 0/false, msub if 1/true
 		unsigned int ra = operand & 0x1f;
 
 		//read in ra register, if ra is not ZR
