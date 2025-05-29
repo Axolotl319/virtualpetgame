@@ -114,9 +114,6 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rd = instr & 0x1f; //Destination register
 	uint64_t result;
 
-	//Handle Zero register
-	if (rd == 0x1f) return 0;
-
 	switch(opi){
 		case 2: { //arithmetic
 			unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
@@ -179,7 +176,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			break;
 		}
 	}
-
+	
+	// If destination is 0 register, do not write. 
+	if (rd == 0x1f) return 0;
 
 	if(width == 32){ //32-bit
 		return write_reg32(armv8, rd, result);
@@ -203,9 +202,6 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	uint64_t result;
 	
-	//Handles destination register being ZR
-	if (rd == 0x1f) return 0;
-
 	//check that operand is in the valid range
 	if (operand > 63 || (type != 24 && (width == 32 && operand > 31))) {
 		fprintf(stderr, "Invalid operand");
@@ -283,7 +279,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 				break;
 		}
 
-	}else if(type < 16 && type % 2 == 0){
+	}else if(type < 16 && type % 2 == 0){ 
 		//arithmetic 
 			result = (width == 32) ?
 		        perform_arithmetic(armv8, opc, (uint32_t) op1, (uint32_t) op2, width) :	
@@ -311,7 +307,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		return 1;
 	}
 	
-	
+	// If zero register, do not write 
+	if (rd == 0x1f) {
+		return 0; 
+	}
+
 	if(width == 32){ 
 		return write_reg32(armv8, rd, result);
 	}else{ //64-bit
@@ -337,7 +337,10 @@ void datatransfer(int instr, armv8_state *armv8) {}
 
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 
-void branch(int instr, armv8_state *armv8) {
+// Returns 1 if branch success and condition met 
+// Returns 0 if success but condition not met 
+// Returns -1 in case of failure 
+int branch(int instr, armv8_state *armv8) {
 	int op = instr >> 30;
         int64_t offset = 0; 
 	int cond = 0; 	
@@ -349,6 +352,7 @@ void branch(int instr, armv8_state *armv8) {
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
 			setPC(armv8, armv8->PC + offset); 
+			return 1; 
 			break; 
 
 	// Conditional 
@@ -361,40 +365,49 @@ void branch(int instr, armv8_state *armv8) {
 				case 0: 
 					if (armv8->PSTATE.Z == true) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1;
 					}
 					break; 
 				case 1: 
 					if (armv8->PSTATE.Z == false) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 10: 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 11: 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 12: 
 					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 13: 
 					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
 						setPC(armv8, armv8->PC + offset); 
+						return 1; 
 					}
 					break; 
 				case 14: 
 					setPC(armv8, armv8->PC + offset); 
+					return 1; 
 					break; 
 				default: 
 					printf("Invalid condition code in branch.");
+					return -1; 
 					break; 
 			}
+			return 0; 
 			break; 
 	// Unconditional (register)
 		case 3: 
@@ -402,9 +415,12 @@ void branch(int instr, armv8_state *armv8) {
 		        // 0x1f is the zero register, does not need to be handled
 			if (reg != 0x1f && read_reg64(armv8, reg, addr) == 0) {
 				setPC(armv8, *addr);
+				return 1; 
 			}
 			break; 	
 		default: 
 			printf("Invalid branch instruction.");
+			return -1; 
 	} 
+	return 0; 
 }

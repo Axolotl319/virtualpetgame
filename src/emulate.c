@@ -95,16 +95,19 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 			break; 
 		case 10:
 		case 11:
-			printf("This is branch.\n"); 
-			branch( result, armv8 );
-			return 2; 
+			printf("This is branch.\n");
+		        int branchStat = branch( result, armv8 ); 	
+			if (branchStat) {
+				return 2; 
+			} else if (branchStat == -1) {
+				return -1; 
+			}
 			break; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
 			return -1;
 			break; 
 	}
-
 	return 0; 
 }	
 
@@ -127,6 +130,8 @@ static int fetch(armv8_state *armv8) {
 		}
 
 		status = decode(current, armv8);
+		
+		printf("Status code: %d\n", status); 
 
 		if ( status == 1 ) { 	//HALT
 			break;
