@@ -8,6 +8,69 @@
 #include "armv8.h"
 #include <limits.h>
 
+
+
+//Bitwise shift operations
+
+//Shifts operand to the left, inserting zeros from least significant bit.
+static uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+
+		//The operand is masked and then shifted.
+		//Return value is promoted to uint64_t to match function signature so no cast needed.
+		return ((uint32_t)(operand) << shift);
+    }
+    return operand << shift;
+}
+
+//Shifts operand to the right, inserting zeros from most significant bit.
+static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+
+		//The operand is masked and then shifted.
+		//Return value is promoted to uint64_t to match function signature so no cast needed.
+        return ((uint32_t)(operand) >> shift);
+    }
+    return operand >> shift;
+}
+
+//Operand shifted to the right and the most significant bit is copied into vacant positions.
+static uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+    if (width == 32) {
+        uint32_t version32 = (uint32_t)operand;
+
+        //Mod shift by 32 to ensure shift value is within the valid range 
+        int32_t shifted32 = (int32_t)version32 >> (shift % 32);
+
+        // Zero-extend back to 64 bits
+        return (uint32_t)shifted32;
+    } else {
+        //Mod shift by 64 to ensure shift value is within the valid range
+		//Casting to signed int32 to ensure sign-extension on >>
+        int64_t shifted64 = (int64_t)operand >> (shift % 64);
+        return (uint64_t)(shifted64);
+    }
+}
+
+//Performs a bitwise right rotate on the operand, preserving all bits.
+static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
+	if (width == 32) {
+
+		//Mod shift by 32 to ensure shift value is within the valid range 
+		shift %= 32;
+		uint32_t version32 = (uint32_t)operand;
+		uint32_t rotated_bits = (version32 >> shift) | (version32 << (32 - shift));
+		return rotated_bits;
+
+	} else {
+		//Mod shift by 63 to ensure shift value is within the valid range
+		shift %= 64;
+		uint64_t rotated_bits = (operand >> shift) | (operand << (64 - shift));
+		return rotated_bits;
+	}
+}
+
+
 // Performs arithmetic instructions
 // Takes arguments: armv8 state pointer, opcode, 1st argument, 2nd argument, bit width
 // Returns 64 bit result
