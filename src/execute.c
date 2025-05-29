@@ -318,17 +318,27 @@ void load(armv8_state *armv8, int width, int rt, uint64_t addr){
 	}
 }
 
-void store(armv8_state *armv8, int width, int rt, uint64_t *transferAddress){
-	// Obtain the true memory location to which data should be stored
-	// uint64_t *addr = (uint64_t *) armv8->memory + (transferAddress / 4); 
-
+void store(armv8_state *armv8, int width, int rt, uint64_t addr){
+	
 	switch(width){
 		case 32:
-			read_reg32(armv8, rt, (uint32_t *) transferAddress);
+			;
+			uint32_t towrite1 = 0; 
+			read_reg32(armv8, rt, &towrite1);
+			for (int i=0; i<4; i++) {
+				armv8->memory[addr+i] = towrite1 & 0xf; 
+				towrite1 = towrite1 >> 4; 
+			}
 			break;
 
 		case 64:
-			read_reg64(armv8, rt, transferAddress);
+			;
+			uint64_t towrite2 = 0; 
+			read_reg64(armv8, rt, &towrite2);
+			for (int i=0; i<8; i++) {
+				armv8->memory[addr+i] = towrite2 & 0xf; 
+				towrite2 = towrite2 >> 4; 
+			}
 			break;
 
 		default:
@@ -416,7 +426,7 @@ void datatransfer(int instr, armv8_state *armv8) {
 	if((instr >> 22) & 0x1){ 
 		load(armv8, width, rt, transferAddress);
 	} else{
-		store(armv8, width, rt, &transferAddress);
+		store(armv8, width, rt, transferAddress);
 	}
 }
 
