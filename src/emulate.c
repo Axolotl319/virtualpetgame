@@ -99,11 +99,11 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 		case 11:
 			printf("This is branch.\n");
 		        int branchStat = branch( result, armv8 ); 	
-			if (branchStat) {
-				return 2; 
-			} else if (branchStat == -1) {
+			if (branchStat == -1) {
 				return -1; 
-			}
+			} else if (branchStat) {
+				return 2; 
+			} 
 			break; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");

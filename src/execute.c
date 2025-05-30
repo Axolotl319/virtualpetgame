@@ -432,7 +432,7 @@ static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 // Loads an immediate value into target register 
 void loadliteral(int instr, armv8_state *armv8) {
 	unsigned int reg = instr & 0x1f; 	// Obtains the target register
-	int imm = ((instr >> 5) & 0x13)*4;	// Obtains the value to load
+	int imm = ((instr >> 5) & 0x3ffff)*4;	// Obtains the value to load
 	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
 	if (sf) {				// If sf == 1, 64-bit
 		write_reg64(armv8, reg, load64bit(armv8, armv8->PC+imm)); 
@@ -539,7 +539,7 @@ int branch(int instr, armv8_state *armv8) {
 	// Unconditional (offset) 
 		case 0: 
 			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
-			setPC(armv8, armv8->PC + offset); 
+			if (setPC(armv8, armv8->PC + offset)) { return -1; }
 			return 1; 
 			break; 
 
@@ -552,42 +552,42 @@ int branch(int instr, armv8_state *armv8) {
 			switch(cond) {
 				case 0: 
 					if (armv8->PSTATE.Z == true) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1;
 					}
 					break; 
 				case 1: 
 					if (armv8->PSTATE.Z == false) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
 				case 10: 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
 				case 11: 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
 				case 12: 
 					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
 				case 13: 
 					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
-						setPC(armv8, armv8->PC + offset); 
+						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
 				case 14: 
-					setPC(armv8, armv8->PC + offset); 
+					if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 					return 1; 
 					break; 
 				default: 
@@ -602,7 +602,7 @@ int branch(int instr, armv8_state *armv8) {
 			reg = (instr >> 5) & 0x1f; 
 		        // 0x1f is the zero register, does not need to be handled
 			if (reg != 0x1f && read_reg64(armv8, reg, &addr) == 0) {
-				setPC(armv8, addr);
+				if (setPC(armv8, (unsigned int)addr)) { return -1; }
 				return 1; 
 			}
 			break; 	
