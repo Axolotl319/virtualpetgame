@@ -85,13 +85,15 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 		case 6:
 		case 12: 
 		case 14: 
-			printf("This is single data transfer.\n"); 
-			int temp = 0xf & (result >> 31); 
-			if (temp) {
+		       	;		
+			int type = 0x1 & (result >> 31); 	
+			if (type) { 
+				printf("This is a load/store with offset (sdt).\n"); 
 				datatransfer( result, armv8 ); 
 			} else {
+				printf("This is a load literal (sdt).\n"); 
 				loadliteral( result, armv8 ); 
-			}
+			} 
 			break; 
 		case 10:
 		case 11:
