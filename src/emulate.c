@@ -68,8 +68,8 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 	}
 
 	// Obtain op0 -- comments used for debugging purposes. 
-	int opzero = (result >> 25) & 0xf;
-        printf("%u ", opzero);	
+	unsigned int opzero = (result >> 25) & 0xf;
+        printf("Opcode: %u\n", opzero);	
 	switch (opzero) {
 		case 8:
 		case 9:

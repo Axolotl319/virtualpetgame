@@ -494,7 +494,7 @@ void datatransfer(int instr, armv8_state *armv8) {
 // Returns 0 if success but condition not met 
 // Returns -1 in case of failure 
 int branch(int instr, armv8_state *armv8) {
-	int op = instr >> 30;
+	unsigned int op = (instr >> 30) & 0x3;
         int64_t offset = 0; 
 	int cond = 0; 	
 	unsigned int reg = 0; 
