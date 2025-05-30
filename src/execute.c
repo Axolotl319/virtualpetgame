@@ -191,7 +191,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int opr = (instr >> 21) & 0xf; //opr = bits 21-24 of instruction
-	unsigned int type = opr | (((instr >> 28) & 0x1) << 3); //M-opr: type of instruction (M = bit 28)
+	unsigned int type = opr | (((instr >> 28) & 0x1) << 4); //M-opr: type of instruction (M = bit 28)
 	unsigned int operand = (instr >> 10) & 0x3f; //last operand
 	unsigned int rd = instr & 0x1f; //destination register
 	unsigned int rn = (instr >> 5) & 0x1f; //register operand
@@ -223,22 +223,22 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	//perform shift
 	if(type != 24) {
 		
-		switch((opr >> 1) & 0x3){ //shift rm bits
+		switch((opr >> 1) & 0x3){ //shift op2 bits
 			case 0: //lsl
 				op2 = logical_shift_left(armv8, op2, operand, width); //defined in modify-regs.c 
 				break;
 
 			case 1: //lsr
-				op2 = logical_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
+				op2 = logical_shift_right(armv8, op2, operand, width);
 				break;
 
 			case 2: //asr
-				op2 = arithmetic_shift_right(armv8, op2, operand, width); //defined in modify-regs.c
+				op2 = arithmetic_shift_right(armv8, op2, operand, width);
 				break;
 
 			case 3: //ror
 				if (type < 8) {
-					op2 = rotate_right(armv8, op2, operand, width); //defined in modify-regs.c
+					op2 = rotate_right(armv8, op2, operand, width);
 				} else {
 					fprintf(stderr, "Unknown shift type for arithmetic instructions");
 					return 1;
