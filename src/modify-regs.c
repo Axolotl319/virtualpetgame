@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "modify-regs.h"
 #include "armv8.h"
-
+#include "modify-regs.h"
 
 //checks if registers are in bounds - returns 1 if they aren't
 static int check_reg_bounds(int reg_num) {
@@ -18,7 +17,7 @@ static int check_reg_bounds(int reg_num) {
 //Takes arguments: armv8 state pointer, register number, 32 bit int pointer to store data
 //Reads to the data pointer 
 //Returns 1 if failure, 0 if success
-int read_reg32(armv8_state *armv8, int reg_num, uint32_t *data) {
+int read_reg32(armv8_state *armv8, int reg_num, int32_t *data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
@@ -32,7 +31,7 @@ int read_reg32(armv8_state *armv8, int reg_num, uint32_t *data) {
 //Write
 //Takes arguments armv8 state pointer, register number, 64 bit data to write
 //Returns 1 if failure, 0 if success
-int write_reg32(armv8_state *armv8, int reg_num, uint64_t data) {
+int write_reg32(armv8_state *armv8, int reg_num, int64_t data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
@@ -47,7 +46,7 @@ int write_reg32(armv8_state *armv8, int reg_num, uint64_t data) {
 
 //Read
 //Arguments same as 32 bit
-int read_reg64(armv8_state *armv8, int reg_num, uint64_t *data) {
+int read_reg64(armv8_state *armv8, int reg_num, int64_t *data) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
@@ -58,7 +57,8 @@ int read_reg64(armv8_state *armv8, int reg_num, uint64_t *data) {
 
 //Write 
 //Arguments same as 32 bit
-int write_reg64(armv8_state *armv8, int reg_num, uint64_t data) {
+int write_reg64(armv8_state *armv8, int reg_num, int64_t data) {
+	printf("64-bit data to write: %ld\n", data); 
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
