@@ -397,15 +397,17 @@ static void load(armv8_state *armv8, int width, int rt, uint64_t addr){
 }
 
 static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
-	
+	printf("Address to write to: %lx\n", addr); 
 	switch(width){
 		case 32:
 			;
-			int32_t towrite1 = 0; 
+			int32_t towrite1 = 0;	
 			read_reg32(armv8, rt, &towrite1);
+			printf("Data to store: %x\n", towrite1); 
 			for (int i=0; i<4; i++) {
-				armv8->memory[addr+i] = towrite1 & 0xf; 
-				towrite1 = towrite1 >> 4; 
+				armv8->memory[addr+i] = towrite1 & 0xff; 
+				towrite1 = towrite1 >> 8;
+			        printf("Remaining bytes to write: %x\n", towrite1); 	
 			}
 			break;
 
@@ -413,9 +415,10 @@ static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 			;
 			int64_t towrite2 = 0; 
 			read_reg64(armv8, rt, &towrite2);
+			printf("Data to store: %lx\n", towrite2); 
 			for (int i=0; i<8; i++) {
-				armv8->memory[addr+i] = towrite2 & 0xf; 
-				towrite2 = towrite2 >> 4; 
+				armv8->memory[addr+i] = towrite2 & 0xff; 
+				towrite2 = towrite2 >> 8; 
 			}
 			break;
 
@@ -455,7 +458,7 @@ void datatransfer(int instr, armv8_state *armv8) {
 	int rt = instr & 0x1f; //target register, contains data to store
 	int xn = (instr >> 5) & 0x1f; //base register Xn
 	read_reg64(armv8, xn, &transferAddress);  // Store base in transferAddress 
-	int width = ((instr >> 30) & 0x1f) ? 64 : 32;
+	int width = ((instr >> 30) & 0x1) ? 64 : 32;
 	
 	// Pre-calculated for unsigned offset
 	unsigned int offset = (instr >> 10) & 0x0fff; 
