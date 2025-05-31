@@ -371,6 +371,14 @@ static uint64_t load64bit(armv8_state *armv8, uint64_t addr) {
 		| ((uint64_t)armv8->memory[addr + 7] << 56);		
 }
 
+static int32_t sign_ext_32(int num, int msb_num) { 
+	if (num >> (msb_num-1)) {
+		printf("Resulting calculation: %08x\n", num | (0xffffffff << msb_num)); 
+		return num | (0xffffffff << msb_num);
+	}
+	return num;
+}
+
 //Add read/write reg checks
 static void load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	// uint8_t *addr = &(armv8->memory[transferAddress]); 
@@ -432,7 +440,7 @@ static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 // Loads an immediate value into target register 
 void loadliteral(int instr, armv8_state *armv8) {
 	unsigned int reg = instr & 0x1f; 	// Obtains the target register
-	int imm = ((instr >> 5) & 0x3ffff)*4;	// Obtains the value to load
+	int imm = sign_ext_32((instr >> 5) & 0x3ffff, 18)*4;	// Obtains the value to load
 	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
 	if (sf) {				// If sf == 1, 64-bit
 		write_reg64(armv8, reg, load64bit(armv8, armv8->PC+imm)); 
@@ -530,7 +538,7 @@ void datatransfer(int instr, armv8_state *armv8) {
 // Returns -1 in case of failure 
 int branch(int instr, armv8_state *armv8) {
 	unsigned int op = (instr >> 30) & 0x3;
-        int64_t offset = 0; 
+        int32_t offset = 0; 
 	int cond = 0; 	
 	unsigned int reg = 0; 
 	int64_t addr = 0; 
@@ -538,7 +546,7 @@ int branch(int instr, armv8_state *armv8) {
 
 	// Unconditional (offset) 
 		case 0: 
-			offset = (instr & 0x3ffffff)*4; // Mask bits 26 onwards 
+			offset = (sign_ext_32(instr & 0x2ffffff, 25))*4; // Mask bits 26 onwards 
 			if (setPC(armv8, armv8->PC + offset)) { return -1; }
 			return 1; 
 			break; 
@@ -546,8 +554,8 @@ int branch(int instr, armv8_state *armv8) {
 	// Conditional 
 		case 1: 
 			cond = instr & 0xf;
-			offset = ((instr >> 5) & 0x7ffff)*4; // Mask bits 20 onwards 
-			
+			offset = (sign_ext_32((instr >> 5) & 0x3ffff, 18))*4; // Mask bits 20 onwards 
+			printf("This is the offset calculated: %08x\n", offset); 
 			// Determines which PSTATE flag to check
 			switch(cond) {
 				case 0: 
