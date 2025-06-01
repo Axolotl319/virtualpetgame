@@ -10,9 +10,10 @@ CFLAGS  ?= -std=c17 -g\
 all: assemble emulate
 
 assemble: assemble.o
-emulate: emulate.o execute.o modify-regs.o
+emulate: emulate.o data-processing.o execute.o modify-regs.o
 
 emulate.o: emulate.c armv8.h
+data-processing.o: data-processing.c armv8.h
 execute.o: execute.c armv8.h
 modify-regs.o: modify-regs.c armv8.h
 

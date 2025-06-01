@@ -5,6 +5,7 @@
 #include <string.h>
 #include "armv8.h" 
 #include "modify-regs.h"
+#include "data-processing.h"
 #include "execute.h"
 
 static size_t num_bytes_read = 0; 
