@@ -7,9 +7,6 @@
 #include "sign-extension.h"
 #include "branch.h"
 #include "modify-regs.h"
-#include <limits.h>
-#include <assert.h>
-
 
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 

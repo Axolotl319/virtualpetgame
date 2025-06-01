@@ -1,6 +1,3 @@
-#ifndef ARMV8_H
-#define ARMV8_H
-
 #define NUM_GP_REGS 31 //general purpose registers
 #define MEM_SIZE (1 << 21)   // ARMv8 has 2MB memory
 #define WORD_SIZE 4        // 1 word = 4 bytes
@@ -20,6 +17,4 @@ typedef struct State {
 	uint64_t PC; //Program Counter
 	pstate PSTATE; //PSTATE struct
 } armv8_state;
-
-#endif 
 
