@@ -34,31 +34,24 @@ static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int sh
 
 //Operand shifted to the right and the most significant bit is copied into vacant positions.
 static int64_t arithmetic_shift_right(armv8_state *armv8, int64_t operand, int shift, int width) { 
-    	if (width == 32) {
-        	//Mod shift by 32 to ensure shift value is within the valid range 
-        	int32_t shifted32 = ((int32_t)operand) >> (shift % 32);
-
+    	if (width == 32) { 
+        	int32_t shifted32 = ((int32_t)operand) >> shift;
         	// Zero-extend back to 64 bits
 		return (uint64_t)shifted32;
     	} else {
-        	//Mod shift by 64 to ensure shift value is within the valid range
 		//Casting to signed int32 to ensure sign-extension on >>
-        	int64_t shifted64 = operand >> (shift % 64); 
+        	int64_t shifted64 = operand >> shift; 
 		return (shifted64);
     	}
 }
 
 static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
 	if (width == 32) {
-		//Mod shift by 32 to ensure shift value is within the valid range
-		shift %= 32;
 		uint32_t version32 = (uint32_t)operand;
 		uint32_t rotated_bits = (version32 >> shift) | (version32 << (32 - shift));
 		return rotated_bits;
 
 	} else {
-		//Mod shift by 63 to ensure shift value is within the valid range
-		shift %= 64;
 		uint64_t rotated_bits = (operand >> shift) | (operand << (64 - shift));
 		return rotated_bits;
 	}
@@ -249,7 +242,14 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 
 	//perform shift
-	if(type != 24) { 
+	if(type != 24) {
+		
+		//Checks if the shift amount is within the valid range
+		if (operand < 0 || operand > width - 1) {
+			fprintf(stderr, "Invalid shift amount");
+			return 1;
+		}
+
 		switch((opr >> 1) & 0x3){ //shift operand bits
 			case 0: //lsl
 				op2 = logical_shift_left(armv8, op2, operand, width); //defined in modify-regs.c 
@@ -301,6 +301,10 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 				result = op1 & op2;
 				update_pstate(&armv8->PSTATE, op1, op2, result, OP_LOGIC, width);
 				break;
+
+			default: 
+				fprintf(stderr, "Invalid operation code for logical dp operation");
+				return 1;
 		}
 
 	}else if(type < 16 && type % 2 == 0){ 
