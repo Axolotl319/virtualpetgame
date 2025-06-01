@@ -10,22 +10,41 @@
 #include <limits.h>
 #include <assert.h>
 
-static uint32_t load32bit(armv8_state *armv8, uint64_t addr) {
-	 return ((uint32_t)armv8->memory[addr])
+//Loads value from memory
+//Takes arguments: armv8 pointer, mem address, data pointer
+//Returns 0 if success, 1 if failure
+static int load32bit(armv8_state *armv8, uint64_t addr, uint32_t *data) {
+	 //Bounds checking
+	 if (addr + 3 >= MEM_SIZE) {
+		 fprintf(stderr, "Invalid memory address for load instruction");
+		 return 1;
+	 }
+
+	 *data = ((uint32_t)armv8->memory[addr])
 		| ((uint32_t)armv8->memory[addr + 1] << 8) 
 		| ((uint32_t)armv8->memory[addr + 2] << 16) 
-		| ((uint32_t)armv8->memory[addr + 3] << 24);			
+		| ((uint32_t)armv8->memory[addr + 3] << 24);	
+	
+	 return 0;	 
 }	
 
-static uint64_t load64bit(armv8_state *armv8, uint64_t addr) {
-	return ((uint64_t)armv8->memory[addr]) 
+static int load64bit(armv8_state *armv8, uint64_t addr, uint64_t *data) {
+	//Bounds checking
+	if (addr + 7 >= MEM_SIZE) {
+		fprintf(stderr, "Invalid memory addresss for load instruction");
+		return 1;
+	}
+	
+	*data = ((uint64_t)armv8->memory[addr]) 
 		| ((uint64_t)armv8->memory[addr + 1] << 8)
 		| ((uint64_t)armv8->memory[addr + 2] << 16)
 		| ((uint64_t)armv8->memory[addr + 3] << 24)
 		| ((uint64_t)armv8->memory[addr + 4] << 32)
 		| ((uint64_t)armv8->memory[addr + 5] << 40)
 		| ((uint64_t)armv8->memory[addr + 6] << 48)
-		| ((uint64_t)armv8->memory[addr + 7] << 56);		
+		| ((uint64_t)armv8->memory[addr + 7] << 56);
+	
+	return 0;	
 }
 
 //Add read/write reg checks
@@ -35,9 +54,15 @@ static int load(armv8_state *armv8, int width, int rt, uint64_t addr){
 	uint64_t data;
 
 	if (width == 32) {
-		data = load32bit(armv8, addr);
+		if (load32bit(armv8, addr, (uint32_t *)&data)) { 
+			return 1;
+		}
+
 	} else if (width == 64) {
-		data = load64bit(armv8, addr);
+		if (load64bit(armv8, addr, &data)) { 
+			return 1; 
+		}
+
 	} else {
 		fprintf(stderr, "Width must be 32 or 64 (load instruction)");
 		return 1;
@@ -49,7 +74,6 @@ static int load(armv8_state *armv8, int width, int rt, uint64_t addr){
 }
 
 static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
-        //int32_t towrite1;
 	uint64_t towrite;
 	int word_limit;
 
@@ -61,6 +85,11 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 		fprintf(stderr, "Width must be 32 or 64 (store instruction)");
 		return 1;
 	}
+
+	//bounds checking
+	if (addr + word_limit > MEM_SIZE) { 
+		return 1; 
+	}
 	
 	if (read_reg(armv8, rt, &towrite, width)) { return 1; }
 
@@ -68,32 +97,6 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 		armv8->memory[addr+i] = towrite & 0xff;
 		towrite = towrite >> 8;
 	}
-
-	/*switch(width){
-		case 32:
-			if (read_reg32(armv8, rt, &towrite1)) { return 1; }
-
-			for (int i=0; i<4; i++) {
-				armv8->memory[addr+i] = towrite1 & 0xff; 
-				towrite1 = towrite1 >> 8;
-			}
-
-			break;
-
-		case 64:
-			if (read_reg64(armv8, rt, &towrite2)) { return 1; }
-
-			for (int i=0; i<8; i++) {
-				armv8->memory[addr+i] = towrite2 & 0xff; 
-				towrite2 = towrite2 >> 8; 
-			}
-
-			break;
-
-		default:
-			fprintf(stderr, "Width must be 32 or 64 (store instruction)");
-			break;
-	}*/
 	return 0;
 }
 
@@ -105,13 +108,13 @@ int loadliteral(int instr, armv8_state *armv8) {
 	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
 	
 	int width;
-	int64_t data;
+	uint64_t data;
 	if (sf) {
 		width = 64;
-		data = load64bit(armv8, armv8->PC+imm);
+		if (load64bit(armv8, armv8->PC+imm, &data)) { return 1; }
 	} else {
 		width = 32;
-		data = load32bit(armv8, armv8->PC+imm);
+		if (load32bit(armv8, armv8->PC+imm, (uint32_t *) &data)) { return 1; }
 	}
 
 	if (write_reg(armv8, reg, data, width)) { return 1; }
