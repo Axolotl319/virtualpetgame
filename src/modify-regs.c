@@ -26,28 +26,23 @@ int write_reg(armv8_state *armv8, int reg_num, int64_t data, int width) {
 	return 0;
 }
 
-//Read GP Register
-//Takes arguments: armv8 state pointer, register number, 32 bit int pointer to store data
-//Reads to the data pointer 
-//Returns 1 if failure, 0 if success
-int read_reg32(armv8_state *armv8, int reg_num, int32_t *data) {
+//Reads GP register
+//Takes arguments: armv8 state pointer, register number, 64 bit int pointer for data, register width 
+int read_reg(armv8_state *armv8, int reg_num, int64_t *data, int width) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
 	}
+
+	int64_t raw_data = armv8->GP_regs[reg_num];
+
+	//Sets upper 32 bits to 0 if width is 32
+	*data = (width == 32) ? 
+		(int64_t)((uint32_t)raw_data) :
+		(raw_data);
 	
 	//Sets upper 32 bits to 0
-	*data = ((uint32_t)(armv8->GP_regs[reg_num] & 0xffffffff));
-	return 0;
-}
-
-//Arguments same as 32 bit
-int read_reg64(armv8_state *armv8, int reg_num, int64_t *data) {
-	if (check_reg_bounds(reg_num)) {
-		fprintf(stderr, "Register out of bounds\n");
-		return 1;
-	}
-	*data = armv8->GP_regs[reg_num];
+	//*data = ((uint32_t)(armv8->GP_regs[reg_num] & 0xffffffff));
 	return 0;
 }
 

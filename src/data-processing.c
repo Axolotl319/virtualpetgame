@@ -135,7 +135,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
 	unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
 	int64_t op = 0;
-	int status = 0;
+	//int status = 0;
 
 	//variables for wide move
 	int hw = ((instr >> 21) & 0x3);
@@ -143,8 +143,9 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	switch(opi){
 		case 2: //arithmetic			
 			//performs arithmetic based on bit width
-			status = (width == 32) ? read_reg32(armv8, rn, (int32_t *)&op) : read_reg64(armv8, rn, &op);
-		        if (status) { return 1;	}
+			
+			//read in register operand
+			if (read_reg(armv8, rn, &op, width)) { return 1; }
 
 			result = (width == 32) ? 
 				perform_arithmetic32(armv8, opc, (int32_t) op, (int32_t) imm) :
@@ -174,7 +175,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 				case 3: //move wide with keep
 					//reads rd register 	
-                        		if (read_reg64(armv8, rd, &value)) { return 1; }
+                        		if (read_reg(armv8, rd, &value, 64)) { return 1; }
 
 					//Masking bits
 					result = (value) & ~((uint64_t)0xffff << shift); //set appropriate 16 bits to zero
@@ -221,14 +222,12 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 	//reads register rn into op1, if rn is not ZR
 	if (rn != 0x1f) {
-		int status = (width == 32) ? read_reg32(armv8, rn, (int32_t *)&op1) : read_reg64(armv8, rn, &op1);	
-        	if (status) { return 1; }
+		if (read_reg(armv8, rn, &op1, width)) { return 1; }
 	}
 
 	//reads register rm into op2, if rm is not ZR
 	if (rm != 0x1f) {
-		int status = (width == 32) ? read_reg32(armv8, rm, (int32_t *)&op2) : read_reg64(armv8, rm, &op2);
-        	if (status) { return 1; }
+		if (read_reg(armv8, rm, &op2, width)) { return 1; }
 	}
 
 	//perform shift
@@ -298,8 +297,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		}
 
 	}else if(type < 16 && type % 2 == 0){ 
-		//arithmetic 
-		printf("Op1: %lx, Op2: %lx\n", op1, op2); 	
+		//arithmetic 	
 		result = (width == 32) ?
 		        perform_arithmetic32(armv8, opc, (int32_t) op1, (int32_t) op2) :	
 			perform_arithmetic64(armv8, opc, op1, op2); 
@@ -312,8 +310,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		//read in ra register, if ra is not ZR
 		int64_t op3 = 0;
 		if (ra != 0x1f) {
-			int status = (width == 32) ? read_reg32(armv8, ra, (int32_t *) &op3) : read_reg64(armv8, ra, &op3);
-			if (status) { return 1; }
+			if (read_reg(armv8, ra, &op3, width)) { return 1; }
 		}
 
 		if(negate){

@@ -49,10 +49,27 @@ static int load(armv8_state *armv8, int width, int rt, uint64_t addr){
 }
 
 static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
-        int32_t towrite1;
-	int64_t towrite2;
+        //int32_t towrite1;
+	int64_t towrite;
+	int word_limit;
 
-	switch(width){
+	if (width == 32) {
+		word_limit = 4;
+	} else if (width == 64) {
+		word_limit = 8;
+	} else {
+		fprintf(stderr, "Width must be 32 or 64 (store instruction)");
+		return 1;
+	}
+	
+	if (read_reg(armv8, rt, &towrite, width)) { return 1; }
+
+	for (int i = 0; i < word_limit; i++) {
+		armv8->memory[addr+i] = towrite & 0xff;
+		towrite = towrite >> 8;
+	}
+
+	/*switch(width){
 		case 32:
 			if (read_reg32(armv8, rt, &towrite1)) { return 1; }
 
@@ -76,7 +93,7 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 		default:
 			fprintf(stderr, "Width must be 32 or 64 (store instruction)");
 			break;
-	}
+	}*/
 	return 0;
 }
 
@@ -120,7 +137,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 			       //
 	int xn = (instr >> 5) & 0x1f; //base register Xn
 	if (xn == 0x1f) { return 0; } //Handle case when xn is the SP
-	if (read_reg64(armv8, xn, &transferAddress)) { return 1; }  // Store base in transferAddress
+	if (read_reg(armv8, xn, &transferAddress, 64)) { return 1; }  // Store base in transferAddress
 
 	int width = ((instr >> 30) & 0x1) ? 64 : 32;
 	
@@ -146,7 +163,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 			break;
 
 		case 1: //register offset
-			if (read_reg64(armv8, xm, &regoffset)) { return 1; } 
+			if (read_reg(armv8, xm, &regoffset, 64)) { return 1; } 
 			transferAddress += (unsigned int) regoffset;
 			break;
 
