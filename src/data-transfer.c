@@ -32,32 +32,34 @@ static uint64_t load64bit(armv8_state *armv8, uint64_t addr) {
 static void load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	// uint8_t *addr = &(armv8->memory[transferAddress]); 
 	// printf("Data to write: %p\n", addr); 
- 	switch(width){
+ 	uint32_t data1;
+	uint64_t data2;
+
+	switch(width){
 		case 32:
-			;
-			uint32_t data1 = load32bit(armv8, addr);
+			data1 = load32bit(armv8, addr);
 			write_reg32(armv8, rt, data1);
 			break;
 
 		case 64:
-			;
-			uint64_t data2 = load64bit(armv8, addr);
+			data2 = load64bit(armv8, addr);
 			printf("Data to write: %lu\n", data2); 
 			write_reg64(armv8, rt, data2);
 			break;
 
 		default:
-			perror("Width must be 32 or 64 (load instruction)");
+			fprintf(stderr, "Width must be 32 or 64 (load instruction)");
 			break;
 	}
 }
 
 static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
-	printf("Address to write to: %lx\n", addr); 
+	printf("Address to write to: %lx\n", addr);
+        int32_t towrite1;
+	int64_t towrite2;
+
 	switch(width){
 		case 32:
-			;
-			int32_t towrite1 = 0;	
 			read_reg32(armv8, rt, &towrite1);
 			printf("Data to store: %x\n", towrite1); 
 			for (int i=0; i<4; i++) {
@@ -68,8 +70,6 @@ static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 			break;
 
 		case 64:
-			;
-			int64_t towrite2 = 0; 
 			read_reg64(armv8, rt, &towrite2);
 			printf("Data to store: %lx\n", towrite2); 
 			for (int i=0; i<8; i++) {
@@ -79,7 +79,7 @@ static void store(armv8_state *armv8, int width, int rt, uint64_t addr){
 			break;
 
 		default:
-			perror("Width must be 32 or 64 (store instruction)");
+			fprintf(stderr, "Width must be 32 or 64 (store instruction)");
 			break;
 	}
 }

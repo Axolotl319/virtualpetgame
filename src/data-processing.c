@@ -35,7 +35,6 @@ static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int sh
 //Operand shifted to the right and the most significant bit is copied into vacant positions.
 static int64_t arithmetic_shift_right(armv8_state *armv8, int64_t operand, int shift, int width) { 
     	if (width == 32) {
-
         	//Mod shift by 32 to ensure shift value is within the valid range 
         	int32_t shifted32 = ((int32_t)operand) >> (shift % 32);
 
@@ -51,7 +50,6 @@ static int64_t arithmetic_shift_right(armv8_state *armv8, int64_t operand, int s
 
 static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
 	if (width == 32) {
-
 		//Mod shift by 32 to ensure shift value is within the valid range
 		shift %= 32;
 		uint32_t version32 = (uint32_t)operand;
@@ -144,26 +142,29 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rd = instr & 0x1f; //Destination register
 	int64_t result;
 
+	//variables for arithmetic instructions
+	unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
+	uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
+	unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
+	int64_t op = 0;
+	int status = 0;
+
+	//variables for wide move
+	int hw = ((instr >> 21) & 0x3);
+
 	switch(opi){
-		case 2: { //arithmetic
-			unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
-			uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
-			unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
-			
+		case 2: //arithmetic			
 			//performs arithmetic based on bit width
-			int64_t op = 0;
-			int status = (width == 32) ? read_reg32(armv8, rn, (int32_t *)&op) : read_reg64(armv8, rn, &op);
-		        if (status) return 1;	
+			status = (width == 32) ? read_reg32(armv8, rn, (int32_t *)&op) : read_reg64(armv8, rn, &op);
+		        if (status) { return 1;	}
 
 			result = (width == 32) ? 
 				perform_arithmetic32(armv8, opc, (int32_t) op, (int32_t) imm) :
 				perform_arithmetic64(armv8, opc, op, imm);
 
 			break;
-		}
 
-		case 5: { //wide move
-			int hw = ((instr >> 21) & 0x3);
+		case 5: //wide move
 			
 			if (width == 32 && hw > 1) {
 				fprintf(stderr, "Invalid shift for 32 bit");
@@ -172,6 +173,8 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			int shift = 16 * hw;
 
 			uint64_t imm = ((uint64_t)((instr >> 5) & 0xffff)) << shift; // shifted immediate value
+			int64_t value;
+
 			switch(opc){
 				case 0: //move wide with NOT
 					result = ~(imm);
@@ -181,24 +184,20 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 					result = imm;
 					break;
 
-				case 3: { //move wide with keep
-					
+				case 3: //move wide with keep
 					//reads rd register 	
-					int64_t value;
-                        		if (read_reg64(armv8, rd, &value)) return 1;
+                        		if (read_reg64(armv8, rd, &value)) { return 1; }
 
 					//Masking bits
 					result = (value) & ~((uint64_t)0xffff << shift); //set appropriate 16 bits to zero
 					result = result | imm; //move imm into these 16 bits
 					break;
-				}
 
 				default:
 					fprintf(stderr, "Unknown OPC for wide move instruction.");
 					return 1;
 			}
 			break;
-		}
 
 		default: 
 			fprintf(stderr, "Unknown OPI in immediate data processing instruction.");

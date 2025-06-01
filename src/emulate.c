@@ -65,13 +65,15 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 		| ((uint32_t) *instruction);
 
 	// Checks for halting instruction 
-	if (result == 0x8a000000) {
-		return 1; 
-	}
+	if (result == 0x8a000000) { return 1; }
 
 	// Obtain op0 -- comments used for debugging purposes. 
 	unsigned int opzero = (result >> 25) & 0xf;
         printf("Opcode: %u\n", opzero);	
+	
+	//Type for load/store and load literal
+	int type = 0x1 & (result >> 31); 
+
 	switch (opzero) {
 		case 8:
 		case 9:
@@ -87,8 +89,6 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 		case 6:
 		case 12: 
 		case 14: 
-		       	;		
-			int type = 0x1 & (result >> 31); 	
 			if (type) { 
 				printf("This is a load/store with offset (sdt).\n"); 
 				datatransfer( result, armv8 ); 

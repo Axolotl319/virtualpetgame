@@ -107,7 +107,7 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 	int sign_result = (result >> (width - 1)) & 1;
 	
 	switch (op_type) {
-		case OP_ADD: {
+		case OP_ADD: 
 			//unsigned overflow
 			//when the result is smaller than the operands
 			PSTATE->C = (result < op1); 
@@ -117,9 +117,9 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 			//and the sign bit of the result is different
 			PSTATE->V = (sign_op1 == sign_op2) && (sign_result != sign_op1);
 			break;
-		}		
+				
 
-		case OP_SUB: {	
+		case OP_SUB: 
 			//Borrow = 0, No borrow = 1 
 			PSTATE->C = (op1 >= op2);
 
@@ -128,12 +128,11 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 			//and the sign bit of the result is different to op1
 			PSTATE->V = (sign_op1 != sign_op2) && (sign_result != sign_op1);
 		        break;
-		}
-		case OP_LOGIC: {
+		
+		case OP_LOGIC: 
 			PSTATE->C = 0;
 			PSTATE->V = 0;
-		        break;
-		}		
+		        break;	
 
 	}
 }
