@@ -67,38 +67,37 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 	// Checks for halting instruction 
 	if (result == 0x8a000000) { return 1; }
 
-	// Obtain op0 -- comments used for debugging purposes. 
-	unsigned int opzero = (result >> 25) & 0xf;
-        printf("Opcode: %u\n", opzero);	
+	// Obtain op0 
+	unsigned int opzero = (result >> 25) & 0xf;	
 	
 	//Type for load/store and load literal
 	int type = 0x1 & (result >> 31); 
 
 	switch (opzero) {
 		case 8:
-		case 9:
+		case 9: //Data processing (immediate)
 			printf("This is data processing (immediate).\n"); 
-			immdp( result, armv8 ); 
+			if (immdp( result, armv8 )) { return -1; } 
 			break; 
 		case 5:
-		case 13:
+		case 13: //Data processing (registers)
 			printf("This is data processing (registers).\n");
-			regdp( result, armv8 );
+			if (regdp( result, armv8 )) { return -1; }
 		        break; 
 		case 4:
 		case 6:
 		case 12: 
-		case 14: 
-			if (type) { 
+		case 14: //Load/Store
+			if (type) { //Load/Store with offset
 				printf("This is a load/store with offset (sdt).\n"); 
-				datatransfer( result, armv8 ); 
-			} else {
+				if (datatransfer( result, armv8 )) { return -1; } 
+			} else { //Load Literal
 				printf("This is a load literal (sdt).\n"); 
-				loadliteral( result, armv8 ); 
+				if (loadliteral( result, armv8 )) { return -1; } 
 			} 
 			break; 
 		case 10:
-		case 11:
+		case 11: //Branch
 			printf("This is branch.\n");
 		        int branchStat = branch( result, armv8 ); 	
 			if (branchStat == -1) {
@@ -139,7 +138,7 @@ static int fetch(armv8_state *armv8) {
 
 		if ( status == 1 ) { 	//HALT
 			break;
-		} 
+		}
 		if ( status < 0 ) {	//Decode failed
 			return 1; 
 		}
@@ -178,7 +177,7 @@ int main(int argc, char **argv)
 	
 	armv8.memory = malloc(MEM_SIZE);
 	if(armv8.memory == NULL){
-		perror("Couldn't allocate buffer memory");
+		fprintf(stderr, "Couldn't allocate buffer memory");
 		fclose(inFile);
 		return 1;
 	}
@@ -190,6 +189,7 @@ int main(int argc, char **argv)
 	//Calls fetch function, which calls decode
 	if (fetch(&armv8)) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
+		return 1;
 	}
 	
 	//print armv8 state

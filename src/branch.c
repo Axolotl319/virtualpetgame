@@ -76,7 +76,7 @@ int branch(int instr, armv8_state *armv8) {
 					return 1; 
 					break; 
 				default: 
-					printf("Invalid condition code in branch.");
+					fprintf(stderr, "Invalid condition code in branch.");
 					return -1; 
 					break; 
 			}
@@ -93,7 +93,7 @@ int branch(int instr, armv8_state *armv8) {
 			}
 			break; 	
 		default: 
-			printf("Invalid branch instruction.");
+			fprintf(stderr, "Invalid branch instruction.");
 			return -1; 
 	} 
 	return 0; 
