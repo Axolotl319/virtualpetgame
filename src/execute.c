@@ -476,7 +476,7 @@ void datatransfer(int instr, armv8_state *armv8) {
 	int64_t regoffset = 0; 		
 
 	// Pre-calculated for pre/post index
-	int simm9 = (instr >> 12) & 0x1ff;
+	int32_t simm9 = sign_ext_32((instr >> 12) & 0x1ff, 9);
 
 	assert(mode >= 0 && mode <= 3);
         printf("Transfer address: %lu\n", transferAddress); 	
