@@ -3,7 +3,7 @@
 #define WORD_SIZE 4        // 1 word = 4 bytes
 
 //PSTATE register
-typedef struct Pstate {
+typedef struct pstate {
 	bool N; //Negative flag
 	bool Z; //Zero condition flag
 	bool C; //Carry condition flag
@@ -11,10 +11,10 @@ typedef struct Pstate {
 } pstate;
 
 //All the registers and memory - state of the machine
-typedef struct State {
-	uint8_t *memory; //Memory
+typedef struct armv8_state {
 	uint64_t GP_regs[NUM_GP_REGS]; //General purpose registers R0..R30
 	uint64_t PC; //Program Counter
 	pstate PSTATE; //PSTATE struct
+	uint8_t *memory; //Memory
 } armv8_state;
 

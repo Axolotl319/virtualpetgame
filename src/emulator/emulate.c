@@ -8,8 +8,7 @@
 #include "data-processing.h"
 #include "branch.h"
 #include "data-transfer.h"
-
-static size_t num_bytes_read = 0; 
+ 
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 static void initialise(armv8_state *armv8) {
@@ -183,7 +182,7 @@ int main(int argc, char **argv)
 	}
 	
 	// Reads contents of file into buffer 
-	num_bytes_read = fread(armv8.memory, 1, MEM_SIZE, inFile);	
+	fread(armv8.memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
 
 	//Calls fetch function, which calls decode
