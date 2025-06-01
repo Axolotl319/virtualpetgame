@@ -5,7 +5,6 @@
 #include <string.h>
 #include "armv8.h"
 #include "sign-extension.h"
-#include "execute.h"
 #include "modify-regs.h"
 #include <limits.h>
 #include <assert.h>

@@ -10,46 +10,43 @@
 #include <assert.h>
 
 
-
 //Bitwise shift operations
 
 //Shifts operand to the left, inserting zeros from least significant bit.
 static uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shift, int width) {
-    if (width == 32) {
-
+	if (width == 32) {
 		//The operand is masked and then shifted.
 		//Return value is promoted to uint64_t to match function signature so no cast needed.
 		return ((uint32_t)(operand) << shift);
-    }
-    return operand << shift;
+    	}
+    	return operand << shift;
 }
 
 //Shifts operand to the right, inserting zeros from most significant bit.
 static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
-    if (width == 32) {
-
+    	if (width == 32) {
 		//The operand is masked and then shifted.
 		//Return value is promoted to uint64_t to match function signature so no cast needed.
-        return ((uint32_t)(operand) >> shift);
-    }
-    return operand >> shift;
+        	return ((uint32_t)(operand) >> shift);
+    	}
+    	return operand >> shift;
 }
 
 //Operand shifted to the right and the most significant bit is copied into vacant positions.
 static int64_t arithmetic_shift_right(armv8_state *armv8, int64_t operand, int shift, int width) { 
-    if (width == 32) {
+    	if (width == 32) {
 
-        //Mod shift by 32 to ensure shift value is within the valid range 
-        int32_t shifted32 = ((int32_t)operand) >> (shift % 32);
+        	//Mod shift by 32 to ensure shift value is within the valid range 
+        	int32_t shifted32 = ((int32_t)operand) >> (shift % 32);
 
-        // Zero-extend back to 64 bits
-	return (uint64_t)shifted32;
-    } else {
-        //Mod shift by 64 to ensure shift value is within the valid range
+        	// Zero-extend back to 64 bits
+		return (uint64_t)shifted32;
+    	} else {
+        	//Mod shift by 64 to ensure shift value is within the valid range
 		//Casting to signed int32 to ensure sign-extension on >>
-        int64_t shifted64 = operand >> (shift % 64); 
-	return (shifted64);
-    }
+        	int64_t shifted64 = operand >> (shift % 64); 
+		return (shifted64);
+    	}
 }
 
 static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
@@ -203,15 +200,15 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			break;
 		}
 
-		default: {
+		default: 
 			fprintf(stderr, "Unknown OPI in immediate data processing instruction.");
 			return 1;
 			break;
-		}
+		
 	}
 	
 	// If destination is 0 register, do not write. 
-	if (rd == 0x1f) return 0;
+	if (rd == 0x1f) { return 0; }
 
 	if(width == 32){ //32-bit
 		return write_reg32(armv8, rd, result);
@@ -243,13 +240,13 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	//reads register rn into op1, if rn is not ZR
 	if (rn != 0x1f) {
 		int status = (width == 32) ? read_reg32(armv8, rn, (int32_t *)&op1) : read_reg64(armv8, rn, &op1);	
-        	if (status) return 1;
+        	if (status) { return 1; }
 	}
 
 	//reads register rm into op2, if rm is not ZR
 	if (rm != 0x1f) {
 		int status = (width == 32) ? read_reg32(armv8, rm, (int32_t *)&op2) : read_reg64(armv8, rm, &op2);
-        	if (status) return 1;
+        	if (status) { return 1; }
 	}
 
 	//perform shift
@@ -286,9 +283,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		//logical
 		bool negate = opr & 0x1;
 		
-		if(negate){
-			op2 = ~op2;
-		}
+		if(negate) { op2 = ~op2; }
 
 		switch(opc){ //specifies operation
 			case 0: //and
@@ -325,7 +320,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		int64_t op3 = 0;
 		if (ra != 0x1f) {
 			int status = (width == 32) ? read_reg32(armv8, ra, (int32_t *) &op3) : read_reg64(armv8, ra, &op3);
-			if (status) return 1;
+			if (status) { return 1; }
 		}
 
 		if(negate){
@@ -339,9 +334,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 	
 	// If zero register, do not write 
-	if (rd == 0x1f) {
-		return 0; 
-	}
+	if (rd == 0x1f) { return 0; }
 
 	if(width == 32){ 
 		return write_reg32(armv8, rd, result);

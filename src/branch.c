@@ -43,7 +43,7 @@ int branch(int instr, armv8_state *armv8) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1;
 					}
-					break; 
+					break;	
 				case 1: 
 					if (armv8->PSTATE.Z == false) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
@@ -85,6 +85,7 @@ int branch(int instr, armv8_state *armv8) {
 			}
 			return 0; 
 			break; 
+
 	// Unconditional (register)
 		case 3: 
 			reg = (instr >> 5) & 0x1f; 

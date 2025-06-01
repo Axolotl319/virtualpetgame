@@ -6,7 +6,8 @@
 #include "armv8.h" 
 #include "modify-regs.h"
 #include "data-processing.h"
-#include "execute.h"
+#include "branch.h"
+#include "data-transfer.h"
 
 static size_t num_bytes_read = 0; 
 
