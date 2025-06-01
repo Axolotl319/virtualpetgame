@@ -87,7 +87,7 @@ int branch(int instr, armv8_state *armv8) {
 		case 3: 
 			reg = (instr >> 5) & 0x1f; 
 		        // 0x1f is the zero register, does not need to be handled
-			if (reg != 0x1f && read_reg64(armv8, reg, &addr) == 0) {
+			if (reg != 0x1f && read_reg(armv8, reg, &addr, 64) == 0) {
 				if (setPC(armv8, (unsigned int)addr)) { return -1; }
 				return 1; 
 			}
