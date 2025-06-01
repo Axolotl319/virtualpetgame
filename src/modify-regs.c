@@ -12,7 +12,7 @@ static int check_reg_bounds(int reg_num) {
 
 //Write to GP register
 //Takes arguments: armv8 state, register number, 64 bit data to write, register width
-int write_reg(armv8_state *armv8, int reg_num, int64_t data, int width) {
+int write_reg(armv8_state *armv8, int reg_num, uint64_t data, int width) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds");
 		return 1;
@@ -28,21 +28,19 @@ int write_reg(armv8_state *armv8, int reg_num, int64_t data, int width) {
 
 //Reads GP register
 //Takes arguments: armv8 state pointer, register number, 64 bit int pointer for data, register width 
-int read_reg(armv8_state *armv8, int reg_num, int64_t *data, int width) {
+int read_reg(armv8_state *armv8, int reg_num, uint64_t *data, int width) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
 		return 1;
 	}
 
-	int64_t raw_data = armv8->GP_regs[reg_num];
+	uint64_t raw_data = armv8->GP_regs[reg_num];
 
 	//Sets upper 32 bits to 0 if width is 32
 	*data = (width == 32) ? 
-		(int64_t)((uint32_t)raw_data) :
+		(uint64_t)((uint32_t)raw_data) :
 		(raw_data);
-	
-	//Sets upper 32 bits to 0
-	//*data = ((uint32_t)(armv8->GP_regs[reg_num] & 0xffffffff));
+
 	return 0;
 }
 

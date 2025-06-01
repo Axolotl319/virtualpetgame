@@ -18,7 +18,7 @@ int branch(int instr, armv8_state *armv8) {
         int32_t offset = 0; 
 	int cond = 0; 	
 	unsigned int reg = 0; 
-	int64_t addr = 0; 
+	uint64_t addr = 0; 
 	switch (op) {
 
 	// Unconditional (offset) 
@@ -88,7 +88,7 @@ int branch(int instr, armv8_state *armv8) {
 			reg = (instr >> 5) & 0x1f; 
 		        // 0x1f is the zero register, does not need to be handled
 			if (reg != 0x1f && read_reg(armv8, reg, &addr, 64) == 0) {
-				if (setPC(armv8, (unsigned int)addr)) { return -1; }
+				if (setPC(armv8, addr)) { return -1; }
 				return 1; 
 			}
 			break; 	

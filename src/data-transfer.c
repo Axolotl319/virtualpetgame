@@ -50,7 +50,7 @@ static int load(armv8_state *armv8, int width, int rt, uint64_t addr){
 
 static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
         //int32_t towrite1;
-	int64_t towrite;
+	uint64_t towrite;
 	int word_limit;
 
 	if (width == 32) {
@@ -132,7 +132,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 		mode = 3; //post-index
 	}
 
-	int64_t transferAddress = 0;
+	uint64_t transferAddress = 0;
 	int rt = instr & 0x1f; //target register, contains data to store
 			       //
 	int xn = (instr >> 5) & 0x1f; //base register Xn
@@ -146,7 +146,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 
 	// Pre-calculated for register offset
 	int xm = (instr >> 16) & 0x1f; //index register offset
-	int64_t regoffset = 0; 		
+	uint64_t regoffset = 0; 		
 
 	// Pre-calculated for pre/post index
 	int32_t simm9 = sign_ext_32((instr >> 12) & 0x1ff, 9);
@@ -164,7 +164,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 
 		case 1: //register offset
 			if (read_reg(armv8, xm, &regoffset, 64)) { return 1; } 
-			transferAddress += (unsigned int) regoffset;
+			transferAddress += regoffset;
 			break;
 
 		case 2: //pre-index

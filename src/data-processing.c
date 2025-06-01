@@ -6,6 +6,7 @@
 #include "armv8.h"
 #include "data-processing.h"
 #include "modify-regs.h"
+#include "sign-extension.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -33,65 +34,41 @@ static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int sh
 }
 
 //Operand shifted to the right and the most significant bit is copied into vacant positions.
-static int64_t arithmetic_shift_right(armv8_state *armv8, int64_t operand, int shift, int width) { 
+static uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) { 
     	if (width == 32) { 
-        	int32_t shifted32 = ((int32_t)operand) >> shift;
+        	int32_t shifted32 = ((int32_t)(operand & 0xffffffff)) >> shift;
         	// Zero-extend back to 64 bits
 		return (uint64_t)shifted32;
     	} else {
 		//Casting to signed int32 to ensure sign-extension on >>
-        	int64_t shifted64 = operand >> shift; 
-		return (shifted64);
+        	int64_t shifted64 = (int64_t)operand >> shift; 
+		return (uint64_t)shifted64;
     	}
 }
 
+//Operand shifted to the right, wrapping the shifted bits around
 static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
 	if (width == 32) {
 		uint32_t version32 = (uint32_t)operand;
-		uint32_t rotated_bits = (version32 >> shift) | (version32 << (32 - shift));
-		return rotated_bits;
+		return (version32 >> shift) | (version32 << (32 - shift));
 
 	} else {
-		uint64_t rotated_bits = (operand >> shift) | (operand << (64 - shift));
-		return rotated_bits;
+		return (operand >> shift) | (operand << (64 - shift));
 	}
 }
 
 
-static int32_t perform_arithmetic32(armv8_state *armv8, int opcode, int32_t arg1, int32_t arg2){
-	int32_t result = UINT32_MAX;
-	switch(opcode){
-		case 0:  //add
-			result = arg1 + arg2;
-			break;
-		
-		case 1:  //adds
-			result = arg1 + arg2;
-			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_ADD, 32);
-			break;
-
-		case 2:  //sub
-			result = arg1 - arg2;
-			break;
-
-		case 3:  //subs
-			result = arg1 - arg2;
-			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_SUB, 32);
-			break;
-
-		default: 
-			fprintf(stderr, "Error. Unknown arithmetic opcode.");
-			return 1;
-			break;
-	}
-	return result;
-}
-
-// Performs arithmetic instructions
-// Takes arguments: armv8 state pointer, opcode, 1st argument, 2nd argument, bit width
-// Returns 64 bit result
-static int64_t perform_arithmetic64(armv8_state *armv8, int opcode, int64_t arg1, int64_t arg2){
+//Performs arithmetic
+//Takes arguments: armv8 state pointer, opcode, 2 signed 64 bit int arguments, bit width
+//Returns 64 bit signed int
+static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, int64_t arg2, int width) {
 	int64_t result = UINT64_MAX;
+
+	//mask operands if 32 bits
+	if (width == 32) {
+		arg1 = (int32_t)arg1;
+		arg2 = (int32_t)arg2;
+	}
 
 	switch(opcode){
 		case 0:  //add
@@ -117,8 +94,15 @@ static int64_t perform_arithmetic64(armv8_state *armv8, int opcode, int64_t arg1
 			return 1;
 			break;
 	}
+
+	//mask result if 32 bit
+	if (width == 32) {
+		result = (int32_t)result;
+	}
+
 	return result;
 }
+
 
 //Immediate data processing instructions
 //Takes arguments: 32 bit instruction, armv8 state pointer
@@ -134,8 +118,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
 	uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
 	unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
-	int64_t op = 0;
-	//int status = 0;
+	uint64_t op = 0;
 
 	//variables for wide move
 	int hw = ((instr >> 21) & 0x3);
@@ -143,14 +126,8 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	switch(opi){
 		case 2: //arithmetic			
 			//performs arithmetic based on bit width
-			
-			//read in register operand
 			if (read_reg(armv8, rn, &op, width)) { return 1; }
-
-			result = (width == 32) ? 
-				perform_arithmetic32(armv8, opc, (int32_t) op, (int32_t) imm) :
-				perform_arithmetic64(armv8, opc, op, imm);
-
+			result = perform_arithmetic(armv8, opc, op, imm, width);
 			break;
 
 		case 5: //wide move
@@ -162,7 +139,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			int shift = 16 * hw;
 
 			uint64_t imm = ((uint64_t)((instr >> 5) & 0xffff)) << shift; // shifted immediate value
-			int64_t value;
+			uint64_t value;
 
 			switch(opc){
 				case 0: //move wide with NOT
@@ -209,8 +186,8 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	unsigned int rn = (instr >> 5) & 0x1f; //register operand
 	unsigned int rm = (instr >> 16) & 0x1f; //register that shift is performed on
 	unsigned int opc = (instr >> 29) & 0x3; //opcode
-	int64_t op1 = 0; //first operand
-	int64_t op2 = 0; //second operand
+	uint64_t op1 = 0; //first operand
+	uint64_t op2 = 0; //second operand
 	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
 	int64_t result;
 	
@@ -297,21 +274,24 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		}
 
 	}else if(type < 16 && type % 2 == 0){ 
-		//arithmetic 	
-		result = (width == 32) ?
-		        perform_arithmetic32(armv8, opc, (int32_t) op1, (int32_t) op2) :	
-			perform_arithmetic64(armv8, opc, op1, op2); 
-					    
+		//arithmetic
+		result = perform_arithmetic(armv8, opc, op1, op2, width); 	
+
 	}else if(type == 24){
 		//multiply
 		bool negate = (operand >> 5) & 0x1; //madd if 0/false, msub if 1/true
 		unsigned int ra = operand & 0x1f;
 
 		//read in ra register, if ra is not ZR
-		int64_t op3 = 0;
+		uint64_t op3 = 0;
 		if (ra != 0x1f) {
 			if (read_reg(armv8, ra, &op3, width)) { return 1; }
 		}
+		
+		//sign extend the operands to avoid signed arithmetic errors
+		op1 = sign_ext_64(op1, width);
+		op2 = sign_ext_64(op2, width);
+		op3 = sign_ext_64(op3, width);
 
 		if(negate){
 			result = op3 - (op1 * op2);
