@@ -60,8 +60,6 @@ static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, in
 
 static int32_t perform_arithmetic32(armv8_state *armv8, int opcode, int32_t arg1, int32_t arg2){
 	int32_t result = UINT32_MAX;
-
-	printf("32bit Arg1: %x, Arg2: %x\n", arg1, arg2); 
 	switch(opcode){
 		case 0:  //add
 			result = arg1 + arg2;
@@ -86,7 +84,6 @@ static int32_t perform_arithmetic32(armv8_state *armv8, int opcode, int32_t arg1
 			return 1;
 			break;
 	}
-	printf("32bit Arithmetic result: %x\n", result); 
 	return result;
 }
 
@@ -96,7 +93,6 @@ static int32_t perform_arithmetic32(armv8_state *armv8, int opcode, int32_t arg1
 static int64_t perform_arithmetic64(armv8_state *armv8, int opcode, int64_t arg1, int64_t arg2){
 	int64_t result = UINT64_MAX;
 
-	printf("64bit Arg1: %lx, Arg2: %lx\n", arg1, arg2); 
 	switch(opcode){
 		case 0:  //add
 			result = arg1 + arg2;
@@ -121,7 +117,6 @@ static int64_t perform_arithmetic64(armv8_state *armv8, int opcode, int64_t arg1
 			return 1;
 			break;
 	}
-	printf("64bit Arithmetic result: %lx\n", result); 
 	return result;
 }
 
@@ -201,13 +196,8 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	
 	// If destination is 0 register, do not write. 
 	if (rd == 0x1f) { return 0; }
-
-	if(width == 32){ //32-bit
-		return write_reg32(armv8, rd, result);
-	}else{ //64-bit
-		return write_reg64(armv8, rd, result);
-	}
-
+	
+	return write_reg(armv8, rd, result, width);
 }
 
 int regdp(uint32_t instr, armv8_state *armv8) {
@@ -339,11 +329,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	// If zero register, do not write 
 	if (rd == 0x1f) { return 0; }
 
-	if(width == 32){ 
-		return write_reg32(armv8, rd, result);
-	}else{ //64-bit
-		return write_reg64(armv8, rd, result);
-	}
+	return write_reg(armv8, rd, result, width);
 
 }
 

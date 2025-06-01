@@ -32,24 +32,19 @@ static uint64_t load64bit(armv8_state *armv8, uint64_t addr) {
 static int load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	// uint8_t *addr = &(armv8->memory[transferAddress]); 
 	// printf("Data to write: %p\n", addr); 
- 	uint32_t data1;
-	uint64_t data2;
+	uint64_t data;
 
-	switch(width){
-		case 32:
-			data1 = load32bit(armv8, addr);
-			if (write_reg32(armv8, rt, data1)) { return 1; }
-			break;
-
-		case 64:
-			data2 = load64bit(armv8, addr);
-			if (write_reg64(armv8, rt, data2)) { return 1; }
-			break;
-
-		default:
-			fprintf(stderr, "Width must be 32 or 64 (load instruction)");
-			break;
+	if (width == 32) {
+		data = load32bit(armv8, addr);
+	} else if (width == 64) {
+		data = load64bit(armv8, addr);
+	} else {
+		fprintf(stderr, "Width must be 32 or 64 (load instruction)");
+		return 1;
 	}
+
+	if (write_reg(armv8, rt, data, width)) { return 1; }
+
 	return 0;
 }
 
@@ -91,11 +86,19 @@ int loadliteral(int instr, armv8_state *armv8) {
 	unsigned int reg = instr & 0x1f; 	// Obtains the target register
 	int imm = sign_ext_32((instr >> 5) & 0x3ffff, 18)*4;	// Obtains the value to load
 	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
-	if (sf) {				// If sf == 1, 64-bit
-		if (write_reg64(armv8, reg, load64bit(armv8, armv8->PC+imm))) { return 1; } 
-	} else {				// Otherwise, 32-bit 
-		if (write_reg32(armv8, reg, load32bit(armv8, armv8->PC+imm))) { return 1; } 
-	}	
+	
+	int width;
+	int64_t data;
+	if (sf) {
+		width = 64;
+		data = load64bit(armv8, armv8->PC+imm);
+	} else {
+		width = 32;
+		data = load32bit(armv8, armv8->PC+imm);
+	}
+
+	if (write_reg(armv8, reg, data, width)) { return 1; }
+
 	return 0;
 }
 
@@ -133,17 +136,13 @@ int datatransfer(int instr, armv8_state *armv8) {
 
 	assert(mode >= 0 && mode <= 3);
   
+	//multiplier to calculate load size
+	int multiplier; 
+
 	switch(mode){
 		case 0: //unsigned offset
-			switch (width){
-				case 32:
-					transferAddress += 4*offset;
-					break;
-
-				case 64:
-					transferAddress += 8*offset;
-					break;
-			}
+			multiplier = (width == 32) ? 4 : 8;
+			transferAddress += multiplier*offset;
 			break;
 
 		case 1: //register offset
@@ -153,27 +152,11 @@ int datatransfer(int instr, armv8_state *armv8) {
 
 		case 2: //pre-index
 			transferAddress += simm9;
-			switch(width){
-				case 32:
-					if (write_reg32(armv8, xn, transferAddress)) { return 1; }
-					break;
-
-				case 64:
-					if (write_reg64(armv8, xn, transferAddress)) { return 1; }
-					break;
-			}
+			if (write_reg(armv8, xn, transferAddress, width)) { return 1; }
 			break;
 
 		case 3: //post-index
-			switch(width){
-				case 32:
-					if (write_reg32(armv8, xn, transferAddress + simm9)) { return 1; }
-					break;
-
-				case 64:
-					if (write_reg64(armv8, xn, transferAddress + simm9)) { return 1; }
-					break;
-			}
+			if (write_reg(armv8, xn, transferAddress + simm9, width)) { return 1;}
 			break;
 	}
  
