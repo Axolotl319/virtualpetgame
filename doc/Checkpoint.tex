@@ -34,15 +34,39 @@ sessions, it is easier to patch bugs and communicate concerns. As a result, all 
 emulator tasks were completed ahead of the schedule we had made on day one. 
 
 Although communication is our strength, one aspect the group can improve on is communicating potential 
-utility functions -- like bit masks and memory reads -- so they can be generalized immediatley instead 
+utility functions -- like bit masks and memory reads -- so they can be generalized immediately instead 
 of at the end, saving time and energy in the long-term. In the planning stages, the group should improve on
 identifying closely-related tasks. Through identifying these tasks and assigning them to the same person, 
 we can save time by having one group member complete the entire component in one branch instead of completing
-half a component, reviewing, merging, and making a different member branch where the previous left off.  
+half a component, reviewing, merging, and having a different member continue where the previous left off.  
 
 \section{Implementation Strategies}
 
-Some implementation tasks we will likely find challenging include identifying utility functions and global 
-structs. 
+Our emulator is split into four main sections: the "hardware" definitions, the initialization and fetch cycle, the execution, 
+and the global utility functions. First, the \texttt{PSTATE} register is represented by a struct consisting of four Booleans, each 
+representing a \texttt{PSTATE} flag. The state of the ARM is represented by a struct consisting of an 8-bit int array representing memory,
+a 64-bit int array representing the 31 general-purpose registers, a 64-bit int representing the PC, and the \texttt{PSTATE} struct 
+representing the Processor State Register. These components are defined in their own armv8.h file, and can be updated using a 
+subset of the global utility functions, "modify-regs". Note that the zero register is not included, since it represents the 
+value zero and so can be handled independently. 
+
+Next, the ARM memory is initialized using \texttt{memset()}, setting 2MB of memory to zero before instructions and data
+are loaded. This is freed at the end of execution. The remaining components are initialized to their defaults as stated
+in the specification file. The fetch cycle repeatedly calls a "decode" function that reads the instruction corresponding 
+to the address in the PC, then passes the instruction to the proper function for execution. This decode function then 
+returns a status code indicating successful execution, failed execution, or halt condition reached. 
+
+The execution of instructions is divided into three modules: Data Processing, Data Transfer, and Branch. These are accessed by 
+decode depending on bits 28-25 of each instruction, and all return status codes representing success or failure of execution.
+
+Lastly, the global utility functions are composed of functions to read and write registers, update the PSTATE register, and
+perform sign extensions. These are frequently used across all execution modules, and serve to reduce clutter in the execution 
+modules' code. 
+
+Some implementation tasks we will likely find challenging are identifying utility functions early on and maintaining code organization. 
+As mentioned previously, some of our utility functions were refactored after the emulator functionality was complete, which is 
+time-consuming and inefficient. To mitigate this challenge, group members should use the group chat to ask 
+if someone already has an implementation for a problem that seems very common, such as extracting bits from an instruction or 
+sign-extending an offset. This will speed development by reducing redundancy, shorten source files, and reduce errors. 
 
 \end{document}
