@@ -9,10 +9,10 @@ CFLAGS  ?= -std=c17 -g\
 
 all: emulate
 
-emulate: emulate.o sign-extension.o data-processing.o data-transfer.o branch.o modify-regs.o
+emulate: emulate.o sign-extension.o bit-mask.o data-processing.o data-transfer.o branch.o modify-regs.o
 
 emulate.o: emulate.c armv8.h
-data-processing.o: data-processing.c armv8.h
+data-processing.o: data-processing.c armv8.h 
 data-transfer.o: data-transfer.c armv8.h
 branch.o: branch.c armv8.h
 modify-regs.o: modify-regs.c armv8.h

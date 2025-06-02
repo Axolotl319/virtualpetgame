@@ -7,6 +7,7 @@
 #include "data-processing.h"
 #include "modify-regs.h"
 #include "sign-extension.h"
+#include "bit-mask.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -108,20 +109,60 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 //Takes arguments: 32 bit instruction, armv8 state pointer
 //Returns 0 for success, 1 for failure
 int immdp(uint32_t instr, armv8_state *armv8) {
-	unsigned int width = ((instr >> 31) & 0x1) ? 64 : 32; //MSB = 1: Width = 64, MSB = 0: Width = 32
-	unsigned int opi = (instr >> 23) & 0x7; //Data processing operation 010=Arithmetic, 101=Wide move
-	unsigned int opc = (instr >> 29) & 0x3; //Operation code
-	unsigned int rd = instr & 0x1f; //Destination register
+	
+	//flag for bit width
+	unsigned int sf;
+	if ( extract_bits_32(instr, 31, 1, &sf)) { return 1; }
+	unsigned int width = (sf) ? 64 : 32; //MSB = 1: Width = 64, MSB = 0: Width = 32
+	unsigned int width1 = ((instr >> 31) & 0x1) ? 64 : 32;
+	printf("Calculated width: %d, Actual width: %d\n", width, width1);
+
+	//Data processing operation 010=Arithmetic, 101=Wide move
+	unsigned int opi;
+	if ( extract_bits_32(instr, 23, 3, &opi)) { return 1; }
+	unsigned int opi1 = (instr >> 23) & 0x7;
+	printf("Calculated opi: %d Actual opi: %d\n", opi, opi1);
+
+	//Operation code
+	unsigned int opc1 = (instr >> 29) & 0x3; //Operation code
+	unsigned int opc;
+	if ( extract_bits_32(instr, 29, 2, &opc)) { return 1; }
+	printf("Calculated opc: %d Actual opc: %d\n", opc, opc1);
+
+	//Destination register
+	unsigned int rd1 = instr & 0x1f; //Destination register
+	unsigned int rd;
+	if ( extract_bits_32(instr, 0, 4, &rd)) { return 1; } 
+	printf("Calculated rd: %d Actual rd: %d\n", rd, rd1);
+
 	int64_t result;
 
 	//variables for arithmetic instructions
-	unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
-	uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
-	unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
+	unsigned int shift1 = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
+	unsigned int shift;
+	if ( extract_bits_32(instr, 22, 1, &shift)) { return 1; }
+	printf("Calculated shift: %d Actual shift: %d\n", shift, shift1);
+
+	//immediate 12 bit value
+	unsigned int imm12;
+	if ( extract_bits_32(instr, 10, 12, &imm12)) { return 1; }
+	uint64_t imm = imm12 << shift; //shifted immediate value 
+	uint64_t imm1 = ((instr >> 10) &0xfff) << shift;
+        printf("Calculated imm: %ld Actual imm: %ld\n", imm, imm1);	
+	
+	//1st operand register
+	unsigned int rn;
+	if ( extract_bits_32(instr, 5, 4, &rn)) { return 1; }
+	unsigned int rn1 = (instr >> 5) & 0x1f; //1st operand register
+	printf("Calculated rn: %d Actual rn: %d\n", rn, rn1);
+
 	uint64_t op = 0;
 
 	//variables for wide move
-	int hw = ((instr >> 21) & 0x3);
+	int hw1 = ((instr >> 21) & 0x3);
+	unsigned int hw;
+	if ( extract_bits_32(instr, 21, 2, &hw)) { return 1; }
+	printf("Calculated hw: %d Actual hw: %d\n", hw, hw1);
 
 	switch(opi){
 		case 2: //arithmetic			
