@@ -8,65 +8,11 @@
 #include "modify-regs.h"
 #include "sign-extension.h"
 #include "extract-bits.h"
+#include "instr-formats.h"
 #include <limits.h>
 #include <assert.h>
 
 #define ZR 0x1f //Zero register
-
-//struct for extracting bits from 32 bit instruction
-typedef struct {
-	int index;
-	int bits;
-} bit_range_t;
-
-//immdp instruction format
-typedef struct {
-	bit_range_t rd;
-	bit_range_t rn;
-	bit_range_t imm12;
-	bit_range_t sh;
-	bit_range_t imm16;
-	bit_range_t hw;
-	bit_range_t opi;
-	bit_range_t opc;
-	bit_range_t sf;
-} immdp_format_t;
-
-const immdp_format_t immdp_format = {
-	.rd    = {0, 5},
-	.rn    = {5, 5},
-	.imm12 = {10, 12},
-	.sh    = {22, 1},
-	.imm16 = {5, 16},
-	.hw    = {21, 2},
-	.opi   = {23, 3},
-	.opc   = {29, 2},
-	.sf    = {31, 1}
-};
-
-//regdp instruction format
-typedef struct {
-	bit_range_t rd;
-	bit_range_t rn;
-	bit_range_t operand;
-	bit_range_t rm;
-	bit_range_t opr;
-	bit_range_t M;
-	bit_range_t opc;
-	bit_range_t sf;
-} regdp_format_t;
-
-const regdp_format_t regdp_format = {
-	.rd      = {0, 5},
-	.rn      = {5, 5},
-	.operand = {10, 6},
-	.rm      = {16, 5},
-	.opr     = {21, 4},
-	.M       = {28, 1},
-	.opc     = {29, 2},
-	.sf      = {31, 1}
-};
-
 
 //Bitwise shift operations
 
@@ -166,32 +112,28 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 //Takes arguments: 32 bit instruction, armv8 state pointer
 //Returns 0 for success, 1 for failure
 int immdp(uint32_t instr, armv8_state *armv8) {
-	
+	//Extract bits from instruction	
 	//Bit width
        	//MSB = 1: Width = 64, MSB = 0: Width = 32
 	unsigned int width = extract_bits(instr, immdp_format.sf.index, immdp_format.sf.bits) ? WIDTH_64 : WIDTH_32;		
 	//Data processing operation 010=Arithmetic, 101=Wide move
 	unsigned int opi = extract_bits(instr, immdp_format.opi.index, immdp_format.opi.bits);
-	//Operation code
-	unsigned int opc = extract_bits(instr, immdp_format.opc.index, immdp_format.opc.bits);
-	//Destination register
-	unsigned int rd = extract_bits(instr, immdp_format.rd.index, immdp_format.rd.bits);
-	//Result
-	int64_t result;
+	unsigned int opc = extract_bits(instr, immdp_format.opc.index, immdp_format.opc.bits); //Opcode
+	unsigned int rd = extract_bits(instr, immdp_format.rd.index, immdp_format.rd.bits); //Destination register
+	int64_t result; //Result
 
 	//Variables for arithmetic instructions
 	int arith_shift_amount = 12; //shift is possibly 12
 	unsigned int arith_shift = extract_bits(instr, immdp_format.sh.index, immdp_format.sh.bits) * arith_shift_amount; //Shift by 12 if bit 22 = 1
-	//immediate 12 bit value
 	uint64_t imm = extract_bits(instr, immdp_format.imm12.index, immdp_format.imm12.bits) << arith_shift; //shifted immediate value 
-	//1st operand register
-	unsigned int rn = extract_bits(instr, immdp_format.rn.index, immdp_format.rn.bits);
+	unsigned int rn = extract_bits(instr, immdp_format.rn.index, immdp_format.rn.bits); //1st operand register
 	uint64_t op = 0;
 
 	//variables for wide move
-	unsigned int hw = extract_bits(instr, immdp_format.hw.index, immdp_format.hw.bits);
-	int mov_shift_amount = 16; //shift is hw*16
-	unsigned int mov_shift = mov_shift_amount * hw;
+	unsigned int hw = extract_bits(instr, immdp_format.hw.index, immdp_format.hw.bits); //hw
+	int hw_min_32 = 1; //min value of hw for 32 bit width
+	int mov_shift_amount = 16; //shift is hw * 16
+	unsigned int mov_shift = mov_shift_amount * hw; //amount to shift by
 
 	switch(opi){
 		case 2: //arithmetic			
@@ -202,7 +144,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 		case 5: //wide move
 			
-			if (width == WIDTH_32 && hw > 1) {
+			if (width == WIDTH_32 && hw > hw_min_32) {
 				fprintf(stderr, "Invalid shift for 32 bit");
 				return 1;
 			}
@@ -252,32 +194,16 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 }
 
 int regdp(uint32_t instr, armv8_state *armv8) {
-	//regdp instruction format
-	int opr_index = 21; //opr = bits 21-24
-	int opr_bits = 4;
-	int type_index = 28; //type flag = bit 28
-	int type_bits = 1;
-	int operand_index = 10; //last operand = bits 10-15
-	int operand_bits = 6;
-	int rd_index = 0; //rd = bits 0-4
-	int rn_index = 5; //rn = bits 5-9
-	int rm_index = 16; //rm = bits 16-20
-	int reg_bits = 5;
-	int opc_index = 29; //opc = bits 29-30
-	int opc_bits = 2;
-	int sf_index = 31; //sf = bit 31
-	int sf_bits = 1;
-
-	unsigned int opr = extract_bits(instr, opr_index, opr_bits); //opr = bits 21-24 of instruction
-	unsigned int type = opr | (extract_bits(instr, type_index, type_bits) << 4); //M-opr: type of instruction (M = bit 28)
-	unsigned int operand = extract_bits(instr, operand_index, operand_bits); //last operand
-	unsigned int rd = extract_bits(instr, rd_index, reg_bits); //destination register
-	unsigned int rn = extract_bits(instr, rn_index, reg_bits); //register operand
-	unsigned int rm = extract_bits(instr, rm_index, reg_bits); //register that shift is performed on
-	unsigned int opc = extract_bits(instr, opc_index, opc_bits); //opcode
+	unsigned int opr = extract_bits(instr, regdp_format.opr.index, regdp_format.opr.bits); //opr = bits 21-24 of instruction
+	unsigned int type = opr | (extract_bits(instr, regdp_format.M.index, regdp_format.M.bits) << 4); //M-opr: type of instruction (M = bit 28)
+	unsigned int operand = extract_bits(instr, regdp_format.operand.index, regdp_format.operand.bits); //last operand
+	unsigned int rd = extract_bits(instr, regdp_format.rd.index, regdp_format.rd.bits); //destination register
+	unsigned int rn = extract_bits(instr, regdp_format.rn.index, regdp_format.rn.bits); //register operand
+	unsigned int rm = extract_bits(instr, regdp_format.rm.index, regdp_format.rm.bits); //register that shift is performed on
+	unsigned int opc = extract_bits(instr, regdp_format.opc.index, regdp_format.opc.bits); //opcode
 	uint64_t op1 = 0; //first operand
 	uint64_t op2 = 0; //second operand
-	int width = (extract_bits(instr, sf_index, sf_bits)) ? WIDTH_64 : WIDTH_32; //width depending on MSB
+	int width = (extract_bits(instr, regdp_format.sf.index, regdp_format.sf.bits)) ? WIDTH_64 : WIDTH_32; //width depending on MSB
 	int64_t result;
 
 	//instruction types
@@ -285,10 +211,9 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	int arith_instr = 16; //arith instrs - type < 16
 	int mul_instr = 24; //mul instrs - type = 24
 
-
 	
 	//check that operand is in the valid range
-	if (operand > 63 || (type != mul_instr && (width == WIDTH_32 && operand > 31))) {
+	if (operand > (WIDTH_64 - 1) || (type != mul_instr && operand > width - 1)) {
 		fprintf(stderr, "Invalid operand");
 		return 1;
 	}
@@ -312,10 +237,9 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			return 1;
 		}
 
-		int shift_type_index = 1; //shift type = bits 1-2 of opr
-		int shift_type_bits = 2;
+		int shift = extract_bits(instr, regdp_format.shift.index, regdp_format.shift.bits);
 
-		switch(extract_bits(opr, shift_type_index, shift_type_bits)){ //shift operand bits
+		switch(shift){ //shift operand bits
 			case 0: //lsl
 				op2 = logical_shift_left(armv8, op2, operand, width); 
 				break;
@@ -345,9 +269,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 	if(type < log_instr){
 		//logical
-		int negate_index = 0; //negate flag is bit 0 of opr
-		int negate_bits = 1;
-		bool negate = extract_bits(opr, negate_index, negate_bits);
+		bool negate = extract_bits(instr, regdp_format.N.index, regdp_format.N.bits);
 		
 		if(negate) { op2 = ~op2; }
 
@@ -380,12 +302,8 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 	}else if(type == mul_instr){
 		//multiply
-		int negate_index = 5; //negate flag is bit 5 of the operand
-		int negate_bits = 1;
-		int ra_index = 0; //ra is bits 0-4
-		int ra_bits = 5;
-		bool negate = extract_bits(operand, negate_index, negate_bits); //madd if 0/false, msub if 1/true
-		unsigned int ra = extract_bits(operand, ra_index, ra_bits); 
+		bool negate = extract_bits(instr, regdp_format.x.index, regdp_format.x.bits); //madd if 0/false, msub if 1/true
+		unsigned int ra = extract_bits(instr, regdp_format.ra.index, regdp_format.ra.bits); 
 
 		//read in ra register, if ra is not ZR
 		uint64_t op3 = 0;

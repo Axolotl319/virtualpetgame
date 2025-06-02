@@ -7,6 +7,8 @@
 #include "sign-extension.h"
 #include "data-transfer.h"
 #include "modify-regs.h"
+#include "extract-bits.h"
+#include "instr-formats.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -49,16 +51,14 @@ static int load64bit(armv8_state *armv8, uint64_t addr, uint64_t *data) {
 
 //Add read/write reg checks
 static int load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
-	// uint8_t *addr = &(armv8->memory[transferAddress]); 
-	// printf("Data to write: %p\n", addr); 
 	uint64_t data;
 
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		if (load32bit(armv8, addr, (uint32_t *)&data)) { 
 			return 1;
 		}
 
-	} else if (width == 64) {
+	} else if (width == WIDTH_64) {
 		if (load64bit(armv8, addr, &data)) { 
 			return 1; 
 		}
@@ -77,9 +77,9 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	uint64_t towrite;
 	int word_limit;
 
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		word_limit = 4;
-	} else if (width == 64) {
+	} else if (width == WIDTH_64) {
 		word_limit = 8;
 	} else {
 		fprintf(stderr, "Width must be 32 or 64 (store instruction)");
@@ -102,18 +102,18 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 
 // Input: 32-bit instruction and pointer to armv8 state 
 // Loads an immediate value into target register 
-int loadliteral(int instr, armv8_state *armv8) {
-	unsigned int reg = instr & 0x1f; 	// Obtains the target register
-	int imm = sign_ext_32((instr >> 5) & 0x3ffff, 18)*4;	// Obtains the value to load
-	int sf = (instr >> 30) & 0x1;		// Determines 32-bit or 64-bit
+int loadliteral(uint32_t instr, armv8_state *armv8) {
+	unsigned int reg = extract_bits(instr, sdt_format.rt.index, sdt_format.rt.bits); 	// Obtains the target register
+	int imm = sign_ext_32(extract_bits(instr, sdt_format.simm19.index, sdt_format.simm19.bits), 18)*4;	// Obtains the value to load
+	int sf = extract_bits(instr, sdt_format.sf.index, sdt_format.sf.bits);		// Determines 32-bit or 64-bit
 	
 	int width;
 	uint64_t data;
 	if (sf) {
-		width = 64;
+		width = WIDTH_64;
 		if (load64bit(armv8, armv8->PC+imm, &data)) { return 1; }
 	} else {
-		width = 32;
+		width = WIDTH_32;
 		if (load32bit(armv8, armv8->PC+imm, (uint32_t *) &data)) { return 1; }
 	}
 
@@ -122,37 +122,35 @@ int loadliteral(int instr, armv8_state *armv8) {
 	return 0;
 }
 
-int datatransfer(int instr, armv8_state *armv8) {
-
+int datatransfer(uint32_t instr, armv8_state *armv8) {
 	int mode; //represents addressing mode
-	if(((instr >> 24) & 0x1) == 1){
+	if(extract_bits(instr, sdt_format.U.index, sdt_format.U.bits)){
 		mode = 0; //unsigned offset
-	}else if(((instr >> 21) & 0x1) == 1){
+	}else if(extract_bits(instr, sdt_format.R.index, sdt_format.R.bits)){
 		mode = 1; //register offset
-	}else if(((instr >> 11) & 0x1) == 1){
+	}else if(extract_bits(instr, sdt_format.I.index, sdt_format.I.bits)){
 		mode = 2; //pre-index
 	}else{
 		mode = 3; //post-index
 	}
 
 	uint64_t transferAddress = 0;
-	int rt = instr & 0x1f; //target register, contains data to store
-			       //
-	int xn = (instr >> 5) & 0x1f; //base register Xn
+	int rt = extract_bits(instr, sdt_format.rt.index, sdt_format.rt.bits); //target register, contains data to store
+	int xn = extract_bits(instr, sdt_format.xn.index, sdt_format.xn.bits); //base register Xn
 	if (xn == 0x1f) { return 0; } //Handle case when xn is the SP
-	if (read_reg(armv8, xn, &transferAddress, 64)) { return 1; }  // Store base in transferAddress
+	if (read_reg(armv8, xn, &transferAddress, WIDTH_64)) { return 1; }  // Store base in transferAddress
 
-	int width = ((instr >> 30) & 0x1) ? 64 : 32;
-	
+	int width = extract_bits(instr, sdt_format.sf.index, sdt_format.sf.bits) ? WIDTH_64 : WIDTH_32;
+
 	// Pre-calculated for unsigned offset
-	unsigned int offset = (instr >> 10) & 0x0fff; 
+	unsigned int offset = extract_bits(instr, sdt_format.offset.index, sdt_format.offset.bits); 
 
 	// Pre-calculated for register offset
-	int xm = (instr >> 16) & 0x1f; //index register offset
+	int xm = extract_bits(instr, sdt_format.xm.index, sdt_format.xm.bits); //index register offset
 	uint64_t regoffset = 0; 		
 
 	// Pre-calculated for pre/post index
-	int32_t simm9 = sign_ext_32((instr >> 12) & 0x1ff, 9);
+	int32_t simm9 = sign_ext_32(extract_bits(instr, sdt_format.simm9.index, sdt_format.simm9.bits), sdt_format.simm9.bits);
 
 	assert(mode >= 0 && mode <= 3);
   
@@ -161,12 +159,12 @@ int datatransfer(int instr, armv8_state *armv8) {
 
 	switch(mode){
 		case 0: //unsigned offset
-			multiplier = (width == 32) ? 4 : 8;
+			multiplier = (width == WIDTH_32) ? 4 : 8;
 			transferAddress += multiplier*offset;
 			break;
 
 		case 1: //register offset
-			if (read_reg(armv8, xm, &regoffset, 64)) { return 1; } 
+			if (read_reg(armv8, xm, &regoffset, WIDTH_64)) { return 1; } 
 			transferAddress += regoffset;
 			break;
 
@@ -180,7 +178,7 @@ int datatransfer(int instr, armv8_state *armv8) {
 			break;
 	}
  
-	if((instr >> 22) & 0x1){ 
+	if(extract_bits(instr, sdt_format.L.index, sdt_format.L.bits)){ 
 		if (load(armv8, width, rt, transferAddress)) { return 1; }
 	} else{
 		if (store(armv8, width, rt, transferAddress)) { return 1; }
