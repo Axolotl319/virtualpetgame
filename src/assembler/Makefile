@@ -9,7 +9,10 @@ CFLAGS  ?= -std=c17 -g\
 
 all: assemble
 
-assemble: assemble.o
+assemble: assemble.o symtable.o
+
+assemble.o: assemble.c
+symtable.o: symtable.c
 
 clean:
 	$(RM) *.o assemble
