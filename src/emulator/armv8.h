@@ -1,6 +1,8 @@
-#define NUM_GP_REGS 31 //general purpose registers
-#define MEM_SIZE (1 << 21)   // ARMv8 has 2MB memory
-#define WORD_SIZE 4        // 1 word = 4 bytes
+#define NUM_GP_REGS 31      //general purpose registers
+#define MEM_SIZE (1 << 21)  // ARMv8 has 2MB memory
+#define WORD_SIZE 4         // 1 word = 4 bytes
+#define WIDTH_32 32         // 32 bits
+#define WIDTH_64 64         // 64 bits
 
 //PSTATE register
 typedef struct pstate {
