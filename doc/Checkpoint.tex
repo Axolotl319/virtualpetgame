@@ -13,9 +13,9 @@
 
 The group is organized such that all members receive a similar amount of work, and 
 each member takes ownership of their own emulator tasks. To assign these tasks, 
-we first gathered in-person to read the specification and create a Google Docs checklist of emulator tasks as 
+we first gathered in-person to read the specification and create a Google Docs checklist of emulator components as 
 extracted from the spec. Then, each member of the group volunteered to complete a few tasks they found interesting. Since 
-it is hard to estimate exactly how long each task will take, a few leftover tasks were kept open 
+it is hard to estimate exactly how long each task will take, some leftover tasks were kept open 
 to be claimed as group members completed their initial assignments. 
 
 We coordinate our work by communicating progress and requests through a WhatsApp 
@@ -23,20 +23,26 @@ channel. For example, when a group member finishes one of their tasks, they typi
 the completed task and asks others to review the merge request. After the request 
 is reviewed and adjustments are made, the code is merged and a reminder to pull is sent to the 
 channel. Lastly, the group member claims an unfinished task from the checklist by writing 
-their name next to an un-claimed task. Although each member works independently, sometimes 
-there are sections of code written by others that are relevant yet need to be updated, patched, or pushed. 
-These are also communicated and documented clearly in the WhatsApp channel. 
+their name next to an un-claimed task, allowing us to easily track progress. Although each member 
+works independently, sometimes there are sections of code written by others that are relevant 
+yet need to be updated, patched, or pushed. These are also communicated and documented clearly 
+in the WhatsApp channel. 
 
 A good combination of remote and in-person work helps the group function exceptionally well. When working 
 from home, it is easier to concentrate on and complete the task at hand. When working in-person during lab 
 sessions, it is easier to patch bugs and communicate concerns. As a result, all the 
 emulator tasks were completed ahead of the schedule we had made on day one. 
 
-Although communication is our strength and must be maintained for future tasks, one 
-aspect of the group that needs to change for later tasks is ... 
+Although communication is our strength, one aspect the group can improve on is communicating potential 
+utility functions -- like bit masks and memory reads -- so they can be generalized immediatley instead 
+of at the end, saving time and energy in the long-term. In the planning stages, the group should improve on
+identifying closely-related tasks. Through identifying these tasks and assigning them to the same person, 
+we can save time by having one group member complete the entire component in one branch instead of completing
+half a component, reviewing, merging, and making a different member branch where the previous left off.  
 
 \section{Implementation Strategies}
 
-
+Some implementation tasks we will likely find challenging include identifying utility functions and global 
+structs. 
 
 \end{document}
