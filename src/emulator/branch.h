@@ -1,5 +1,12 @@
-//branch conditions
+//branch return
+typedef enum branch_flag {
+	BR_FAIL = -1,
+	BR_NOTHING,  //no branch taken
+	BR_SUCCESS
+} branch_flag;
 
+
+//branch conditions
 typedef enum branch_cond {
 	BR_EQ,       //equal
 	BR_NE,       //not equal

@@ -1,6 +1,6 @@
 //addressing modes
 typedef enum {
-	MODE_UNSIGNED_OFFSET = 0,
+	MODE_UNSIGNED_OFFSET,
 	MODE_REG_OFFSET,
 	MODE_PRE_INDEX,
 	MODE_POST_INDEX

@@ -30,8 +30,8 @@ int branch(uint32_t instr, armv8_state *armv8) {
 	// Unconditional (offset) 
 		case BR_OP_UNCONDITIONAL: 
 			offset = (sign_ext_32(simm26, br_format.simm26.bits - 1)) * WORD_SIZE_32; // Mask bits 26 onwards 
-			if (setPC(armv8, armv8->PC + offset)) { return -1; }
-			return 1; 
+			if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; }
+			return BR_SUCCESS; 
 			break; 
 
 	// Conditional 
@@ -43,50 +43,50 @@ int branch(uint32_t instr, armv8_state *armv8) {
 			switch(cond) {
 				case BR_EQ: //equal
 					if (armv8->PSTATE.Z) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1;
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS;
 					}
 					break;	
 				case BR_NE: //not equal
 					if (!armv8->PSTATE.Z) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1; 
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS; 
 					}
 					break; 
 				case BR_GE: //signed greater or equal 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1; 
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS; 
 					}
 					break; 
 				case BR_LT: //signed less than 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1; 
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS; 
 					}
 					break; 
 				case BR_GT: //signed greater than 
 					if (!armv8->PSTATE.Z  && armv8->PSTATE.N == armv8->PSTATE.Z) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1; 
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS; 
 					}
 					break; 
 				case BR_LE: //signed less than or equal 
 					if (!(!armv8->PSTATE.Z  && armv8->PSTATE.N == armv8->PSTATE.Z)) {
-						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-						return 1; 
+						if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+						return BR_SUCCESS; 
 					}
 					break; 
 				case BR_AL: //always 
-					if (setPC(armv8, armv8->PC + offset)) { return -1; } 
-					return 1; 
+					if (setPC(armv8, armv8->PC + offset)) { return BR_FAIL; } 
+					return BR_SUCCESS; 
 					break; 
 				default: 
 					fprintf(stderr, "Invalid condition code in branch.");
-					return -1; 
+					return BR_FAIL; 
 					break; 
 			}
-			return 0; 
+			return BR_NOTHING; 
 			break; 
 
 	// Unconditional (register)
@@ -94,13 +94,13 @@ int branch(uint32_t instr, armv8_state *armv8) {
 			reg = extract_bits(instr, br_format.xn.index, br_format.xn.bits); 
 		        // zero register, does not need to be handled
 			if (reg != ZRSP && read_reg(armv8, reg, &addr, WIDTH_64) == 0) {
-				if (setPC(armv8, addr)) { return -1; }
-				return 1; 
+				if (setPC(armv8, addr)) { return BR_FAIL; }
+				return BR_SUCCESS; 
 			}
 			break; 	
 		default: 
 			fprintf(stderr, "Invalid branch instruction.");
-			return -1; 
+			return BR_FAIL; 
 	} 
-	return 0; 
+	return BR_NOTHING; 
 }

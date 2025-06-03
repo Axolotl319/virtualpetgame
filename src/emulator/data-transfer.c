@@ -13,56 +13,16 @@
 #include <limits.h>
 #include <assert.h>
 
-//Loads value from memory
-//Takes arguments: armv8 pointer, mem address, data pointer
-//Returns 0 if success, 1 if failure
-static int load32bit(armv8_state *armv8, uint64_t addr, uint32_t *data) {
-	 //Bounds checking
-	 if (addr + 3 >= MEM_SIZE) {
-		 fprintf(stderr, "Invalid memory address for load instruction");
-		 return 1;
-	 }
-
-	 *data = ((uint32_t)armv8->memory[addr])
-		| ((uint32_t)armv8->memory[addr + 1] << 8) 
-		| ((uint32_t)armv8->memory[addr + 2] << 16) 
-		| ((uint32_t)armv8->memory[addr + 3] << 24);	
-	
-	 return 0;	 
-}	
-
-static int load64bit(armv8_state *armv8, uint64_t addr, uint64_t *data) {
-	//Bounds checking
-	if (addr + 7 >= MEM_SIZE) {
-		fprintf(stderr, "Invalid memory addresss for load instruction");
-		return 1;
-	}
-	
-	*data = ((uint64_t)armv8->memory[addr]) 
-		| ((uint64_t)armv8->memory[addr + 1] << 8)
-		| ((uint64_t)armv8->memory[addr + 2] << 16)
-		| ((uint64_t)armv8->memory[addr + 3] << 24)
-		| ((uint64_t)armv8->memory[addr + 4] << 32)
-		| ((uint64_t)armv8->memory[addr + 5] << 40)
-		| ((uint64_t)armv8->memory[addr + 6] << 48)
-		| ((uint64_t)armv8->memory[addr + 7] << 56);
-	
-	return 0;	
-}
 
 //Add read/write reg checks
 static int load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	uint64_t data;
 
 	if (width == WIDTH_32) {
-		if (load32bit(armv8, addr, (uint32_t *)&data)) { 
-			return 1;
-		}
+		if (get_memory_data(armv8, addr, WORD_SIZE_32, &data)) { return 1;}
 
 	} else if (width == WIDTH_64) {
-		if (load64bit(armv8, addr, &data)) { 
-			return 1; 
-		}
+		if (get_memory_data(armv8, addr, WORD_SIZE_64, &data)) { return 1; }
 
 	} else {
 		fprintf(stderr, "Width must be 32 or 64 (load instruction)");
@@ -113,10 +73,10 @@ int loadliteral(uint32_t instr, armv8_state *armv8) {
 	uint64_t data;
 	if (sf) {
 		width = WIDTH_64;
-		if (load64bit(armv8, armv8->PC+imm, &data)) { return 1; }
+		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_64, &data)) { return 1; }
 	} else {
 		width = WIDTH_32;
-		if (load32bit(armv8, armv8->PC+imm, (uint32_t *) &data)) { return 1; }
+		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_32, &data)) { return 1; }
 	}
 
 	if (write_reg(armv8, reg, data, width)) { return 1; }

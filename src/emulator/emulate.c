@@ -17,6 +17,13 @@
 #define ARG_INPUT 1    //argument for input file
 #define ARG_OUTPUT 2    //argument for output file
 
+typedef enum decode_flag {
+	DCD_FAIL = -1, //fail
+	DCD_SUCCESS,   //success
+	DCD_HLT,       //halt instruction reached
+	DCD_BRANCH     //branch instruction detected
+} decode_flag;
+
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 static void initialise(armv8_state *armv8) {
 	memset(armv8, 0, sizeof(*armv8));
@@ -44,14 +51,11 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
 	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE_32); addr+=WORD_SIZE_32) {
-		uint32_t word = 
-			((uint32_t)armv8->memory[addr])
-			| ((uint32_t)armv8->memory[addr + 1] << 8)
-			| ((uint32_t)armv8->memory[addr + 2] << 16)
-			| ((uint32_t)armv8->memory[addr + 3] << 24);
+		uint64_t word;
+		get_memory_data(armv8, addr, WORD_SIZE_32, &word);
 
 		if (word != 0) {
-			fprintf(outFile, "0x%08x: 0x%08x\n", addr, word);
+			fprintf(outFile, "0x%08x: 0x%08x\n", addr, (uint32_t)word);
 		}
 	}
 
@@ -62,16 +66,15 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 // Returns 1 if halting condition reached. 
 // Returns 2 if branch statement.  
 // Returns -1 if decoding unsuccessful, returns 0 if successful.  
-static int decode(uint8_t *instruction, armv8_state *armv8) {
+static int decode(armv8_state *armv8) {
 	
 	// Combines four consecutive bytes to 32 bits, taking into account little endian  
-	uint32_t result = ((uint32_t) *(instruction+3) << 24) 
-		| ((uint32_t) *(instruction+2) << 16) 
-		| ((uint32_t) *(instruction+1) << 8) 
-		| ((uint32_t) *instruction);
+	uint64_t temp;
+       	if (get_memory_data(armv8, armv8->PC, WORD_SIZE_32, &temp)) { return DCD_FAIL; }
+	uint32_t result = (uint32_t)(temp);
 
 	// Checks for halting instruction 
-	if (result == HALT) { return 1; }
+	if (result == HALT) { return DCD_HLT; }
 
 	// Obtain op0 
 	unsigned int opzero = extract_bits(result, OP0_INDEX, OP0_BITS);	
@@ -85,28 +88,28 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 
 	switch (op0_group) {
 		case IMMDP_GROUP: //Data processing (immediate) 
-			return immdp( result, armv8 ) ? -1 : 0;
+			return immdp( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS;
 		
 		case REGDP_GROUP: //Data processing (registers)
-			return regdp( result, armv8 ) ? -1 : 0;
+			return regdp( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS;
 		  
 		case LDSTR_GROUP: //Load/Store
 			return type ? //Load/Store with offset
-				datatransfer( result, armv8 ) ? -1 : 0 : 
+				datatransfer( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS : 
 			        //Load Literal 
-				loadliteral( result, armv8 ) ? -1 : 0;
+				loadliteral( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS;
 
 		case BR_GROUP: //Branch
 		        branchStat = branch( result, armv8 ); 	
-			if (branchStat == -1) {
-				return -1; 
-			} else if (branchStat) {
-				return 2; 
+			if (branchStat == BR_FAIL) {
+				return DCD_FAIL; 
+			} else if (branchStat == BR_SUCCESS) {
+				return DCD_BRANCH; 
 			} 
-			return 0; 
+			return DCD_SUCCESS; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
-			return -1;
+			return DCD_FAIL;
 	}
 }	
 
@@ -120,26 +123,24 @@ static int fetch(armv8_state *armv8) {
 
 	// Decodes each instruction  
 	while(1) {
-		uint8_t *current = &armv8->memory[armv8->PC];		
-		
 		//if PC is out of bounds
-		if (armv8->PC + WORD_SIZE_32 > MEM_SIZE) {
+		if (armv8->PC > MEM_SIZE - WORD_SIZE_32) {
 			fprintf(stderr, "PC out of bounds\n");
 			return 1;
-		}
+		}	
 
-		status = decode(current, armv8);
+		status = decode(armv8);
 		
 		printf("Status code: %d\n", status); 
 
-		if ( status == 1 ) { 	//HALT
+		if ( status == DCD_HLT ) { 	//HALT
 			break;
 		}
-		if ( status < 0 ) {	//Decode failed
+		if ( status == DCD_FAIL ) {	//Decode failed
 			return 1; 
 		}
 
-		if ( status == 0 ) {	//Increment PC if decode success and not branch
+		if ( status == DCD_SUCCESS ) {	//Increment PC if decode success and not branch
 			incrementPC(armv8); 
 		} 
 	}
