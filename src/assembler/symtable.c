@@ -9,24 +9,24 @@
  */
 
 //returns NULL if error, else returns pointer to new symbol table
-//elements = number of (label, address) elements
-symbol_table *createST(char **labels, uint8_t *addresses, int elements){
+//size = number of (label, address) elements
+symbol_table *createST(char **labels, uint8_t *addresses, int size){
 	symbol_table *table = malloc(sizeof(struct symbol_table));
 	if(table == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table");
 		return NULL;
 	}
-	table->labels = malloc(elements * sizeof(char*));
+	table->labels = malloc(size * sizeof(char*));
 	if(table->labels == NULL){
 		fprintf(stderr, "Can't allocate memory for symbol table labels array");
 		return NULL;
 	}
-	table->addresses = malloc(elements * sizeof(uint8_t));
+	table->addresses = malloc(size * sizeof(uint8_t));
 	if(table->addresses == NULL){
 		fprintf(stderr, "Can't allocate memory for ST addresses array");
 		return NULL;
 	}
-	for(int i = 0; i < elements; i++){
+	for(int i = 0; i < size; i++){
 		table->labels[i] = labels[i]; 
 		table->addresses[i] = addresses[i];
 	}
@@ -41,8 +41,8 @@ void freeST(symbol_table *st){
 }
 
 //returns address of label or -1 if label is unknown
-uint8_t getAddress(symbol_table *table, char *label, int elements){
-	for(int i = 0; i < elements; i++){
+uint8_t getAddress(symbol_table *table, char *label, int size){
+	for(int i = 0; i < size; i++){
 		if(strcmp(table->labels[i], label) == 0){
 			//if label at index i
 			return table->addresses[i];

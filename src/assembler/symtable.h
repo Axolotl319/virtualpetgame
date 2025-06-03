@@ -8,7 +8,7 @@ typedef struct symbol_table{
 
 //returns NULL if error, else returns pointer to new symbol table
 //elements = number of (label, address) elements
-extern symbol_table *createST(char **labels, uint8_t *addresses, int elements);
+extern symbol_table *createST(char **labels, uint8_t *addresses, int size);
 
 //frees space previously mallocd to a symbol table st
 extern void freeST(symbol_table *st);
