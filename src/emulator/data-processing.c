@@ -7,15 +7,25 @@
 #include "data-processing.h"
 #include "modify-regs.h"
 #include "sign-extension.h"
+#include "extract-bits.h"
+#include "instr-formats.h"
+#include "constants.h"
 #include <limits.h>
 #include <assert.h>
 
+//Get regdp instruction type
+static regdp_instr_t get_instr_type(unsigned int mopr) {
+	if ((mopr & ARITH_MASK) == ARITH_CODE) { return ARITH_INSTR; }
+	if ((mopr & LOG_MASK) == LOG_CODE) { return LOG_INSTR; }
+	if ((mopr == MUL_CODE)) { return MUL_INSTR; }
+	return REGDP_INVALID;
+}
 
 //Bitwise shift operations
 
 //Shifts operand to the left, inserting zeros from least significant bit.
 static uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shift, int width) {
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		//The operand is masked and then shifted.
 		//Return value is promoted to uint64_t to match function signature so no cast needed.
 		return ((uint32_t)(operand) << shift);
@@ -25,7 +35,7 @@ static uint64_t logical_shift_left(armv8_state *armv8, uint64_t operand, int shi
 
 //Shifts operand to the right, inserting zeros from most significant bit.
 static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
-    	if (width == 32) {
+    	if (width == WIDTH_32) {
 		//The operand is masked and then shifted.
 		//Return value is promoted to uint64_t to match function signature so no cast needed.
         	return ((uint32_t)(operand) >> shift);
@@ -35,8 +45,9 @@ static uint64_t logical_shift_right(armv8_state *armv8, uint64_t operand, int sh
 
 //Operand shifted to the right and the most significant bit is copied into vacant positions.
 static uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int shift, int width) { 
-    	if (width == 32) { 
-        	int32_t shifted32 = ((int32_t)(operand & 0xffffffff)) >> shift;
+	if (width == WIDTH_32) { 
+		//truncate the top 32 bits before casting to signed int
+        	int32_t shifted32 = ((int32_t)(uint32_t)(operand)) >> shift;
         	// Zero-extend back to 64 bits
 		return (uint64_t)shifted32;
     	} else {
@@ -48,12 +59,12 @@ static uint64_t arithmetic_shift_right(armv8_state *armv8, uint64_t operand, int
 
 //Operand shifted to the right, wrapping the shifted bits around
 static uint64_t rotate_right(armv8_state *armv8, uint64_t operand, int shift, int width) {
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		uint32_t version32 = (uint32_t)operand;
-		return (version32 >> shift) | (version32 << (32 - shift));
+		return (version32 >> shift) | (version32 << (WIDTH_32 - shift));
 
 	} else {
-		return (operand >> shift) | (operand << (64 - shift));
+		return (operand >> shift) | (operand << (WIDTH_64 - shift));
 	}
 }
 
@@ -65,28 +76,28 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 	int64_t result = UINT64_MAX;
 
 	//mask operands if 32 bits
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		arg1 = (int32_t)arg1;
 		arg2 = (int32_t)arg2;
 	}
 
 	switch(opcode){
-		case 0:  //add
+		case ARITH_ADD:  //add
 			result = arg1 + arg2;
 			break;
 		
-		case 1:  //adds
+		case ARITH_ADDS: //adds
 			result = arg1 + arg2;
-			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_ADD, 64);
+			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_ADD, width);
 			break;
 
-		case 2:  //sub
+		case ARITH_SUB:  //sub
 			result = arg1 - arg2;
 			break;
 
-		case 3:  //subs
+		case ARITH_SUBS: //subs
 			result = arg1 - arg2;
-			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_SUB, 64);
+			update_pstate(&armv8->PSTATE, (uint64_t) arg1, (uint64_t) arg2, result, OP_SUB, width);
 			break;
 
 		default: 
@@ -96,7 +107,7 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 	}
 
 	//mask result if 32 bit
-	if (width == 32) {
+	if (width == WIDTH_32) {
 		result = (int32_t)result;
 	}
 
@@ -108,54 +119,62 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 //Takes arguments: 32 bit instruction, armv8 state pointer
 //Returns 0 for success, 1 for failure
 int immdp(uint32_t instr, armv8_state *armv8) {
-	unsigned int width = ((instr >> 31) & 0x1) ? 64 : 32; //MSB = 1: Width = 64, MSB = 0: Width = 32
-	unsigned int opi = (instr >> 23) & 0x7; //Data processing operation 010=Arithmetic, 101=Wide move
-	unsigned int opc = (instr >> 29) & 0x3; //Operation code
-	unsigned int rd = instr & 0x1f; //Destination register
-	int64_t result;
+	//Extract bits from instruction	
+	//Bit width
+       	//MSB = 1: Width = 64, MSB = 0: Width = 32
+	unsigned int width = extract_bits(instr, immdp_format.sf.index, immdp_format.sf.bits) ? WIDTH_64 : WIDTH_32;		
+	//Data processing operation 010=Arithmetic, 101=Wide move
+	unsigned int opi = extract_bits(instr, immdp_format.opi.index, immdp_format.opi.bits);
+	unsigned int opc = extract_bits(instr, immdp_format.opc.index, immdp_format.opc.bits); //Opcode
+	unsigned int rd = extract_bits(instr, immdp_format.rd.index, immdp_format.rd.bits); //Destination register
+	int64_t result; //Result
 
-	//variables for arithmetic instructions
-	unsigned int shift = ((instr >> 22) & 0x1) ? 12 : 0; //shift by 12 if bit 22 = 1 
-	uint64_t imm = ((instr >> 10) & 0xfff) << shift; //shifted immediate value 
-	unsigned int rn = (instr >> 5) & 0x1f; //1st operand register
+	//Variables for arithmetic instructions
+	unsigned int arith_shift = extract_bits(instr, immdp_format.sh.index, immdp_format.sh.bits) * ARITH_SHIFT_AMT; //Shift by 12 if bit 22 = 1
+	uint64_t imm = extract_bits(instr, immdp_format.imm12.index, immdp_format.imm12.bits) << arith_shift; //shifted immediate value 
+	unsigned int rn = extract_bits(instr, immdp_format.rn.index, immdp_format.rn.bits); //1st operand register
 	uint64_t op = 0;
 
 	//variables for wide move
-	int hw = ((instr >> 21) & 0x3);
+	unsigned int hw = extract_bits(instr, immdp_format.hw.index, immdp_format.hw.bits); //hw
+	int hw_min_32 = 1; //min value of hw for 32 bit width
+	unsigned int mov_shift = MOV_SHIFT_AMT * hw; //amount to shift by
 
 	switch(opi){
-		case 2: //arithmetic			
+		case OPI_ARITH: //arithmetic			
 			//performs arithmetic based on bit width
 			if (read_reg(armv8, rn, &op, width)) { return 1; }
 			result = perform_arithmetic(armv8, opc, op, imm, width);
 			break;
 
-		case 5: //wide move
+		case OPI_MOV: //wide move
 			
-			if (width == 32 && hw > 1) {
+			if (width == WIDTH_32 && hw > hw_min_32) {
 				fprintf(stderr, "Invalid shift for 32 bit");
 				return 1;
 			}
-			int shift = 16 * hw;
-
-			uint64_t imm = ((uint64_t)((instr >> 5) & 0xffff)) << shift; // shifted immediate value
+			
+			//shifted immediate value
+			uint64_t imm = ((uint64_t)
+					(extract_bits(instr, immdp_format.imm16.index, immdp_format.imm16.bits))) 
+					<< mov_shift;
 			uint64_t value;
 
 			switch(opc){
-				case 0: //move wide with NOT
+				case MOVN: //move wide with NOT
 					result = ~(imm);
 					break;
 				
-				case 2: //move wide with zero
+				case MOVZ: //move wide with zero
 					result = imm;
 					break;
 
-				case 3: //move wide with keep
+				case MOVK: //move wide with keep
 					//reads rd register 	
-                        		if (read_reg(armv8, rd, &value, 64)) { return 1; }
+                        		if (read_reg(armv8, rd, &value, WIDTH_64)) { return 1; }
 
 					//Masking bits
-					result = (value) & ~((uint64_t)0xffff << shift); //set appropriate 16 bits to zero
+					result = (value) & ~((uint64_t)(MASK_16) << mov_shift); //set appropriate 16 bits to zero
 					result = result | imm; //move imm into these 16 bits
 					break;
 
@@ -173,118 +192,123 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	}
 	
 	// If destination is 0 register, do not write. 
-	if (rd == 0x1f) { return 0; }
+	if (rd == ZRSP) { return 0; }
 	
 	return write_reg(armv8, rd, result, width);
 }
 
+
 int regdp(uint32_t instr, armv8_state *armv8) {
-	unsigned int opr = (instr >> 21) & 0xf; //opr = bits 21-24 of instruction
-	unsigned int type = opr | (((instr >> 28) & 0x1) << 4); //M-opr: type of instruction (M = bit 28)
-	unsigned int operand = (instr >> 10) & 0x3f; //last operand
-	unsigned int rd = instr & 0x1f; //destination register
-	unsigned int rn = (instr >> 5) & 0x1f; //register operand
-	unsigned int rm = (instr >> 16) & 0x1f; //register that shift is performed on
-	unsigned int opc = (instr >> 29) & 0x3; //opcode
+	unsigned int opr = extract_bits(instr, regdp_format.opr.index, regdp_format.opr.bits); //opr = bits 21-24 of instruction
+	unsigned int M = extract_bits(instr, regdp_format.M.index, regdp_format.M.bits); //M = bit 28
+	regdp_instr_t type = get_instr_type(opr | M << regdp_format.opr.bits); //M-opr: type of instruction 
+	unsigned int operand = extract_bits(instr, regdp_format.operand.index, regdp_format.operand.bits); //last operand
+	unsigned int rd = extract_bits(instr, regdp_format.rd.index, regdp_format.rd.bits); //destination register
+	unsigned int rn = extract_bits(instr, regdp_format.rn.index, regdp_format.rn.bits); //register operand
+	unsigned int rm = extract_bits(instr, regdp_format.rm.index, regdp_format.rm.bits); //register that shift is performed on
+	unsigned int opc = extract_bits(instr, regdp_format.opc.index, regdp_format.opc.bits); //opcode
 	uint64_t op1 = 0; //first operand
 	uint64_t op2 = 0; //second operand
-	int width = ((instr >> 31) & 0x1) ? 64 : 32; //width depending on MSB
+	int width = (extract_bits(instr, regdp_format.sf.index, regdp_format.sf.bits)) ? WIDTH_64 : WIDTH_32; //width depending on MSB
 	int64_t result;
 	
 	//check that operand is in the valid range
-	if (operand > 63 || (type != 24 && (width == 32 && operand > 31))) {
-		fprintf(stderr, "Invalid operand");
+	if (operand > (WIDTH_64 - 1) || (type != MUL_INSTR && operand > width - 1)) {
+		fprintf(stderr, "Invalid operand.\n");
 		return 1;
 	}
 
 	//reads register rn into op1, if rn is not ZR
-	if (rn != 0x1f) {
+	if (rn != ZRSP) {
 		if (read_reg(armv8, rn, &op1, width)) { return 1; }
 	}
 
 	//reads register rm into op2, if rm is not ZR
-	if (rm != 0x1f) {
+	if (rm != ZRSP) {
 		if (read_reg(armv8, rm, &op2, width)) { return 1; }
 	}
 
 	//perform shift
-	if(type != 24) {
+	if(type != MUL_INSTR) {
 		
 		//Checks if the shift amount is within the valid range
 		if (operand < 0 || operand > width - 1) {
-			fprintf(stderr, "Invalid shift amount");
+			fprintf(stderr, "Invalid shift amount.\n");
 			return 1;
 		}
 
-		switch((opr >> 1) & 0x3){ //shift operand bits
-			case 0: //lsl
-				op2 = logical_shift_left(armv8, op2, operand, width); //defined in modify-regs.c 
+		shift_t shift = extract_bits(instr, regdp_format.shift.index, regdp_format.shift.bits);
+
+		switch(shift){ //shift operand bits
+			case LSL: //lsl
+				op2 = logical_shift_left(armv8, op2, operand, width); 
 				break;
 
-			case 1: //lsr
+			case LSR: //lsr
 				op2 = logical_shift_right(armv8, op2, operand, width);
 				break;
 
-			case 2: //asr
+			case ASR: //asr
 				op2 = arithmetic_shift_right(armv8, op2, operand, width);
 				break;
 
-			case 3: //ror
-				if (type < 8) {
+			case ROR: //ror
+				if (type == LOG_INSTR) {
 					op2 = rotate_right(armv8, op2, operand, width);
 				} else {
-					fprintf(stderr, "Unknown shift type for arithmetic instructions");
+					fprintf(stderr, "Unknown shift type for arithmetic instructions.\n");
 					return 1;
 				}
 				break;
 			
 			default: 
-			        fprintf(stderr, "Unknown shift type");
+			        fprintf(stderr, "Unknown shift type.\n");
 				return 1;
 		}
 		
 	}
-	if(type < 8){
+
+	if(type == LOG_INSTR){
 		//logical
-		bool negate = opr & 0x1;
+		bool negate = extract_bits(instr, regdp_format.N.index, regdp_format.N.bits);
 		
 		if(negate) { op2 = ~op2; }
 
 		switch(opc){ //specifies operation
-			case 0: //and
+			case LOG_AND: //and
 				result = op1 & op2;
 				break;
 
-			case 1: //or
+			case LOG_OR: //or
 				result = op1 | op2;
 				break;
 
-			case 2: //xor
+			case LOG_XOR: //xor
 				result = op1 ^ op2;
 				break;
 
-			case 3: //and, set flags
+			case LOG_ANDS: //and, set flags
 				result = op1 & op2;
 				update_pstate(&armv8->PSTATE, op1, op2, result, OP_LOGIC, width);
 				break;
 
 			default: 
-				fprintf(stderr, "Invalid operation code for logical dp operation");
+				fprintf(stderr, "Invalid operation code for logical dp operation.\n");
 				return 1;
 		}
 
-	}else if(type < 16 && type % 2 == 0){ 
+	}else if(type == ARITH_INSTR){ 
 		//arithmetic
 		result = perform_arithmetic(armv8, opc, op1, op2, width); 	
 
-	}else if(type == 24){
+	}else if(type == MUL_INSTR){
 		//multiply
-		bool negate = (operand >> 5) & 0x1; //madd if 0/false, msub if 1/true
-		unsigned int ra = operand & 0x1f;
+		bool negate = extract_bits(instr, regdp_format.x.index, regdp_format.x.bits); //madd if 0/false, msub if 1/true
+		unsigned int ra = extract_bits(instr, regdp_format.ra.index, regdp_format.ra.bits); 
 
 		//read in ra register, if ra is not ZR
 		uint64_t op3 = 0;
-		if (ra != 0x1f) {
+		if (ra != ZRSP) {
 			if (read_reg(armv8, ra, &op3, width)) { return 1; }
 		}
 		
@@ -299,12 +323,12 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			result = op3 + (op1 * op2);
 		}
 	}else{
-		fprintf(stderr, "Unknown type of data processing register instruction.");
+		fprintf(stderr, "Unknown type of data processing register instruction.\n");
 		return 1;
 	}
 	
 	// If zero register, do not write 
-	if (rd == 0x1f) { return 0; }
+	if (rd == ZRSP) { return 0; }
 
 	return write_reg(armv8, rd, result, width);
 
