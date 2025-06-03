@@ -1,7 +1,3 @@
-#define NUM_GP_REGS 31     //num GP registers
-#define MEM_SIZE (1 << 21) //ARMV8 has 2MB memory
-#define ZRSP 0x1f          // Zero Register/Stack Pointer
-
 //PSTATE register
 typedef struct pstate {
 	bool N; //Negative flag

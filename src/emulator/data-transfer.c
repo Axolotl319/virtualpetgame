@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "constants.h"
 #include "armv8.h"
 #include "sign-extension.h"
 #include "data-transfer.h"
 #include "modify-regs.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
-#include "constants.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -18,16 +18,9 @@
 static int load(armv8_state *armv8, int width, int rt, uint64_t addr){ 
 	uint64_t data;
 
-	if (width == WIDTH_32) {
-		if (get_memory_data(armv8, addr, WORD_SIZE_32, &data)) { return 1;}
+	int word_size = width == WIDTH_32 ? WORD_SIZE_32 : WORD_SIZE_64;
 
-	} else if (width == WIDTH_64) {
-		if (get_memory_data(armv8, addr, WORD_SIZE_64, &data)) { return 1; }
-
-	} else {
-		fprintf(stderr, "Width must be 32 or 64 (load instruction)");
-		return 1;
-	}
+	if (get_memory_data(armv8, addr, word_size, &data)) { return 1;}
 
 	if (write_reg(armv8, rt, data, width)) { return 1; }
 
@@ -38,20 +31,14 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	uint64_t towrite;
 	int word_limit;
 
-	if (width == WIDTH_32) {
-		word_limit = WORD_SIZE_32;
-	} else if (width == WIDTH_64) {
-		word_limit = WORD_SIZE_64;
-	} else {
-		fprintf(stderr, "Width must be 32 or 64 (store instruction)");
-		return 1;
-	}
+	word_limit = (width == WIDTH_32) ? WORD_SIZE_32 : WORD_SIZE_64;
 
 	//bounds checking
 	if (addr + word_limit > MEM_SIZE) { 
 		return 1; 
 	}
-	
+	assert(addr + word_limit <= MEM_SIZE);
+
 	if (read_reg(armv8, rt, &towrite, width)) { return 1; }
 
 	for (int i = 0; i < word_limit; i++) {

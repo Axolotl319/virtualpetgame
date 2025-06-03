@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "constants.h"
 #include "armv8.h"
 #include "modify-regs.h"
-#include "constants.h"
+#include <assert.h>
 
 //checks if registers are in bounds - returns 1 if they aren't
 static int check_reg_bounds(int reg_num) {
@@ -58,7 +59,8 @@ int setPC(armv8_state *armv8, uint64_t addr) {
 	if (addr >= MEM_SIZE) { //PC too large
 		fprintf(stderr, "Address out of bounds\n");
 		return 1;
-	} 
+	}
+       	assert(addr < MEM_SIZE);	
 	armv8->PC = addr;
 	return 0;
 }
