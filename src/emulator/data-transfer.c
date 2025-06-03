@@ -79,9 +79,9 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	int word_limit;
 
 	if (width == WIDTH_32) {
-		word_limit = 4;
+		word_limit = WORD_SIZE_32;
 	} else if (width == WIDTH_64) {
-		word_limit = 8;
+		word_limit = WORD_SIZE_64;
 	} else {
 		fprintf(stderr, "Width must be 32 or 64 (store instruction)");
 		return 1;
@@ -95,8 +95,8 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 	if (read_reg(armv8, rt, &towrite, width)) { return 1; }
 
 	for (int i = 0; i < word_limit; i++) {
-		armv8->memory[addr+i] = towrite & 0xff;
-		towrite >>= 8;
+		armv8->memory[addr+i] = towrite & MASK_8;
+		towrite >>= WORD_SIZE_64;
 	}
 	return 0;
 }
@@ -105,7 +105,8 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 // Loads an immediate value into target register 
 int loadliteral(uint32_t instr, armv8_state *armv8) {
 	unsigned int reg = extract_bits(instr, sdt_format.rt.index, sdt_format.rt.bits); 	// Obtains the target register
-	int imm = sign_ext_32(extract_bits(instr, sdt_format.simm19.index, sdt_format.simm19.bits), 18)*4;	// Obtains the value to load
+	unsigned int simm19 = extract_bits(instr, sdt_format.simm19.index, sdt_format.simm19.bits);
+	int imm = sign_ext_32(simm19, sdt_format.simm19.bits) * WORD_SIZE_32;	// Obtains the value to load
 	int sf = extract_bits(instr, sdt_format.sf.index, sdt_format.sf.bits);		// Determines 32-bit or 64-bit
 	
 	int width;
@@ -160,7 +161,7 @@ int datatransfer(uint32_t instr, armv8_state *armv8) {
 
 	switch(mode){
 		case MODE_UNSIGNED_OFFSET: //unsigned offset
-			multiplier = (width == WIDTH_32) ? 4 : 8;
+			multiplier = (width == WIDTH_32) ? WORD_SIZE_32 : WORD_SIZE_64;
 			transferAddress += multiplier*offset;
 			break;
 

@@ -49,7 +49,7 @@ int read_reg(armv8_state *armv8, int reg_num, uint64_t *data, int width) {
 //PC operations 
 //Increment - takes argument armv8 state pointer
 void incrementPC(armv8_state *armv8) {
-	armv8->PC+=WORD_SIZE;
+	armv8->PC+=WORD_SIZE_32;
 }
 
 //Sets PC to a specified address

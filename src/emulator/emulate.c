@@ -10,6 +10,7 @@
 #include "data-transfer.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
+#include "constants.h"
  
 #define HALT 0x8a000000 //halt instruction
 #define OPT_ARGS 3      //optional number of args for main
@@ -42,7 +43,7 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
-	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE); addr+=WORD_SIZE) {
+	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE_32); addr+=WORD_SIZE_32) {
 		uint32_t word = 
 			((uint32_t)armv8->memory[addr])
 			| ((uint32_t)armv8->memory[addr + 1] << 8)
@@ -122,7 +123,7 @@ static int fetch(armv8_state *armv8) {
 		uint8_t *current = &armv8->memory[armv8->PC];		
 		
 		//if PC is out of bounds
-		if (armv8->PC + WORD_SIZE > MEM_SIZE) {
+		if (armv8->PC + WORD_SIZE_32 > MEM_SIZE) {
 			fprintf(stderr, "PC out of bounds\n");
 			return 1;
 		}

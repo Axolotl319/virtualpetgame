@@ -5,7 +5,7 @@ op0_group_t get_op0_group(unsigned int op0) {
 	if ((op0 & REGDP_MASK) == REGDP_CODE) { return REGDP_GROUP; }
 	if ((op0 & LDSTR_MASK) == LDSTR_CODE) { return LDSTR_GROUP; }
 	if ((op0 & BR_MASK) == BR_CODE) { return BR_GROUP; }
-	return INVALID;
+	return OP0_INVALID;
 }
 
 const immdp_format_t immdp_format = {

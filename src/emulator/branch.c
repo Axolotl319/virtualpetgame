@@ -28,56 +28,56 @@ int branch(uint32_t instr, armv8_state *armv8) {
 	switch (op) {
 
 	// Unconditional (offset) 
-		case 0: 
-			offset = (sign_ext_32(simm26, br_format.simm26.bits - 1)) * WORD_SIZE; // Mask bits 26 onwards 
+		case BR_OP_UNCONDITIONAL: 
+			offset = (sign_ext_32(simm26, br_format.simm26.bits - 1)) * WORD_SIZE_32; // Mask bits 26 onwards 
 			if (setPC(armv8, armv8->PC + offset)) { return -1; }
 			return 1; 
 			break; 
 
 	// Conditional 
-		case 1: 
+		case BR_OP_CONDITIONAL: 
 			cond = extract_bits(instr, br_format.cond.index, br_format.cond.bits);
-			offset = (sign_ext_32(simm19, br_format.simm19.bits - 1)) * WORD_SIZE; // Mask bits 20 onwards 
+			offset = (sign_ext_32(simm19, br_format.simm19.bits - 1)) * WORD_SIZE_32; // Mask bits 20 onwards 
 
 			// Determines which PSTATE flag to check
 			switch(cond) {
-				case 0: 
-					if (armv8->PSTATE.Z == true) {
+				case BR_EQ: //equal
+					if (armv8->PSTATE.Z) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1;
 					}
 					break;	
-				case 1: 
-					if (armv8->PSTATE.Z == false) {
+				case BR_NE: //not equal
+					if (!armv8->PSTATE.Z) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
-				case 10: 
+				case BR_GE: //signed greater or equal 
 					if (armv8->PSTATE.N == armv8->PSTATE.V) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
-				case 11: 
+				case BR_LT: //signed less than 
 					if (armv8->PSTATE.N != armv8->PSTATE.V) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
-				case 12: 
-					if (armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z) {
+				case BR_GT: //signed greater than 
+					if (!armv8->PSTATE.Z  && armv8->PSTATE.N == armv8->PSTATE.Z) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
-				case 13: 
-					if (!(armv8->PSTATE.Z == false && armv8->PSTATE.N == armv8->PSTATE.Z)) {
+				case BR_LE: //signed less than or equal 
+					if (!(!armv8->PSTATE.Z  && armv8->PSTATE.N == armv8->PSTATE.Z)) {
 						if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 						return 1; 
 					}
 					break; 
-				case 14: 
+				case BR_AL: //always 
 					if (setPC(armv8, armv8->PC + offset)) { return -1; } 
 					return 1; 
 					break; 
@@ -90,7 +90,7 @@ int branch(uint32_t instr, armv8_state *armv8) {
 			break; 
 
 	// Unconditional (register)
-		case 3: 
+		case BR_OP_REGISTER: 
 			reg = extract_bits(instr, br_format.xn.index, br_format.xn.bits); 
 		        // zero register, does not need to be handled
 			if (reg != ZRSP && read_reg(armv8, reg, &addr, WIDTH_64) == 0) {

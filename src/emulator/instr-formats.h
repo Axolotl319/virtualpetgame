@@ -16,7 +16,7 @@ typedef enum {
 	REGDP_GROUP,
 	LDSTR_GROUP,
 	BR_GROUP,
-	INVALID
+	OP0_INVALID
 } op0_group_t;
 
 //struct for extracting bits from 32 bit instruction
