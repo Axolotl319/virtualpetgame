@@ -39,3 +39,14 @@ void freeST(symbol_table *st){
 	free(st->addresses);
 	free(st);
 }
+
+//returns address of label or -1 if label is unknown
+uint8_t getAddress(symbol_table *table, char *label, int elements){
+	for(int i = 0; i < elements; i++){
+		if(strcmp(table->labels[i], label) == 0){
+			//if label at index i
+			return table->addresses[i];
+		}
+	}
+	return -1;
+}
