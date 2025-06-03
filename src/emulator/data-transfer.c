@@ -9,6 +9,7 @@
 #include "modify-regs.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
+#include "constants.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -95,7 +96,7 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 
 	for (int i = 0; i < word_limit; i++) {
 		armv8->memory[addr+i] = towrite & 0xff;
-		towrite = towrite >> 8;
+		towrite >>= 8;
 	}
 	return 0;
 }
@@ -123,21 +124,21 @@ int loadliteral(uint32_t instr, armv8_state *armv8) {
 }
 
 int datatransfer(uint32_t instr, armv8_state *armv8) {
-	int mode; //represents addressing mode
+	int mode = MODE_POST_INDEX; //represents addressing mode
 	if(extract_bits(instr, sdt_format.U.index, sdt_format.U.bits)){
-		mode = 0; //unsigned offset
+		mode = MODE_UNSIGNED_OFFSET; //unsigned offset
 	}else if(extract_bits(instr, sdt_format.R.index, sdt_format.R.bits)){
-		mode = 1; //register offset
+		mode = MODE_REG_OFFSET; //register offset
 	}else if(extract_bits(instr, sdt_format.I.index, sdt_format.I.bits)){
-		mode = 2; //pre-index
-	}else{
-		mode = 3; //post-index
+		mode = MODE_PRE_INDEX; //pre-index
+	} else {
+		mode = MODE_POST_INDEX;
 	}
 
 	uint64_t transferAddress = 0;
 	int rt = extract_bits(instr, sdt_format.rt.index, sdt_format.rt.bits); //target register, contains data to store
 	int xn = extract_bits(instr, sdt_format.xn.index, sdt_format.xn.bits); //base register Xn
-	if (xn == 0x1f) { return 0; } //Handle case when xn is the SP
+	if (xn == ZRSP) { return 0; } //Handle case when xn is the SP
 	if (read_reg(armv8, xn, &transferAddress, WIDTH_64)) { return 1; }  // Store base in transferAddress
 
 	int width = extract_bits(instr, sdt_format.sf.index, sdt_format.sf.bits) ? WIDTH_64 : WIDTH_32;
@@ -152,28 +153,28 @@ int datatransfer(uint32_t instr, armv8_state *armv8) {
 	// Pre-calculated for pre/post index
 	int32_t simm9 = sign_ext_32(extract_bits(instr, sdt_format.simm9.index, sdt_format.simm9.bits), sdt_format.simm9.bits);
 
-	assert(mode >= 0 && mode <= 3);
+	assert(mode >= MODE_UNSIGNED_OFFSET && mode <= MODE_POST_INDEX);
   
 	//multiplier to calculate load size
 	int multiplier; 
 
 	switch(mode){
-		case 0: //unsigned offset
+		case MODE_UNSIGNED_OFFSET: //unsigned offset
 			multiplier = (width == WIDTH_32) ? 4 : 8;
 			transferAddress += multiplier*offset;
 			break;
 
-		case 1: //register offset
+		case MODE_REG_OFFSET: //register offset
 			if (read_reg(armv8, xm, &regoffset, WIDTH_64)) { return 1; } 
 			transferAddress += regoffset;
 			break;
 
-		case 2: //pre-index
+		case MODE_PRE_INDEX: //pre-index
 			transferAddress += simm9;
 			if (write_reg(armv8, xn, transferAddress, width)) { return 1; }
 			break;
 
-		case 3: //post-index
+		case MODE_POST_INDEX: //post-index
 			if (write_reg(armv8, xn, transferAddress + simm9, width)) { return 1;}
 			break;
 	}
@@ -186,4 +187,3 @@ int datatransfer(uint32_t instr, armv8_state *armv8) {
 
 	return 0;
 }
-

@@ -1,5 +1,13 @@
 #include "instr-formats.h"
 
+op0_group_t get_op0_group(unsigned int op0) {
+	if ((op0 & IMMDP_MASK) == IMMDP_CODE) { return IMMDP_GROUP; }
+	if ((op0 & REGDP_MASK) == REGDP_CODE) { return REGDP_GROUP; }
+	if ((op0 & LDSTR_MASK) == LDSTR_CODE) { return LDSTR_GROUP; }
+	if ((op0 & BR_MASK) == BR_CODE) { return BR_GROUP; }
+	return INVALID;
+}
+
 const immdp_format_t immdp_format = {
 	.rd    = {0, 5},
 	.rn    = {5, 5},
@@ -38,7 +46,14 @@ const sdt_format_t sdt_format = {
 	.xm       = {16, 5},
 	.L        = {22, 1},
 	.U        = {24, 1},
-	.sf       = {30, 1}
+	.sf       = {30, 1},
+	.type     = {31, 1}
 };
 
-
+const branch_format_t br_format = {
+	.simm26 = {0, 26},
+	.xn     = {5, 5},
+	.cond   = {0, 4},
+	.simm19 = {5, 19},
+	.op     = {30, 2}
+};

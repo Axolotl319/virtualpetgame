@@ -8,7 +8,13 @@
 #include "data-processing.h"
 #include "branch.h"
 #include "data-transfer.h"
+#include "extract-bits.h"
+#include "instr-formats.h"
  
+#define HALT 0x8a000000 //halt instruction
+#define OPT_ARGS 3      //optional number of args for main
+#define ARG_INPUT 1    //argument for input file
+#define ARG_OUTPUT 2    //argument for output file
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 static void initialise(armv8_state *armv8) {
@@ -64,53 +70,43 @@ static int decode(uint8_t *instruction, armv8_state *armv8) {
 		| ((uint32_t) *instruction);
 
 	// Checks for halting instruction 
-	if (result == 0x8a000000) { return 1; }
+	if (result == HALT) { return 1; }
 
 	// Obtain op0 
-	unsigned int opzero = (result >> 25) & 0xf;	
+	unsigned int opzero = extract_bits(result, OP0_INDEX, OP0_BITS);	
 	
 	//Type for load/store and load literal
-	int type = 0x1 & (result >> 31); 
+	int type = extract_bits(result, sdt_format.type.index, sdt_format.type.index);
 
-	switch (opzero) {
-		case 8:
-		case 9: //Data processing (immediate)
-			printf("This is data processing (immediate).\n"); 
-			if (immdp( result, armv8 )) { return -1; } 
-			break; 
-		case 5:
-		case 13: //Data processing (registers)
-			printf("This is data processing (registers).\n");
-			if (regdp( result, armv8 )) { return -1; }
-		        break; 
-		case 4:
-		case 6:
-		case 12: 
-		case 14: //Load/Store
-			if (type) { //Load/Store with offset
-				printf("This is a load/store with offset (sdt).\n"); 
-				if (datatransfer( result, armv8 )) { return -1; } 
-			} else { //Load Literal
-				printf("This is a load literal (sdt).\n"); 
-				if (loadliteral( result, armv8 )) { return -1; } 
-			} 
-			break; 
-		case 10:
-		case 11: //Branch
-			printf("This is branch.\n");
-		        int branchStat = branch( result, armv8 ); 	
+	int branchStat; //branch status	
+
+	int op0_group = get_op0_group(opzero); //get the instr type 
+
+	switch (op0_group) {
+		case IMMDP_GROUP: //Data processing (immediate) 
+			return immdp( result, armv8 ) ? -1 : 0;
+		
+		case REGDP_GROUP: //Data processing (registers)
+			return regdp( result, armv8 ) ? -1 : 0;
+		  
+		case LDSTR_GROUP: //Load/Store
+			return type ? //Load/Store with offset
+				datatransfer( result, armv8 ) ? -1 : 0 : 
+			        //Load Literal 
+				loadliteral( result, armv8 ) ? -1 : 0;
+
+		case BR_GROUP: //Branch
+		        branchStat = branch( result, armv8 ); 	
 			if (branchStat == -1) {
 				return -1; 
 			} else if (branchStat) {
 				return 2; 
 			} 
-			break; 
+			return 0; 
 		default: 
 			fprintf(stderr, "Bad opcode (op0).\n");
 			return -1;
-			break; 
 	}
-	return 0; 
 }	
 
 
@@ -156,15 +152,15 @@ int main(int argc, char **argv)
 	initialise(&armv8);
 
 	//argc = 2 or 3, ./emulate is 1st arg
-  	FILE *inFile = fopen(argv[1], "rb");
+  	FILE *inFile = fopen(argv[ARG_INPUT], "rb");
 	FILE *outFile;
 	if(inFile == NULL){
 		perror("Couldn't open input file.");
 		return 1;
 	}
 
-	if(argc >= 3){
-		outFile = fopen(argv[2], "w");
+	if(argc >= OPT_ARGS){
+		outFile = fopen(argv[ARG_OUTPUT], "w");
 	}else{
 		outFile = stdout;
 	}

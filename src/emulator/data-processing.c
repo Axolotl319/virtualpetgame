@@ -9,10 +9,9 @@
 #include "sign-extension.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
+#include "constants.h"
 #include <limits.h>
 #include <assert.h>
-
-#define ZR 0x1f //Zero register
 
 //Bitwise shift operations
 
@@ -188,7 +187,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	}
 	
 	// If destination is 0 register, do not write. 
-	if (rd == ZR) { return 0; }
+	if (rd == ZRSP) { return 0; }
 	
 	return write_reg(armv8, rd, result, width);
 }
@@ -219,12 +218,12 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 
 	//reads register rn into op1, if rn is not ZR
-	if (rn != ZR) {
+	if (rn != ZRSP) {
 		if (read_reg(armv8, rn, &op1, width)) { return 1; }
 	}
 
 	//reads register rm into op2, if rm is not ZR
-	if (rm != ZR) {
+	if (rm != ZRSP) {
 		if (read_reg(armv8, rm, &op2, width)) { return 1; }
 	}
 
@@ -307,7 +306,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 		//read in ra register, if ra is not ZR
 		uint64_t op3 = 0;
-		if (ra != ZR) {
+		if (ra != ZRSP) {
 			if (read_reg(armv8, ra, &op3, width)) { return 1; }
 		}
 		
@@ -327,7 +326,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	}
 	
 	// If zero register, do not write 
-	if (rd == ZR) { return 0; }
+	if (rd == ZRSP) { return 0; }
 
 	return write_reg(armv8, rd, result, width);
 

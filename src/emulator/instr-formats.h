@@ -1,5 +1,24 @@
 #include <stdint.h>
 
+#define OP0_INDEX 25 //op0 index
+#define OP0_BITS 4   //num op0 bits
+#define IMMDP_MASK 0xE //IMMDP relevant bits from op0
+#define REGDP_MASK 0x7  //REGDP relevant bits
+#define LDSTR_MASK 0x4  //Load/Store relevant bits
+#define BR_MASK 0xE     //Branch relevant bits
+#define IMMDP_CODE 0x8  //IMMDP op0 code
+#define REGDP_CODE 0x5  //REGDP op0 code
+#define LDSTR_CODE 0x4  //Load Store op0 code
+#define BR_CODE 0xA     //Branch op0 code
+
+typedef enum {
+	IMMDP_GROUP,
+	REGDP_GROUP,
+	LDSTR_GROUP,
+	BR_GROUP,
+	INVALID
+} op0_group_t;
+
 //struct for extracting bits from 32 bit instruction
 typedef struct {
 	int index;
@@ -48,8 +67,19 @@ typedef struct {
 	bit_range_t L;
 	bit_range_t U;
 	bit_range_t sf;
+	bit_range_t type;
 } sdt_format_t;
+
+typedef struct {
+	bit_range_t simm26;
+	bit_range_t xn;
+	bit_range_t cond;
+	bit_range_t simm19;
+	bit_range_t op;
+} branch_format_t;
 
 extern const immdp_format_t immdp_format;
 extern const regdp_format_t regdp_format;
 extern const sdt_format_t sdt_format;
+extern const branch_format_t br_format;
+extern op0_group_t get_op0_group(unsigned int op0);

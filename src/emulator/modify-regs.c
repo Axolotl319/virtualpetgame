@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "armv8.h"
 #include "modify-regs.h"
+#include "constants.h"
 
 //checks if registers are in bounds - returns 1 if they aren't
 static int check_reg_bounds(int reg_num) {
@@ -18,8 +19,8 @@ int write_reg(armv8_state *armv8, int reg_num, uint64_t data, int width) {
 		return 1;
 	}
 
-	if (width == 32) {
-		data &= 0xffffffff;
+	if (width == WIDTH_32) {
+		data &= MASK_32; //mask 32 bits only
 	}
 
 	armv8->GP_regs[reg_num] = data;
@@ -37,7 +38,7 @@ int read_reg(armv8_state *armv8, int reg_num, uint64_t *data, int width) {
 	uint64_t raw_data = armv8->GP_regs[reg_num];
 
 	//Sets upper 32 bits to 0 if width is 32
-	*data = (width == 32) ? 
+	*data = (width == WIDTH_32) ? 
 		(uint64_t)((uint32_t)raw_data) :
 		(raw_data);
 

@@ -7,9 +7,11 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
+OBJS = emulate.o sign-extension.o extract-bits.o instr-formats.o data-processing.o data-transfer.o branch.o modify-regs.o
+
 all: emulate
 
-emulate: emulate.o sign-extension.o extract-bits.o instr-formats.o data-processing.o data-transfer.o branch.o modify-regs.o
+emulate: $(OBJS)
 
 emulate.o: emulate.c armv8.h
 data-processing.o: data-processing.c armv8.h
