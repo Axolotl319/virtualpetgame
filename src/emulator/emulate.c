@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "constants.h"
 #include "armv8.h" 
 #include "modify-regs.h"
 #include "data-processing.h"
@@ -10,7 +11,7 @@
 #include "data-transfer.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
-#include "constants.h"
+#include <assert.h>
  
 #define HALT 0x8a000000 //halt instruction
 #define OPT_ARGS 3      //optional number of args for main
@@ -128,6 +129,7 @@ static int fetch(armv8_state *armv8) {
 			fprintf(stderr, "PC out of bounds\n");
 			return 1;
 		}	
+		assert(armv8->PC <= MEM_SIZE - WORD_SIZE_32);
 
 		status = decode(armv8);
 		
@@ -160,6 +162,7 @@ int main(int argc, char **argv)
 		perror("Couldn't open input file.");
 		return 1;
 	}
+	assert(inFile != NULL);
 
 	if(argc >= OPT_ARGS){
 		outFile = fopen(argv[ARG_OUTPUT], "w");
@@ -171,6 +174,7 @@ int main(int argc, char **argv)
 		perror("Couldn't open output file.");
 		return 1;
 	}
+	assert(outFile != NULL);
 	
 	armv8.memory = malloc(MEM_SIZE);
 	if(armv8.memory == NULL){
@@ -178,16 +182,19 @@ int main(int argc, char **argv)
 		fclose(inFile);
 		return 1;
 	}
+	assert(armv8.memory != NULL);
 	
 	// Reads contents of file into buffer 
 	fread(armv8.memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
 
 	//Calls fetch function, which calls decode
-	if (fetch(&armv8)) {
+	int fetch_status = fetch(&armv8);
+	if (fetch_status) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
 		return 1;
 	}
+	assert(!fetch_status);
 	
 	//print armv8 state
 	print_state(&armv8, outFile);

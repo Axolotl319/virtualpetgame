@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include "constants.h"
 #include "armv8.h"
 #include "extract-bits.h"
-#include "constants.h"
 
 //Extracts specific bits from a 32 bit integer
 //Takes in the int to extract from, a start index, and number of bits to extract
@@ -23,6 +23,7 @@ int get_memory_data(armv8_state *armv8, uint64_t addr, int num_bytes, uint64_t *
 		fprintf(stderr, "Invalid memory address");
 		return 1;
 	}
+	assert(addr + WORD_SIZE_32 <= MEM_SIZE);
 
 	*data = 0;
 

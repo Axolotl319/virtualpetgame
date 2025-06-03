@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "constants.h"
 #include "armv8.h"
 #include "data-processing.h"
 #include "modify-regs.h"
 #include "sign-extension.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
-#include "constants.h"
 #include <limits.h>
 #include <assert.h>
 
@@ -153,6 +153,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 				fprintf(stderr, "Invalid shift for 32 bit");
 				return 1;
 			}
+			assert(width == WIDTH_64 || (width == WIDTH_32 && hw <= hw_min_32));
 			
 			//shifted immediate value
 			uint64_t imm = ((uint64_t)
@@ -217,6 +218,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		fprintf(stderr, "Invalid operand.\n");
 		return 1;
 	}
+	assert(operand < WIDTH_64 && (type == MUL_INSTR || operand < width)); 
 
 	//reads register rn into op1, if rn is not ZR
 	if (rn != ZRSP) {
@@ -236,6 +238,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 			fprintf(stderr, "Invalid shift amount.\n");
 			return 1;
 		}
+		assert(operand >= 0 && operand < width);
 
 		shift_t shift = extract_bits(instr, regdp_format.shift.index, regdp_format.shift.bits);
 

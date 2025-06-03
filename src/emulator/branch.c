@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "constants.h"
 #include "armv8.h"
 #include "sign-extension.h"
 #include "branch.h"
 #include "modify-regs.h"
 #include "extract-bits.h"
 #include "instr-formats.h"
-#include "constants.h"
 
 // Input: integer representing an instruction 
 // Based on the instruction, updates the PC to the desired address. 
