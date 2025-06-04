@@ -79,9 +79,9 @@ in the execution modules' code.
 
 Utilities like sign extension, bit extraction, and instruction format data structures can be reused 
 when creating our assembler. Additionally, the emulator directory layout can be reused 
-for our assembler, because the assembler is similar to the emulator in that it performs fetch 
-and encode. For example, the assembler will also have three “encode” modules – Data Processing, 
-Data Transfer, and Branch – to prevent extremely long source files. 
+for the assembler directory layout, because the assembler also has a similar "fetch cycle" that encodes rather than decodes. 
+For example, the assembler will have three “encode” modules that mirror the 
+execution modules – Data Processing, Data Transfer, and Branch – to prevent extremely long source files. 
 
 One implementation task we will likely find challenging is identifying global variables 
 and utility functions early on. Many of our utility functions were identified and refactored 
