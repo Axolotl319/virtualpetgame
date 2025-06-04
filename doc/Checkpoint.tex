@@ -49,7 +49,7 @@ contribute equally, learn the C language, and maintain communication.
 
 \section{Implementation Strategies}
 
-Our ARMv8 emulator is split into four main sections: the "hardware" structures, the initialization 
+Our ARMv8 emulator is split into four main sections: the ``hardware'' data structures, the initialization 
 and fetch cycle, the execution, and the global utility functions. First, the Processor State Register (\texttt{PSTATE}) 
 is represented by a data structure consisting of four Booleans, each representing a \texttt{PSTATE} flag. The 
 state of the ARMv8 is represented by a data structure consisting of an 8-bit integer array representing memory, 
@@ -79,7 +79,7 @@ in the execution modules' code.
 
 Utilities like sign extension, bit extraction, and instruction format data structures can be reused 
 when creating our assembler. Additionally, the emulator directory layout can be reused for the 
-assembler directory layout. This is because the assembler has a similar "fetch cycle" to the emulator; 
+assembler directory layout. This is because the assembler has a similar ``fetch cycle'' to the emulator; 
 the only difference is that the cycle encodes rather than decodes. Hence, the assembler directory 
 will have three “encode” modules that mirror the execution modules – Data Processing, Data Transfer, 
 and Branch – to prevent extremely long source files. 
