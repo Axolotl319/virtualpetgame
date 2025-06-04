@@ -12,8 +12,9 @@
 \section{Group Organisation}
 
 The group is organized such that all members claim a similar amount of work, 
-and each member takes ownership of their own emulator tasks. All work is coordinated 
-by communicating progress and requests through a WhatsApp channel. 
+and each member takes ownership of their own emulator tasks. Most work is coordinated 
+by communicating progress and requests through a WhatsApp channel, while debugging takes 
+place during in-person lab sessions. 
 
 Our process of dividing tasks involves using a checklist and volunteering by interest, which effectively
 maintains motivation and dedication. To divide tasks, we first gather in-person 
@@ -24,7 +25,7 @@ open to be claimed as group members complete their initial tasks.
 
 Since no major errors have been merged into the master branch and minimal GitLab technical 
 difficulties have occurred, coordination between members is quite good. When a group member 
-finishes one of their tasks, they typically announce the completed task and ask others to 
+finishes a task, they typically announce the completed task and ask others to 
 review the merge request, which limits errors. After the request is reviewed and adjustments are made, the code 
 is merged and a reminder to pull is sent on WhatsApp. Lastly, the group member claims an 
 unfinished task from the checklist by writing their name next to an unclaimed task, allowing 
@@ -46,22 +47,22 @@ contribute equally, learn the C language, and maintain communication.
 
 \section{Implementation Strategies}
 
-Our emulator is split into four main sections: the "hardware" structures, the initialization 
+Our ARMv8 emulator is split into four main sections: the "hardware" structures, the initialization 
 and fetch cycle, the execution, and the global utility functions. First, the Processor State Register (\texttt{PSTATE}) 
 is represented by a data structure consisting of four Booleans, each representing a \texttt{PSTATE} flag. The 
-state of the ARM is represented by a data structure consisting of an 8-bit integer array representing memory, 
+state of the ARMv8 is represented by a data structure consisting of an 8-bit integer array representing memory, 
 a 64-bit integer array representing the 31 general-purpose registers, a 64-bit integer representing the \texttt{PC}, 
 and the \texttt{PSTATE} structure. These components are defined in their own \texttt{armv8.h} file, 
 and can be updated using the subset of global utility functions found in \texttt{modify-regs.c}. Note 
 that the zero register is not included, since it represents the value zero and so can be handled independently. 
 
-Next, the ARM memory is initialized using \texttt{malloc} and \texttt{memset}, setting 2MB of memory to zero before 
-instructions and data are loaded. This is freed at the end of execution. The remaining ARM 
+Next, the ARMv8 memory is initialized using \texttt{malloc} and \texttt{memset}, setting 2MB of memory to zero before 
+instructions and data are loaded. This is freed at the end of execution. The remaining ARMv8 
 components are initialized to their defaults as described in the specification file. Afterwards, 
 the fetch cycle repeatedly calls a \texttt{decode} function that reads the instruction at the address 
-in the \textsc{PC}, determines the opcode, then passes the instruction to the proper function for execution. 
+in the \texttt{PC}, determines the opcode, then passes the instruction to the proper function for execution. 
 Ultimately, \texttt{decode} returns a status code indicating successful execution, failed execution, 
-or halt condition reached. This status code also determines if the \textsc{PC} increments, depending on 
+or halt condition reached. This status code also determines if the \texttt{PC} increments, depending on 
 whether a branch has successfully occurred. 
 
 The execution of instructions is divided into three modules: Data Processing, Data Transfer, and 
@@ -71,7 +72,7 @@ execution, which is then propagated by decode.
 
 Lastly, the global utility functions are composed of functions that read and write registers, 
 update the \texttt{PSTATE} register, extract bits from instruction fields, and perform sign extensions. 
-These are frequently used across all execution modules, and serve to reduce clutter 
+The utility functions are frequently used across all execution modules, and are extracted to reduce clutter 
 in the execution modules' code. 
 
 Utilities like sign extension, bit extraction, and instruction format data structures can be reused 
