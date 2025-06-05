@@ -19,10 +19,7 @@ int main(int argc, char **argv) {
 	char linein[MAXLINELEN]; 
 	
 	// First pass: store labels and addresses in symbol table
-	// May be preferable to make labels and addresses dynamic arrays  		
-	dyn_array labels = create_dyn_array();
-	uint8_t *addresses = malloc(15 * sizeof(uint8_t));
-	int nelements = 0;
+        symbol_table *table = emptyST( void );	
 
 	// A regular expression to help identify labels: 
 	regex_t regex; 
@@ -33,7 +30,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; 
 	}
 	
-	int addr = 0; 
+	int addr = 0;
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		int len = strlen(linein); 
 		if (len > 0 && linein[len-1] == '\n') {
@@ -41,14 +38,11 @@ int main(int argc, char **argv) {
 		} 
 		reti = regexec(&regex, linein, 0, NULL, 0);  
 		if (!reti) { 
-			labels->data[nelements] = strdup(linein); 
-			addresses[nelements] = addr; 
-			nelements++; 
+			addPair(table, linein, addr);
 		}
 		addr+=4; 
 	}
 
-	symbol_table *symtable = createST(labels->data, addresses, nelements);
 	// For debugging purposes: 
 	for(int i=0; i<nelements; i++) {
 		printf("Label: %s, address: %u\n", labels->data[i], addresses[i]); 

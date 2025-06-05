@@ -9,5 +9,5 @@ struct dyn_array {
 typedef struct dyn_array * dyn_array; 
 
 dyn_array create_dyn_array(void); 
-void add_elem(dyn_array da, char *); 
+void add_elem(dyn_array da, char *d); 
 void free_dyn_array(dyn_array da); 
