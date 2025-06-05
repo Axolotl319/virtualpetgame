@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <regex.h>
 #include <string.h>
+//#include "armv8.h"
 #include "symtable.h"
 #include "dynamic_array.h"
 
@@ -19,7 +20,7 @@ int main(int argc, char **argv) {
 	char linein[MAXLINELEN]; 
 	
 	// First pass: store labels and addresses in symbol table
-        symbol_table *table = emptyST( void );	
+        symbol_table *symtable = emptyST( );	
 
 	// A regular expression to help identify labels: 
 	regex_t regex; 
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; 
 	}
 	
-	int addr = 0;
+	uint8_t *addr = armv8_state->memory; //from armv8.h, unsure how to link, may need to put in utils?
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		int len = strlen(linein); 
 		if (len > 0 && linein[len-1] == '\n') {
@@ -38,15 +39,16 @@ int main(int argc, char **argv) {
 		} 
 		reti = regexec(&regex, linein, 0, NULL, 0);  
 		if (!reti) { 
-			addPair(table, linein, addr);
+			addPair(symtable, linein, addr);
 		}
-		addr+=4; 
+		addr++; 
 	}
 
-	// For debugging purposes: 
-	for(int i=0; i<nelements; i++) {
-		printf("Label: %s, address: %u\n", labels->data[i], addresses[i]); 
+	//For debugging purposes: 
+	for(int i=0; i<symtable->length; i++) {
+		printf("Label: %s, address: %p\n", symtable->st_pairs[i]->label, symtable->st_pairs[i]->address); 
 	}
+	
 
 	// Second pass: generate binary encoding
 	
