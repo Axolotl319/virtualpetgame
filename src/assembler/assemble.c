@@ -3,6 +3,7 @@
 #include <regex.h>
 #include <string.h>
 #include "symtable.h"
+#include "dynamic_array.h"
 
 #define MAXLINELEN 256 
 
@@ -19,7 +20,7 @@ int main(int argc, char **argv) {
 	
 	// First pass: store labels and addresses in symbol table
 	// May be preferable to make labels and addresses dynamic arrays  		
-	char **labels = malloc(15 * sizeof(char *));
+	dyn_array labels = create_dyn_array();
 	uint8_t *addresses = malloc(15 * sizeof(uint8_t));
 	int nelements = 0;
 
@@ -40,25 +41,25 @@ int main(int argc, char **argv) {
 		} 
 		reti = regexec(&regex, linein, 0, NULL, 0);  
 		if (!reti) { 
-			labels[nelements] = strdup(linein); 
+			labels->data[nelements] = strdup(linein); 
 			addresses[nelements] = addr; 
 			nelements++; 
 		}
 		addr+=4; 
 	}
 
-	symbol_table *symtable = createST(labels, addresses, nelements);
+	symbol_table *symtable = createST(labels->data, addresses, nelements);
 	// For debugging purposes: 
-	for(int i=0; i<15; i++) {
-		printf("Label: %s, address: %u\n", labels[i], addresses[i]); 
+	for(int i=0; i<nelements; i++) {
+		printf("Label: %s, address: %u\n", labels->data[i], addresses[i]); 
 	}
-	
+
 	// Second pass: generate binary encoding
 	
 
 	// Clean up and prepare to exit 
 	fclose(filein); 
-	freeST(symtable); 
-	
+	freeST(symtable);
+        	
 	return EXIT_SUCCESS;
 }

@@ -7,14 +7,15 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o
+OBJS = symtable.o assemble.o dynamic_array.o
 
 all: assemble
 
 assemble: $(OBJS)
 
-assemble.o: assemble.c symtable.h
+assemble.o: assemble.c symtable.h dynamic_array.h
 symtable.o: symtable.c
+dyn_array.o: dynamic_array.c
 
 clean:
 	$(RM) *.o assemble
