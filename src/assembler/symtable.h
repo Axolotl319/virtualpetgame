@@ -2,7 +2,7 @@
 
 typedef struct symbol_pair{
 	char *label;
-	uint8_t address;
+	uint8_t *address;
 } symbol_pair;
 
 typedef struct symbol_table{
@@ -15,10 +15,10 @@ typedef struct symbol_table{
 symbol_table *emptyST(void);
 
 //add new label-address pair to specified symbol table
-void addPair(symbol_table *st, char *label, uint8_t address);
+void addPair(symbol_table *st, char *label, uint8_t *address);
 
 //free space when symbol table no longer needed
 void freeST(symbol_table *st);
 	
 //returns address of label or NULL if label is unknown
-uint8_t getAddress(symbol_table *st, char *label);
+uint8_t *getAddress(symbol_table *st, char *label);

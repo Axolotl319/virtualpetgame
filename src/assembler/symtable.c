@@ -20,7 +20,7 @@ symbol_table *emptyST(void){
 	return st; //pointer to symbol table
 }
 
-void addPair(symbol_table *st, char *label, uint8_t address){
+void addPair(symbol_table *st, char *label, uint8_t *address){
 	symbol_pair *np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table pair");
@@ -35,7 +35,6 @@ void addPair(symbol_table *st, char *label, uint8_t address){
 		}
 	}
 	st->st_pairs[st->length++] = np;
-	printf("debug: pair successfully added, label = %s, address = %d", np->label, np->address);
 }
 }
 
@@ -49,7 +48,7 @@ void freeST(symbol_table *st){
 }
 
 //returns address of label or NULL if label is unknown
-uint8_t getAddress(symbol_table *st, char *label){
+uint8_t *getAddress(symbol_table *st, char *label){
 	for(int i = 0; i < st->length; i++){
 		symbol_pair *p = st->st_pairs[i];
 		if(p->label == label){
