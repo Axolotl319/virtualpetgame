@@ -3,50 +3,59 @@
 #include <string.h>
 #include "symtable.h"
 
-/* So what I'm thinking is:
- * 1st pass, the labels and addresses arrays are created
+/* 1st pass, the labels and addresses arrays are created
  * Then a symbol table is made which does not change
  */
 
 //returns NULL if error, else returns pointer to new symbol table
-//size = number of (label, address) elements
-symbol_table *createST(char **labels, uint8_t *addresses, int size){
-	symbol_table *table = malloc(sizeof(struct symbol_table));
-	if(table == NULL){
+symbol_table *emptyST(void){
+	symbol_table *st = malloc(sizeof(struct symbol_table));
+	if(st == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table");
 		return NULL;
 	}
-	table->labels = malloc(size * sizeof(char*));
-	if(table->labels == NULL){
-		fprintf(stderr, "Can't allocate memory for symbol table labels array");
-		return NULL;
+	st->length = 0; //contains no elements
+	st->capacity = 1; //capacity > length
+	st->st_pairs = malloc(st->capacity * sizeof(symbol_pair));
+	return st; //pointer to symbol table
+}
+
+void addPair(symbol_table *st, char *label, uint8_t *address){
+	symbol_pair *np = malloc(sizeof(struct symbol_pair)); //np = new pair
+	if(np == NULL){
+		fprintf(stderr, "Can't allocate memory for new symbol table pair");
+	}else{
+	np->label = label;
+	np->address = address;
+	if(st->length >= st->capacity){ //current array too small to add pair
+		st->capacity *= 2; //double the array capacity
+		st->st_pairs = realloc(st->st_pairs, st->capacity * sizeof(symbol_pair));
+		if(st->st_pairs == NULL){
+			fprintf(stderr, "Can't reallocate memory for symbol table pairs");
+		}
 	}
-	table->addresses = malloc(size * sizeof(uint8_t));
-	if(table->addresses == NULL){
-		fprintf(stderr, "Can't allocate memory for ST addresses array");
-		return NULL;
-	}
-	for(int i = 0; i < size; i++){
-		table->labels[i] = labels[i]; 
-		table->addresses[i] = addresses[i];
-	}
-	return table; //pointer to symbol table
+	st->st_pairs[st->length++] = np;
+}
 }
 
 //free space when symbol table no longer needed
 void freeST(symbol_table *st){
-	free(st->labels);
-	free(st->addresses);
+	for(int i = 0; i < st->length; i++){
+		free(st->st_pairs[i]);
+	}
+	free(st->st_pairs);
 	free(st);
 }
 
-//returns address of label or -1 if label is unknown
-uint8_t getAddress(symbol_table *table, char *label, int size){
-	for(int i = 0; i < size; i++){
-		if(strcmp(table->labels[i], label) == 0){
-			//if label at index i
-			return table->addresses[i];
+//returns address of label or NULL if label is unknown
+uint8_t *getAddress(symbol_table *st, char *label){
+	for(int i = 0; i < st->length; i++){
+		symbol_pair *p = st->st_pairs[i];
+		if(p->label == label){
+			return p->address;
 		}
 	}
-	return -1;
+	fprintf(stderr, "Label is not in symbol table so can't get address");
+	return NULL;
 }
+
