@@ -19,4 +19,5 @@ symtable.o: symtable.c
 
 clean:
 	$(RM) *.o assemble
+	$(RM) ../utils/*.o
 	

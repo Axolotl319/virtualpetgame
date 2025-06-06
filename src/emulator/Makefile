@@ -1,15 +1,18 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
-	-Wall -Werror -pedantic -Wstrict-prototypes
+	-Wall -Werror -pedantic -Wstrict-prototypes\
+	-I ../utils
 
 .SUFFIXES: .c .o
 
 .PHONY: all clean
 
-OBJS = emulate.o sign-extension.o extract-bits.o instr-formats.o data-processing.o data-transfer.o branch.o modify-regs.o
+UTIL_OBJS := ../utils/sign-extension.o ../utils/extract-bits.o ../utils/instr-formats.o
+OBJS = emulate.o data-processing.o data-transfer.o branch.o modify-regs.o $(UTIL_OBJS)
 
 all: emulate
+	cp emulate ~/armv8_testsuite/solution
 
 emulate: $(OBJS)
 
@@ -21,4 +24,5 @@ modify-regs.o: modify-regs.c armv8.h
 
 clean:
 	$(RM) *.o emulate
+	$(RM) ../utils/*.o
 	

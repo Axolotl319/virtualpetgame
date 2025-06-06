@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <assert.h>
 #include "constants.h"
-#include "armv8.h"
+#include "../emulator/armv8.h"
 #include "extract-bits.h"
 
 //Extracts specific bits from a 32 bit integer
