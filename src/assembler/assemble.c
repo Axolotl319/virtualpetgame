@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <regex.h>
 #include <string.h>
-//#include "armv8.h"
 #include "symtable.h"
 #include "dynamic_array.h"
 
@@ -31,7 +30,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; 
 	}
 	
-	uint8_t *addr = armv8_state->memory; //from armv8.h, unsure how to link, may need to put in utils?
+	uint8_t *addr = &linein //address of label
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		int len = strlen(linein); 
 		if (len > 0 && linein[len-1] == '\n') {
@@ -41,7 +40,6 @@ int main(int argc, char **argv) {
 		if (!reti) { 
 			addPair(symtable, linein, addr);
 		}
-		addr++; 
 	}
 
 	//For debugging purposes: 
