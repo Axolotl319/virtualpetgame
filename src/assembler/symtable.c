@@ -37,7 +37,7 @@ void addPair(symbol_table st, char *label, uint8_t *address){
 		}
 		st->st_pairs[st->length++] = np;
 	}
-	assert(st->capacity >= st->length)
+	assert(st->capacity >= st->length);
 }
 
 //free space when symbol table no longer needed
@@ -52,7 +52,7 @@ void freeST(symbol_table st){
 //returns address of label or NULL if label is unknown
 uint8_t *getAddress(symbol_table st, char *label){
 	for(int i = 0; i < st->length; i++){
-		symbol_pair *p = st->st_pairs[i];
+		symbol_pair p = st->st_pairs[i];
 		if(p->label == label){
 			return p->address;
 		}

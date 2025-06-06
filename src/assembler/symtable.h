@@ -3,15 +3,15 @@
 struct symbol_pair{
 	char *label;
 	uint8_t *address;
-}
+};
 
 typedef struct symbol_pair *symbol_pair;
 
 struct symbol_table{
-	symbol_pair **st_pairs;
+	symbol_pair *st_pairs;
 	int length;
 	int capacity;
-}
+};
 
 typedef struct symbol_table *symbol_table;
 

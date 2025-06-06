@@ -1,21 +1,21 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
-	-Wall -Werror -pedantic -Wstrict-prototypes
+	-Wall -Werror -pedantic -Wstrict-prototypes\
+	-I ../utils
 
 .SUFFIXES: .c .o
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o dynamic_array.o
+OBJS = symtable.o assemble.o
 
 all: assemble
 
 assemble: $(OBJS)
 
-assemble.o: assemble.c symtable.h dynamic_array.h
+assemble.o: assemble.c symtable.h 
 symtable.o: symtable.c
-dyn_array.o: dynamic_array.c
 
 clean:
 	$(RM) *.o assemble

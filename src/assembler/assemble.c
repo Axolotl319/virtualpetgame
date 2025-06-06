@@ -4,9 +4,10 @@
 #include <string.h>
 //#include "armv8.h"
 #include "symtable.h"
-#include "dynamic_array.h"
+//#include "constants.h"
 
-#define MAXLINELEN 256 
+#define MAXLINELEN 256
+#define WORD_SIZE_32 4
 
 int main(int argc, char **argv) {
 
@@ -20,7 +21,7 @@ int main(int argc, char **argv) {
 	char linein[MAXLINELEN]; 
 	
 	// First pass: store labels and addresses in symbol table
-        symbol_table *symtable = emptyST( );	
+        symbol_table symtable = emptyST( );	
 
 	// A regular expression to help identify labels: 
 	regex_t regex; 
@@ -31,7 +32,8 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; 
 	}
 	
-	uint8_t *addr = armv8_state->memory; //from armv8.h, unsure how to link, may need to put in utils?
+	//uint8_t *addr = armv8_state->memory; //from armv8.h, unsure how to link, may need to put in utils?
+	uint8_t addr = 0; 
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		int len = strlen(linein); 
 		if (len > 0 && linein[len-1] == '\n') {
@@ -39,16 +41,11 @@ int main(int argc, char **argv) {
 		} 
 		reti = regexec(&regex, linein, 0, NULL, 0);  
 		if (!reti) { 
-			addPair(symtable, linein, addr);
+			addPair(symtable, linein, &addr);
+			printf("debug: Label: %s, address: %d\n", linein, *getAddress(symtable, linein));
 		}
-		addr++; 
+		addr+=WORD_SIZE_32; 
 	}
-
-	//For debugging purposes: 
-	for(int i=0; i<symtable->length; i++) {
-		printf("Label: %s, address: %p\n", symtable->st_pairs[i]->label, symtable->st_pairs[i]->address); 
-	}
-	
 
 	// Second pass: generate binary encoding
 	
