@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <regex.h>
 #include <string.h>
-//#include "armv8.h"
 #include "symtable.h"
 //#include "constants.h"
 
@@ -32,7 +31,6 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; 
 	}
 	
-	//uint8_t *addr = armv8_state->memory; //from armv8.h, unsure how to link, may need to put in utils?
 	uint8_t addr = 0; 
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		int len = strlen(linein); 
