@@ -151,15 +151,13 @@ static int fetch(armv8_state *armv8) {
 
 int main(int argc, char **argv) 
 {
-	//create an armv8 state and initialise the registers
-	armv8_state armv8;
-	initialise(&armv8);
 
 	//argc = 2 or 3, ./emulate is 1st arg
   	FILE *inFile = fopen(argv[ARG_INPUT], "rb");
 	FILE *outFile;
 	if(inFile == NULL){
 		perror("Couldn't open input file.");
+
 		return 1;
 	}
 	assert(inFile != NULL);
@@ -175,21 +173,25 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	assert(outFile != NULL);
+
+	//create an armv8 state and initialise the registers
+	armv8_state *armv8 = malloc(sizeof(struct armv8_state));
+	initialise(armv8);
 	
-	armv8.memory = malloc(MEM_SIZE);
-	if(armv8.memory == NULL){
+	armv8->memory = malloc(MEM_SIZE);
+	if(armv8->memory == NULL){
 		fprintf(stderr, "Couldn't allocate buffer memory");
 		fclose(inFile);
 		return 1;
 	}
-	assert(armv8.memory != NULL);
+	assert(armv8->memory != NULL);
 	
 	// Reads contents of file into buffer 
-	fread(armv8.memory, 1, MEM_SIZE, inFile);	
+	fread(armv8->memory, 1, MEM_SIZE, inFile);	
 	fclose(inFile);
 
 	//Calls fetch function, which calls decode
-	int fetch_status = fetch(&armv8);
+	int fetch_status = fetch(armv8);
 	if (fetch_status) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
 		return 1;
@@ -197,9 +199,9 @@ int main(int argc, char **argv)
 	assert(!fetch_status);
 	
 	//print armv8 state
-	print_state(&armv8, outFile);
+	print_state(armv8, outFile);
 
-	free(armv8.memory);
-	
+	free(armv8->memory);
+	free(armv8);	
 	return EXIT_SUCCESS;
 }

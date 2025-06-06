@@ -12,6 +12,7 @@ UTIL_OBJS := ../utils/sign-extension.o ../utils/extract-bits.o ../utils/instr-fo
 OBJS = emulate.o data-processing.o data-transfer.o branch.o modify-regs.o $(UTIL_OBJS)
 
 all: emulate
+	cp emulate ~/armv8_testsuite/solution
 
 emulate: $(OBJS)
 
