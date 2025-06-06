@@ -8,14 +8,13 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-UTIL_OBJS = ../utils/sign-extension.o
-OBJS = assemble.o symtable.o $(UTIL_OBJS)
+OBJS = symtable.o assemble.o
 
 all: assemble
 
 assemble: $(OBJS)
 
-assemble.o: assemble.c
+assemble.o: assemble.c symtable.h 
 symtable.o: symtable.c
 
 clean:

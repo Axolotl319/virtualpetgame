@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "symtable.h"
 
 /* 1st pass, the labels and addresses arrays are created
@@ -8,8 +9,8 @@
  */
 
 //returns NULL if error, else returns pointer to new symbol table
-symbol_table *emptyST(void){
-	symbol_table *st = malloc(sizeof(struct symbol_table));
+symbol_table emptyST(void){
+	symbol_table st = malloc(sizeof(struct symbol_table));
 	if(st == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table");
 		return NULL;
@@ -17,29 +18,30 @@ symbol_table *emptyST(void){
 	st->length = 0; //contains no elements
 	st->capacity = 1; //capacity > length
 	st->st_pairs = malloc(st->capacity * sizeof(symbol_pair));
-	return st; //pointer to symbol table
+	return st;
 }
 
-void addPair(symbol_table *st, char *label, uint8_t *address){
-	symbol_pair *np = malloc(sizeof(struct symbol_pair)); //np = new pair
+void addPair(symbol_table st, char *label, uint8_t *address){
+	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table pair");
 	}else{
-	np->label = label;
-	np->address = address;
-	if(st->length >= st->capacity){ //current array too small to add pair
-		st->capacity *= 2; //double the array capacity
-		st->st_pairs = realloc(st->st_pairs, st->capacity * sizeof(symbol_pair));
-		if(st->st_pairs == NULL){
-			fprintf(stderr, "Can't reallocate memory for symbol table pairs");
+		np->label = label;
+		np->address = address;
+		if(st->length >= st->capacity){ //current array too small to add pair
+			st->capacity *= 2; //double the array capacity
+			st->st_pairs = realloc(st->st_pairs, st->capacity * sizeof(symbol_pair));
+			if(st->st_pairs == NULL){
+				fprintf(stderr, "Can't reallocate memory for symbol table pairs");
+			}
 		}
+		st->st_pairs[st->length++] = np;
 	}
-	st->st_pairs[st->length++] = np;
-}
+	assert(st->capacity >= st->length);
 }
 
 //free space when symbol table no longer needed
-void freeST(symbol_table *st){
+void freeST(symbol_table st){
 	for(int i = 0; i < st->length; i++){
 		free(st->st_pairs[i]);
 	}
@@ -48,9 +50,9 @@ void freeST(symbol_table *st){
 }
 
 //returns address of label or NULL if label is unknown
-uint8_t *getAddress(symbol_table *st, char *label){
+uint8_t *getAddress(symbol_table st, char *label){
 	for(int i = 0; i < st->length; i++){
-		symbol_pair *p = st->st_pairs[i];
+		symbol_pair p = st->st_pairs[i];
 		if(p->label == label){
 			return p->address;
 		}
