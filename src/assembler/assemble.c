@@ -4,9 +4,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <assert.h>
 #include "symtable.h"
 #include "constants.h"
+#include "aliases.h"
 
+#define NUM_ARGS 3
 #define MAXLINELEN 256
 #define LABEL_REGEX "[a-zA-Z_.]([a-zA-Z0-9$_.])*:"
 
@@ -20,6 +23,7 @@ static int compile_regex( void ) {
 		fprintf(stderr, "Regex could not be compiled.\n"); 
 		return EXIT_FAILURE; 
 	}
+	assert(!reti);
 	return EXIT_SUCCESS;
 }
 
@@ -67,18 +71,19 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		strip_newline(linein);
 
 		if (is_label(linein)) { 
-			if (addPair(symtable, linein, &addr)) { return 1; }
+			if (addPair(symtable, linein, &addr)) { return EXIT_FAILURE; }
 			printf("debug: Label: %s, address: %d\n", linein, *getAddress(symtable, linein));
 		}
 
 		addr += WORD_SIZE_32; 
 	}
 	return EXIT_SUCCESS;
+	
 }
 
 //Second pass: reads each instruction and int directive
 //Calls functions to generate binary code
-//Replaces label references with addresses from symtable
+//Replaces label references with addresses from symtable HAVENT DONE THIS YET
 static int second_pass(symbol_table symtable, FILE* filein) {
 	//reread file
 	char linein[MAXLINELEN];
@@ -120,10 +125,11 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 
 int main(int argc, char **argv) {
 
-	if (argc != 3) {
+	if (argc != NUM_ARGS) {
 		fprintf(stderr, "Incorrect arguments given.\n");
 	        return EXIT_FAILURE; 	
 	}
+	assert(argc == NUM_ARGS);
 	
 	// Open the input file 
 	FILE *filein = fopen(argv[1], "r");
@@ -131,16 +137,18 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Unable to open file\n");
 		return EXIT_FAILURE;
 	}	
+	assert(filein != NULL);
 
 	
 	// First pass: store labels and addresses in symbol table
         symbol_table symtable = emptyST();
 	if (symtable == NULL) { return EXIT_FAILURE; }
+	assert(symtable != NULL);
 
 	//Compile regex for labels
 	if (compile_regex()) { return EXIT_FAILURE; }
 
-	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }	
+	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	//rewind file to go back to start
 	rewind(filein);

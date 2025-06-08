@@ -8,15 +8,16 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o
+OBJS = symtable.o assemble.o aliases.o
 
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
 
 assemble: $(OBJS)
 
-assemble.o: assemble.c symtable.h 
+assemble.o: assemble.c symtable.h  
 symtable.o: symtable.c
+aliases.o: aliases.c
 
 clean:
 	$(RM) *.o assemble
