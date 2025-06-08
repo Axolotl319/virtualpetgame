@@ -11,6 +11,7 @@ CFLAGS  ?= -std=c17 -g\
 OBJS = symtable.o assemble.o
 
 all: assemble
+	cp assemble ~/armv8_testsuite/solution
 
 assemble: $(OBJS)
 
