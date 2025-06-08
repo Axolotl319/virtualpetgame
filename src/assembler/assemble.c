@@ -84,6 +84,7 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 //Second pass: reads each instruction and int directive
 //Calls functions to generate binary code
 //Replaces label references with addresses from symtable HAVENT DONE THIS YET
+//will do after tokeniser is implemented
 static int second_pass(symbol_table symtable, FILE* filein) {
 	//reread file
 	char linein[MAXLINELEN];
