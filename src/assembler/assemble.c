@@ -3,10 +3,9 @@
 #include <regex.h>
 #include <string.h>
 #include "symtable.h"
-//#include "constants.h"
+#include "constants.h"
 
 #define MAXLINELEN 256
-#define WORD_SIZE_32 4
 
 int main(int argc, char **argv) {
 
