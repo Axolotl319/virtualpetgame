@@ -9,7 +9,7 @@
 #include "data-processing.h"
 #include "branch.h"
 #include "data-transfer.h"
-#include "extract-bits.h"
+#include "extract-data.h"
 #include "instr-formats.h"
 #include <assert.h>
  

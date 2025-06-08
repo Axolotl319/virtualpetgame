@@ -8,7 +8,7 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-UTIL_OBJS := ../utils/sign-extension.o ../utils/extract-bits.o ../utils/instr-formats.o
+UTIL_OBJS := ../utils/sign-extension.o ../utils/extract-data.o ../utils/instr-formats.o
 OBJS = emulate.o data-processing.o data-transfer.o branch.o modify-regs.o $(UTIL_OBJS)
 
 all: emulate
