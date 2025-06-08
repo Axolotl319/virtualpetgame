@@ -16,7 +16,12 @@ int main(int argc, char **argv) {
 	}
 	
 	// Open the input file 
-	FILE *filein = fopen(argv[1], "r"); 
+	FILE *filein = fopen(argv[1], "r");
+       	if (filein == NULL) { 
+		fprintf(stderr, "Unable to open file\n");
+		return 1;
+	}	
+
 	char linein[MAXLINELEN]; 
 	
 	// First pass: store labels and addresses in symbol table
@@ -39,7 +44,7 @@ int main(int argc, char **argv) {
 		} 
 		reti = regexec(&regex, linein, 0, NULL, 0);  
 		if (!reti) { 
-			addPair(symtable, linein, &addr);
+			if (addPair(symtable, linein, &addr)) { return 1; }
 			printf("debug: Label: %s, address: %d\n", linein, *getAddress(symtable, linein));
 		}
 		addr+=WORD_SIZE_32; 

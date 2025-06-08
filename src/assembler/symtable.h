@@ -19,7 +19,7 @@ typedef struct symbol_table *symbol_table;
 symbol_table emptyST(void);
 
 //add new label-address pair to specified symbol table
-void addPair(symbol_table st, char *label, uint8_t *address);
+int addPair(symbol_table st, char *label, uint8_t *address);
 
 //free space when symbol table no longer needed
 void freeST(symbol_table st);

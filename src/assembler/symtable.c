@@ -12,7 +12,7 @@
 symbol_table emptyST(void){
 	symbol_table st = malloc(sizeof(struct symbol_table));
 	if(st == NULL){
-		fprintf(stderr, "Can't allocate memory for new symbol table");
+		fprintf(stderr, "Can't allocate memory for new symbol table\n");
 		return NULL;
 	}
 	st->length = 0; //contains no elements
@@ -21,10 +21,11 @@ symbol_table emptyST(void){
 	return st;
 }
 
-void addPair(symbol_table st, char *label, uint8_t *address){
+int addPair(symbol_table st, char *label, uint8_t *address){
 	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
-		fprintf(stderr, "Can't allocate memory for new symbol table pair");
+		fprintf(stderr, "Can't allocate memory for new symbol table pair\n");
+		return 1;
 	}else{
 		np->label = label;
 		np->address = address;
@@ -32,12 +33,14 @@ void addPair(symbol_table st, char *label, uint8_t *address){
 			st->capacity *= 2; //double the array capacity
 			st->st_pairs = realloc(st->st_pairs, st->capacity * sizeof(symbol_pair));
 			if(st->st_pairs == NULL){
-				fprintf(stderr, "Can't reallocate memory for symbol table pairs");
+				fprintf(stderr, "Can't reallocate memory for symbol table pairs\n");
+				return 1;
 			}
 		}
 		st->st_pairs[st->length++] = np;
 	}
 	assert(st->capacity >= st->length);
+	return 0;
 }
 
 //free space when symbol table no longer needed
@@ -57,7 +60,7 @@ uint8_t *getAddress(symbol_table st, char *label){
 			return p->address;
 		}
 	}
-	fprintf(stderr, "Label is not in symbol table so can't get address");
+	fprintf(stderr, "Label is not in symbol table so can't get address\n");
 	return NULL;
 }
 
