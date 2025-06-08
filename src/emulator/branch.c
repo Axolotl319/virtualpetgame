@@ -8,7 +8,7 @@
 #include "sign-extension.h"
 #include "branch.h"
 #include "modify-regs.h"
-#include "extract-bits.h"
+#include "extract-data.h"
 #include "instr-formats.h"
 
 // Input: integer representing an instruction 

@@ -8,7 +8,7 @@
 #include "data-processing.h"
 #include "modify-regs.h"
 #include "sign-extension.h"
-#include "extract-bits.h"
+#include "extract-data.h"
 #include "instr-formats.h"
 #include <limits.h>
 #include <assert.h>

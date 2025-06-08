@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "constants.h"
 #include "../emulator/armv8.h"
-#include "extract-bits.h"
+#include "extract-data.h"
 
 //Extracts specific bits from a 32 bit integer
 //Takes in the int to extract from, a start index, and number of bits to extract

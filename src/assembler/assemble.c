@@ -7,25 +7,8 @@
 
 #define MAXLINELEN 256
 
-int main(int argc, char **argv) {
-
-	if (argc != 3) {
-		fprintf(stderr, "Incorrect arguments given.\n");
-	        return EXIT_FAILURE; 	
-	}
-	
-	// Open the input file 
-	FILE *filein = fopen(argv[1], "r");
-       	if (filein == NULL) { 
-		fprintf(stderr, "Unable to open file\n");
-		return 1;
-	}	
-
-	char linein[MAXLINELEN]; 
-	
-	// First pass: store labels and addresses in symbol table
-        symbol_table symtable = emptyST( );	
-
+// First pass: store labels and addresses in symbol table
+static int first_pass(symbol_table symtable, FILE* filein, char *linein) {
 	// A regular expression to help identify labels: 
 	regex_t regex; 
 	//int reti = regcomp(&regex, "_start", 0); 
@@ -48,9 +31,37 @@ int main(int argc, char **argv) {
 		}
 		addr+=WORD_SIZE_32; 
 	}
+	return EXIT_SUCCESS;
+}
+
+static int second_pass() {
+}
+
+int main(int argc, char **argv) {
+
+	if (argc != 3) {
+		fprintf(stderr, "Incorrect arguments given.\n");
+	        return EXIT_FAILURE; 	
+	}
+	
+	// Open the input file 
+	FILE *filein = fopen(argv[1], "r");
+       	if (filein == NULL) { 
+		fprintf(stderr, "Unable to open file\n");
+		return EXIT_FAILURE;
+	}	
+
+	char linein[MAXLINELEN]; 
+	
+	// First pass: store labels and addresses in symbol table
+        symbol_table symtable = emptyST();
+	if (symtable == NULL) { return EXIT_FAILURE; }
+
+	if (first_pass(symtable, filein, linein)) { return EXIT_FAILURE; }	
+
 
 	// Second pass: generate binary encoding
-	
+	if (second_pass()) { return EXIT_FAILURE; }
 
 	// Clean up and prepare to exit 
 	fclose(filein); 
