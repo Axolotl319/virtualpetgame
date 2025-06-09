@@ -52,7 +52,36 @@ void freeST(symbol_table st){
 	free(st);
 }
 
+//comparison function for symbol pairs
+static int comp(const void *a, const void *b){
+	symbol_pair x = (symbol_pair) a;
+	symbol_pair y = (symbol_pair) b;
+	return (strcmp(x->label, y->label));
+}
+
 //returns address of label or NULL if label is unknown
+uint8_t *getAddress(symbol_table st, char *label){
+	qsort(st->st_pairs, st->length, sizeof(struct symbol_pair), &comp);
+	//binary search
+	int start = 0;
+	int end = st->length-1; //last index
+	while(start <= end){
+		int mid = (start + end) / 2;
+		int compared = comp(st->st_pairs[mid]->label, label);
+		if(compared == 0){
+			return st->st_pairs[mid]->address;
+			//matching address
+		}else if(compared < 0){
+			start = mid + 1;
+		}else{
+			end = mid - 1;
+		}
+	}
+	fprintf(stderr, "Label is not in symbol table so can't get address\n");
+	return NULL;
+}
+
+/*
 uint8_t *getAddress(symbol_table st, char *label){
 	for(int i = 0; i < st->length; i++){
 		symbol_pair p = st->st_pairs[i];
@@ -63,4 +92,4 @@ uint8_t *getAddress(symbol_table st, char *label){
 	fprintf(stderr, "Label is not in symbol table so can't get address\n");
 	return NULL;
 }
-
+*/
