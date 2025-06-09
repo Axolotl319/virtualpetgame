@@ -56,7 +56,7 @@ void freeST(symbol_table st){
 static int comp(const void *a, const void *b){
 	symbol_pair x = (symbol_pair) a;
 	symbol_pair y = (symbol_pair) b;
-	return (strcmp(a->label, b->label));
+	return (strcmp(x->label, y->label));
 }
 
 //returns address of label or NULL if label is unknown
