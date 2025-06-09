@@ -114,10 +114,14 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			printf("Int directive: %s\n", line);
 			//CALL FUNCTION TO PARSE
 		} else { 
-			printf("Instruction: %s\n", line); 	
-			char *tok = strtok(line, " "); 
+			printf("Instruction: %s\n", line);
+			char tok[10]; 	
+			if (!sscanf(line, "%s", tok)) {
+				fprintf(stderr, "Instruction read failed.\n"); 
+				return EXIT_FAILURE;
+			}	
 			if (*tok == 'b') {
-				tok = "b"; 
+				strcpy(tok, "b"); 
 			}
 			parse_f pf = lookup_alias(tok);
 		        if (pf == NULL) {
