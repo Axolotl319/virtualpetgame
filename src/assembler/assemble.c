@@ -114,8 +114,21 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			printf("Int directive: %s\n", line);
 			//CALL FUNCTION TO PARSE
 		} else { 
-			printf("Instruction: %s\n", line); 
+			printf("Instruction: %s\n", line); 	
+			char *tok = strtok(line, " "); 
+			if (*tok == 'b') {
+				tok = "b"; 
+			}
+			parse_f pf = lookup_alias(tok);
+		        if (pf == NULL) {
+				fprintf(stderr, "Invalid instruction.\n");
+				return EXIT_FAILURE; 
+			}	
 			//CALL FUNCTION TO PARSE
+			if (!pf(line)) {
+				fprintf(stderr, "Instruction parse failed.\n");
+			        return EXIT_FAILURE; 	
+			}	
 		}
 
 		addr += WORD_SIZE_32;

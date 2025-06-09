@@ -1,6 +1,8 @@
+typedef int (*parse_f)(char *); 
+
 typedef struct {
 	char *alias;
-	char *base;
+	parse_f pf;
 } alias_t;
 
-extern char *lookup_alias(char *instr);
+extern parse_f lookup_alias(char *instr);
