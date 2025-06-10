@@ -1,7 +1,20 @@
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <assert.h>
 #include "data-processing.h"
 //#include "tokenise_params.h"
+
+void update_sf(uint32_t *toReturn, char *param) {
+	if (*param == 'x') {
+	   *toReturn |= (1 << 31); 
+	}
+}
+
+uint8_t obtain_reg_num(char *param) { 	
+	return atoi(++param); 
+}
 
 // Returns the encoded instruction if success, -1 if fail
 int arith(char **params, int numparams) {
@@ -25,8 +38,30 @@ int single_op_dest(char **params, int numparams) {
 }
 
 int multiply(char **params, int numparams) {
-	printf("debug: this is a multiply expression\n"); 
-	return 1; 
+	printf("debug: this is a multiply expression\n");
+        assert(numparams == 5); 	
+	uint32_t toReturn = 0x1b000000; 
+ 
+	update_sf(&toReturn, params[1]); 
+
+	// Update x: 
+	if (strcmp(params[1], "msub") == 0) {
+		toReturn |= (1 << 15); 
+	}
+
+	// Obtain the register numbers: 
+	uint8_t rd = obtain_reg_num(params[1]); 
+	uint8_t rn = obtain_reg_num(params[2]); 
+	uint8_t rm = obtain_reg_num(params[3]); 
+	uint8_t ra = obtain_reg_num(params[4]);
+
+	toReturn |= rd; 
+	toReturn |= (rn << 5); 
+	toReturn |= (ra << 10); 
+	toReturn |= (rm << 16); 	
+	 
+	printf("Resulting multiply output: %x\n", toReturn); 
+	return toReturn; 
 }
 
 int compare(char **params, int numparams) {
