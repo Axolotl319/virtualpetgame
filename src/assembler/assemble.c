@@ -58,6 +58,35 @@ static void strip_newline(char *linein) {
         }
 }
 
+//tokenises the instruction
+void get_instr_params(char *instr, char **params, int *numparams) { 
+   char *rest = NULL; 
+   params[0] = strtok_r(instr, " ", &rest);
+   char *param = strtok_r(NULL, ",", &rest);  
+   while (param != NULL) {
+	// Remove all whitespace from the front of any parameters: 
+	while (isspace(*param)) {
+		param++; 
+	}
+	params[*numparams] = param;  
+   	param = strtok_r(NULL, ",", &rest);
+	(*numparams)++; 
+   }
+}
+
+/*//replaces labels with addresses from symtable
+void replace_labels(symbol_table symtable, char **params, int numparams) {
+	char addr[16];
+	for (int i = 1; i < numparams; i++) {
+		uint8_t *address = getAddress(symtable, params[i]);
+		if (address == NULL) { continue; }
+		//dont rlly like the fact that i need to cast it here there might be a better idea
+		snprintf(addr, sizeof(addr), "%d", *address);
+		params[i] = strdup(addr);
+	}
+}*/
+
+
 // First pass: store labels and addresses in symbol table
 static int first_pass(symbol_table symtable, FILE* filein) {
 	char linein[MAXLINELEN];
@@ -83,8 +112,7 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 
 //Second pass: reads each instruction and int directive
 //Calls functions to generate binary code
-//Replaces label references with addresses from symtable HAVENT DONE THIS YET
-//will do after tokeniser is implemented
+//Replaces label references with addresses from symtable
 static int second_pass(symbol_table symtable, FILE* filein) {
 	//reread file
 	char linein[MAXLINELEN];
@@ -127,9 +155,23 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 		        if (pf == NULL) {
 				fprintf(stderr, "Invalid instruction.\n");
 				return EXIT_FAILURE; 
-			}	
+			}
+			
+			//gets array of operands
+			char *params[5];
+        		int numparams = 1; 	
+			get_instr_params(line, params, &numparams); 
+			
+			//DEBUG PRINTING REMOVE THIS
+			for (int i = 0; i < numparams; i++) {
+				printf("Params %d: %s\n", i, params[i]);
+			}
+
+			//Replaces label names with addresses
+			//replace_labels(symtable, params, numparams);
+
 			//CALL FUNCTION TO PARSE
-			if (!pf(line)) {
+			if (!pf(params, numparams)) {
 				fprintf(stderr, "Instruction parse failed.\n");
 			        return EXIT_FAILURE; 	
 			}	

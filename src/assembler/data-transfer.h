@@ -1,1 +1,1 @@
-extern int dt(char *instr); 
+extern int dt(char **params, int numparams); 

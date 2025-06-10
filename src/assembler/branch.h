@@ -1,1 +1,1 @@
-extern int branch(char *instr); 
+extern int branch(char **params, int numparams); 
