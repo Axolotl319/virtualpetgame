@@ -106,7 +106,6 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		if (is_label(linein)) {
 		        linein[strlen(linein) - 1] = '\0';	//remove the colon
 			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
-			printf("debug: Label: %s, address: %d\n", linein, getAddress(symtable, linein));
 		}
 
 		addr += WORD_SIZE_32; 
