@@ -34,3 +34,11 @@ uint8_t obtain_reg_num(char *param) {
 uint32_t extract_imm(char *param) {
 	return strtol(++param, NULL, 16); 	
 }
+
+/*
+ Same functionality as extract_imm, but extracts immediate values written in 
+ decimal format rather than hexadecimal format. 
+ */
+uint32_t extract_imm_dec(char *param) {
+	return strtol(++param, NULL, 10); 
+}
