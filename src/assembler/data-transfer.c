@@ -6,12 +6,13 @@
 #include "symtable.h"
 #include "data-transfer.h"
 #include "assembly-utils.h"
+#include "constants.h"
 
 #define MAX_PARAMS 5
 #define MIN_PARAMS 3
 
 // Return encoded instruction if success, -1 if fail
-int dt(char **params, int numparams) {
+uint32_t dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
 	uint32_t toReturn;
 	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
@@ -37,10 +38,11 @@ int dt(char **params, int numparams) {
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
-			simm19 = strtol(value, NULL, 16);
+			simm19 = strtol(value, NULL, 10);
 		}
 		printf("debug: simm19 = %x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
+		printf("debug: toReturn with simm19 = %x\n", toReturn);
 		//TODO: simm19 is correct but toReturn seems to have
 		//2 random incorrect bits where simm19 should be. Will debug tonight/AM
 	}else if(strcmp(type, "ldr") == 0){
