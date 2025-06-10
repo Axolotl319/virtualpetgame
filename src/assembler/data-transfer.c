@@ -12,7 +12,7 @@
 #define MIN_PARAMS 3
 
 // Return encoded instruction if success, -1 if fail
-uint32_t dt(char **params, int numparams) {
+int dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
 	uint32_t toReturn;
 	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
