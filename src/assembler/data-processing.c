@@ -3,13 +3,32 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "data-processing.h"
 #include "assembly-utils.h"
 //#include "tokenise_params.h"
 
+static bool is_imm(char *param) {
+	return *param == '#';
+}
+
 // Returns the encoded instruction if success, -1 if fail
 int arith(char **params, int numparams) {
 	printf("debug: this is an arithmetic expression\n"); 
+	uint32_t toReturn = 0; 
+	uint8_t rd = obtain_reg_num(params[1]); 
+	uint8_t rn = obtain_reg_num(params[2]); 
+
+	toReturn |= rd; 
+	toReturn |= (rn << 5); 
+
+	if (is_imm(params[3])) {
+		// Then it is immediate value arithmetic
+		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 22);
+	} else {
+		// Else it is register arithmetic 
+		
+	}
 	return 1; 
 }
 
@@ -36,18 +55,18 @@ int wmove(char **params, int numparams) {
 	}
 
 	// Extract imm16 and update toReturn 
+	/*
 	if (strchr(params[2], 'x') != NULL) {
 		toReturn |= (extract_imm(params[2]) << 5);
 	} else {
 		toReturn |= (extract_imm_dec(params[2]) << 5);
 	}
+	*/
+	toReturn |= (extract_imm(params[2]) << 5);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == 4) {
-		char shifttype[5]; 
-		char shiftamt[5]; 
-		sscanf(params[3], "%s %s", shifttype, shiftamt);	
-		toReturn |= ((extract_imm_dec(shiftamt) / 16) << 21);
+		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 21);
 	}
 
 	printf("debug: toReturn looks like this: %x\n", toReturn); 
