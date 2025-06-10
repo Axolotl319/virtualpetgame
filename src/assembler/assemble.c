@@ -120,8 +120,8 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 				fprintf(stderr, "Instruction read failed.\n"); 
 				return EXIT_FAILURE;
 			}	
-			if (*tok == 'b') {
-				strcpy(tok, "b"); 
+			if (strchr(tok, '.') != NULL) {
+				strcpy(tok, "b."); 
 			}
 			parse_f pf = lookup_alias(tok);
 		        if (pf == NULL) {

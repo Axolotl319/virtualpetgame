@@ -6,7 +6,7 @@
 #include "branch.h"
 #include "aliases.h"
 
-#define NUM_ALIASES 30
+#define NUM_ALIASES 31
 
 //alphabetically sorted alias table
 //This doesn't deal with b.cond because im not sure what to do for that
@@ -16,6 +16,7 @@ static alias_t alias_table[] = {
 	{ "and" , &dp },
 	{ "ands", &dp },
 	{ "b"   , &branch },
+	{ "b."  , &branch }, 
 	{ "bic" , &branch },
 	{ "bics", &branch },
 	{ "br"  , &branch },
