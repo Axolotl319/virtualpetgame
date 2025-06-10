@@ -36,7 +36,7 @@ int multiply(char **params, int numparams) {
 	update_sf(&toReturn, 31, params[1]); 
 
 	// Update x: 
-	if (strcmp(params[1], "msub") == 0) {
+	if (strcmp(params[0], "msub") == 0) {
 		toReturn |= (1 << 15); 
 	}
 
