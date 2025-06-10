@@ -75,15 +75,19 @@ void get_instr_params(char *instr, char **params, int *numparams) {
 }
 
 //replaces labels with addresses from symtable
-void replace_labels(symbol_table symtable, char **params, int numparams) {
-	char addr[4];
+//replaces labels with HEX address in the form of a string
+void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+	char addr[8];
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
-		uint8_t address = getAddress(symtable, params[i]);
+		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 		//dont rlly like the fact that i need to cast it here there might be a better idea
-		printf("DEBUG: Address: %d\n", address);
-		sprintf(addr, "%u", address);
+		printf("DEBUG: Address: %x\n", address);
+		int32_t offset = address - current_addr;
+		printf("DEBUG: Offset: %x\n", offset);
+		sprintf(addr, "%x", offset);
+		//memory leak here remembre to fix
 		params[i] = strdup(addr);
 
 	}
@@ -167,7 +171,8 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			get_instr_params(line, params, &numparams); 
 			
 			//Replaces label names with addresses
-                        replace_labels(symtable, params, numparams);
+			printf("Current address: %d\n", addr);
+                        replace_labels(symtable, params, numparams, addr);
 
 			//DEBUG PRINTING REMOVE THIS
 			for (int i = 0; i < numparams; i++) {
