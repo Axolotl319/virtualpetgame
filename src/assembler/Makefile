@@ -8,7 +8,7 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o
+OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o assembly_utils.c
 
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
@@ -21,6 +21,7 @@ aliases.o: aliases.c
 data-processing.o: data-processing.c
 data-transfer.o: data-transfer.c
 branch.o: branch.c
+assembly_utils.o: assembly_utils.c
 
 clean:
 	$(RM) *.o assemble
