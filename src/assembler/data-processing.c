@@ -4,17 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include "data-processing.h"
+#include "assembly-utils.h"
 //#include "tokenise_params.h"
-
-void update_sf(uint32_t *toReturn, char *param) {
-	if (*param == 'x') {
-	   *toReturn |= (1 << 31); 
-	}
-}
-
-uint8_t obtain_reg_num(char *param) { 	
-	return atoi(++param); 
-}
 
 // Returns the encoded instruction if success, -1 if fail
 int arith(char **params, int numparams) {
@@ -42,7 +33,7 @@ int multiply(char **params, int numparams) {
         assert(numparams == 5); 	
 	uint32_t toReturn = 0x1b000000; 
  
-	update_sf(&toReturn, params[1]); 
+	update_sf(&toReturn, 31, params[1]); 
 
 	// Update x: 
 	if (strcmp(params[1], "msub") == 0) {
