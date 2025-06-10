@@ -21,6 +21,18 @@ symbol_table emptyST(void){
 	return st;
 }
 
+static int sympair_bsearch_cmp(const void *key, const void *elem) {
+	const char *label = (const char *)key;
+	const symbol_pair p = *(const symbol_pair *)elem;
+	return strcmp(label, p->label);
+}
+
+static int sympair_qsort_cmp(const void *a, const void *b) {
+	symbol_pair spa = *(const symbol_pair *)a;
+	symbol_pair spb = *(const symbol_pair *)b;
+	return strcmp(spa->label, spb->label);
+}
+
 int addPair(symbol_table st, char *label, uint8_t address){
 	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
@@ -52,6 +64,7 @@ int addPair(symbol_table st, char *label, uint8_t address){
 
 	st->st_pairs[st->length++] = np;
 	assert(st->capacity >= st->length);
+	qsort(st->st_pairs, st->length, sizeof(symbol_pair), sympair_qsort_cmp);
 	return 0;
 }
 
@@ -66,12 +79,9 @@ void freeST(symbol_table st){
 
 //get address. returns 1 on failure
 uint8_t getAddress(symbol_table st, char *label){
-	for(int i = 0; i < st->length; i++){
-		symbol_pair p = st->st_pairs[i];
-		if(!strcmp(p->label, label)){
-			return p->address;
-		}
-	}
+	symbol_pair *result = bsearch(label, st->st_pairs, st->length, sizeof(symbol_pair), sympair_bsearch_cmp);
+	if (result) { return (*result)->address; }
+	
 	fprintf(stderr, "Label is not in symbol table so can't get address\n");
 	return 1; //address has to be a multiple of 4 so can never be 1
 }
