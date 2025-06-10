@@ -20,7 +20,22 @@ int logic(char **params, int numparams) {
 
 int wmove(char **params, int numparams) {
 	printf("debug: this is a wide move expression\n");
-        if (strcmp(params[0], "movz") == 0) {
+        uint32_t toReturn = 0x12800000;
+
+	update_sf(&toReturn, 31, params[1]); 
+
+	// Update opc
+	if (!strcmp(params[0], "movz")) {
+		toReturn |= (1 << 30); 
+	} else if (!strcmp(params[0], "movk")) {
+		toReturn |= (1 << 30); 
+		toReturn |= (1 << 29); 
+	}
+
+	// Extract imm16 and update toReturn 
+	toReturn |= (extract_imm(params[1]) << 5); 
+
+	if (strcmp(params[0], "movz") == 0) {
 		uint32_t res = extract_imm(params[2]);
 	        printf("Extracted immediate: %d\n", res); 	
 	}	
