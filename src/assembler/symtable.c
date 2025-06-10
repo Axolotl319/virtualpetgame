@@ -83,7 +83,7 @@ uint32_t getAddress(symbol_table st, char *label){
 	symbol_pair *result = bsearch(label, st->st_pairs, st->length, sizeof(symbol_pair), sympair_bsearch_cmp);
 	if (result) { return (*result)->address; }
 	
-	fprintf(stderr, "Label is not in symbol table so can't get address\n");
+	// fprintf(stderr, "Label is not in symbol table so can't get address\n");
 	return 1; //address has to be a multiple of 4 so can never be 1
 }
 

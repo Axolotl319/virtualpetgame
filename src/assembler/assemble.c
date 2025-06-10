@@ -78,11 +78,11 @@ void get_instr_params(char *instr, char **params, int *numparams) {
 void replace_labels(symbol_table symtable, char **params, int numparams) {
 	char addr[4];
 	for (int i = 1; i < numparams; i++) {
-		printf("DEBUG: To search: %s\n", params[i]);
+		// printf("DEBUG: To search: %s\n", params[i]);
 		uint8_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 		//dont rlly like the fact that i need to cast it here there might be a better idea
-		printf("DEBUG: Address: %d\n", address);
+		// printf("DEBUG: Address: %d\n", address);
 		sprintf(addr, "%u", address);
 		params[i] = strdup(addr);
 
