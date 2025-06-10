@@ -2,7 +2,7 @@
 #include "branch.h"
 
 // Return 1 if success, 0 if fail 
-int branch(char *instr) {
+int branch(char **params, int numparams) {
 	printf("debug: this is a branch instruction\n"); 
-	return 1; 
+	return 1;		
 }
