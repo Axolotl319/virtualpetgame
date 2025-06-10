@@ -19,7 +19,11 @@ int logic(char **params, int numparams) {
 }
 
 int wmove(char **params, int numparams) {
-	printf("debug: this is a wide move expression\n"); 
+	printf("debug: this is a wide move expression\n");
+        if (strcmp(params[0], "movz") == 0) {
+		uint32_t res = extract_imm(params[2]);
+	        printf("Extracted immediate: %d\n", res); 	
+	}	
 	return 1; 
 }
 
