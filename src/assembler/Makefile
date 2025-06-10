@@ -8,12 +8,14 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o assembly_utils.c
+UTIL_OBJS = ../utils/tokenise_params.o
+
+OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o $(UTIL_OBJS)
 
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
 
-assemble: $(OBJS)
+assemble: $(OBJS) 
 
 assemble.o: assemble.c symtable.h  
 symtable.o: symtable.c
@@ -21,7 +23,6 @@ aliases.o: aliases.c
 data-processing.o: data-processing.c
 data-transfer.o: data-transfer.c
 branch.o: branch.c
-assembly_utils.o: assembly_utils.c
 
 clean:
 	$(RM) *.o assemble

@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "assembly_utils.h"
+#include "tokenise_params.h"
 
 void get_instr_params(char *instr, char **params, int *numparams) { 
    char *rest = NULL; 

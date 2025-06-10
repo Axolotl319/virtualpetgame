@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include "data-processing.h"
-#include "assembly_utils.h"
+#include "tokenise_params.h"
 
 // Returns the encoded instruction if success, -1 if fail
 int arith(char *instr) {
