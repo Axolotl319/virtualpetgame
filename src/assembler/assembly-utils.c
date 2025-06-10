@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "assembly-utils.h"
 
 /*
@@ -32,13 +33,15 @@ uint8_t obtain_reg_num(char *param) {
  integer corresponding to the immediate value (for example, the integer "1"). 
  */
 uint32_t extract_imm(char *param) {
+	if (strchr(param, 'x') == NULL) {
+		return atoi(++param); 
+	}
 	return strtol(++param, NULL, 16); 	
 }
 
-/*
- Same functionality as extract_imm, but extracts immediate values written in 
- decimal format rather than hexadecimal format. 
- */
-uint32_t extract_imm_dec(char *param) {
-	return strtol(++param, NULL, 10); 
+uint8_t obtain_shift_amt(char *param) {
+        char shifttype[5];
+        char shiftamt[5];
+        sscanf(param, "%s %s", shifttype, shiftamt);
+        return extract_imm(shiftamt);
 }

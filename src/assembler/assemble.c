@@ -109,7 +109,6 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		if (is_label(linein)) {
 		        linein[strlen(linein) - 1] = '\0';	//remove the colon
 			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
-			printf("debug: Label: %s, address: %d\n", linein, getAddress(symtable, linein));
 		}
 
 		addr += WORD_SIZE_32; 
@@ -172,11 +171,6 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			
 			//Replaces label names with addresses
                         replace_labels(symtable, params, numparams, addr);
-
-			//DEBUG PRINTING REMOVE THIS
-			for (int i = 0; i < numparams; i++) {
-				printf("DEBUG: Params %d: %s\n", i, params[i]);
-			}
 
 			//CALL FUNCTION TO PARSE
 			if (!pf(params, numparams)) {
