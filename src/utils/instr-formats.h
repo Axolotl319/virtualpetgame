@@ -78,6 +78,17 @@ typedef struct {
 	bit_range_t op;
 } branch_format_t;
 
+//branch conditions
+typedef enum branch_cond {
+	BR_EQ,       //equal
+	BR_NE,       //not equal
+	BR_GE = 0xA, //signed greater than or equal - 0b1010
+	BR_LT,       //signed less than
+	BR_GT,	     //signed greater than
+	BR_LE,       //signed less than or equal
+	BR_AL,       //always
+} branch_cond;
+
 extern const immdp_format_t immdp_format;
 extern const regdp_format_t regdp_format;
 extern const sdt_format_t sdt_format;
