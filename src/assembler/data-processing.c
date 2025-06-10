@@ -74,7 +74,7 @@ int arith(char **params, int numparams) {
 			set_shift_info(&toReturn, params[4]); 	   
 		}
 	}
-	printf("debug: arithmetic looks like this: %x\n", toReturn); 
+	printf("debug: Resulting arithmetic output: %x\n", toReturn); 
 	return toReturn; 
 }
 
@@ -121,7 +121,7 @@ int logic(char **params, int numparams) {
 		set_shift_info(&toReturn, params[4]);	
 	}
 	
-	printf("toReturn looks like this: %x\n", toReturn); 
+	printf("debug: Resulting logic output: %x\n", toReturn); 
 	return toReturn; 
 }
 
@@ -150,7 +150,7 @@ int wmove(char **params, int numparams) {
 		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 21);
 	}
 
-	printf("debug: toReturn looks like this: %x\n", toReturn); 
+	printf("debug: Resulting wide move output: %x\n", toReturn); 
 	return toReturn; 
 }
 
@@ -214,6 +214,7 @@ int multiply(char **params, int numparams) {
 int compare(char **params, int numparams) {
 	printf("debug: this is a compare/test expression\n"); 
 	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
+	
 	// Insert the zero register at params[1]
 	for (int i=numparams; i>1; i--) {
 	   params[i] = params[i-1];  
@@ -232,7 +233,6 @@ int compare(char **params, int numparams) {
 	} else {
 	   params[0] = "adds"; 
 	   toReturn |= arith(params, numparams);
-	}
-	printf("Resulting compare output: %x\n", toReturn); 
+	} 
 	return toReturn; 
 }
