@@ -122,8 +122,7 @@ int logic(char **params, int numparams) {
 	}
 	
 	printf("toReturn looks like this: %x\n", toReturn); 
-
-	return 1; 
+	return toReturn; 
 }
 
 int wmove(char **params, int numparams) {
@@ -155,10 +154,34 @@ int wmove(char **params, int numparams) {
 	return toReturn; 
 }
 
+#define insert_zero(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
+
 int single_op_dest(char **params, int numparams) {
 	printf("debug: this is a single op and destination expression\n"); 
-	
-	return 1; 
+	if (!strcmp(params[0], "mul")) {
+		params[0] = "madd"; 
+		params[numparams++] = "xzr"; 
+		return multiply(params, numparams); 
+	} else if (!strcmp(params[0], "mneg")) {
+		params[0] = "msub"; 
+		params[numparams++] = "xzr"; 
+		return multiply(params, numparams); 
+	} else if (!strcmp(params[0], "mov")) {
+		params[0] = "orr"; 
+		params[numparams++] = "xzr"; 
+		return logic(params, numparams); 
+	} else if (!strcmp(params[0], "mvn")) {
+		params[0] = "orn"; 
+		insert_zero(numparams); 
+		return logic(params, numparams++); 
+	} else if (!strcmp(params[0], "neg")) {
+		params[0] = "sub"; 
+		insert_zero(numparams);  
+		return arith(params, numparams++); 
+	} 
+	params[0] = "subs"; 
+	insert_zero(numparams); 
+	return arith(params, numparams++); 
 }
 
 int multiply(char **params, int numparams) {
