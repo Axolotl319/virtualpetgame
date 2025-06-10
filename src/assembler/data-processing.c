@@ -12,6 +12,18 @@ static bool is_imm(char *param) {
 	return *param == '#';
 }
 
+static void set_shift_info(uint32_t *toReturn, char *param) {
+	char shifttype[4];
+	sscanf(param, "%s", shifttype); 
+	uint8_t oper = obtain_shift_amt(param);
+	if (!strcmp(shifttype, "lsr")) {
+		*toReturn |= (1 << 22); 
+	} else if (!strcmp(shifttype, "asr")) {
+	   	*toReturn |= (1 << 23); 
+	}
+	*toReturn |= (oper << 10); 
+}
+
 // Returns the encoded instruction if success, -1 if fail
 int arith(char **params, int numparams) {
 	printf("debug: this is an arithmetic expression\n"); 
@@ -59,15 +71,7 @@ int arith(char **params, int numparams) {
 
 		// Update shift and operand if needed
 		if (numparams == 5) {
-		   char shifttype[4];
-		   sscanf(params[4], "%s", shifttype); 
-		   uint8_t oper = obtain_shift_amt(params[4]);
-		   if (!strcmp(shifttype, "lsr")) {
-		   	toReturn |= (1 << 22); 
-		   } else if (!strcmp(shifttype, "asr")) {
-		   	toReturn |= (1 << 23); 
-		   }
-		   toReturn |= (oper << 10); 
+			set_shift_info(&toReturn, params[4]); 	   
 		}
 	}
 	printf("debug: arithmetic looks like this: %x\n", toReturn); 
@@ -76,6 +80,49 @@ int arith(char **params, int numparams) {
 
 int logic(char **params, int numparams) {
 	printf("debug: this is a logic expression\n"); 
+	uint32_t toReturn = 0x0a000000;
+
+	update_sf(&toReturn, 31, params[1]); 
+
+	// Obtain and update all the registers 
+	uint8_t rd = obtain_reg_num(params[1]); 
+	uint8_t rn = obtain_reg_num(params[2]); 
+	uint8_t rm = obtain_reg_num(params[3]);
+        toReturn |= rd; 
+	toReturn |= (rn << 5); 
+	toReturn |= (rm << 16); 
+
+	// Set opc and N depending on the mnemonic 
+	uint8_t opc = 0; 
+	uint8_t n = 0; 
+	if (!strcmp(params[0], "bic")) {
+		n = 1; 
+	} else if (!strcmp(params[0], "orr")) {
+		opc = 1; 
+	} else if (!strcmp(params[0], "orn")) {
+		opc = 1; 
+		n = 1; 
+	} else if (!strcmp(params[0], "eor")) {
+		opc = 2; 
+	} else if (!strcmp(params[0], "eon")) {
+		opc = 2; 
+		n = 1; 
+	} else if (!strcmp(params[0], "ands")) {
+		opc = 3; 
+	} else if (!strcmp(params[0], "bics")) {
+		opc = 3; 
+		n = 1; 
+	}
+	toReturn |= (opc << 29); 
+	toReturn |= (n << 21); 
+
+	// Set the shift type if needed
+	if (numparams == 5) {
+		set_shift_info(&toReturn, params[4]);	
+	}
+	
+	printf("toReturn looks like this: %x\n", toReturn); 
+
 	return 1; 
 }
 
@@ -110,6 +157,7 @@ int wmove(char **params, int numparams) {
 
 int single_op_dest(char **params, int numparams) {
 	printf("debug: this is a single op and destination expression\n"); 
+	
 	return 1; 
 }
 
