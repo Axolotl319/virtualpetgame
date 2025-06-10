@@ -24,6 +24,9 @@ int wmove(char **params, int numparams) {
 
 	update_sf(&toReturn, 31, params[1]); 
 
+	// Update rd 
+	toReturn |= obtain_reg_num(params[1]); 
+
 	// Update opc
 	if (!strcmp(params[0], "movz")) {
 		toReturn |= (1 << 30); 
@@ -33,13 +36,22 @@ int wmove(char **params, int numparams) {
 	}
 
 	// Extract imm16 and update toReturn 
-	toReturn |= (extract_imm(params[1]) << 5); 
+	if (strchr(params[2], 'x') != NULL) {
+		toReturn |= (extract_imm(params[2]) << 5);
+	} else {
+		toReturn |= (extract_imm_dec(params[2]) << 5);
+	}
 
-	if (strcmp(params[0], "movz") == 0) {
-		uint32_t res = extract_imm(params[2]);
-	        printf("Extracted immediate: %d\n", res); 	
-	}	
-	return 1; 
+	// If a left shift exists, update the instruction 
+	if (numparams == 4) {
+		char shifttype[5]; 
+		char shiftamt[5]; 
+		sscanf(params[3], "%s %s", shifttype, shiftamt);	
+		toReturn |= ((extract_imm_dec(shiftamt) / 16) << 21);
+	}
+
+	printf("debug: toReturn looks like this: %x\n", toReturn); 
+	return toReturn; 
 }
 
 int single_op_dest(char **params, int numparams) {
