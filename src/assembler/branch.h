@@ -1,1 +1,9 @@
-extern int branch(char **params, int numparams); 
+typedef struct {
+	char * cond_str;
+	branch_cond bcond;
+} cond_pair;
+
+
+extern int reg_branch( char ** params, int numparams );
+extern int uncond_branch( char ** params, int numparams );
+extern int cond_branch( char ** params, int numparams ); 
