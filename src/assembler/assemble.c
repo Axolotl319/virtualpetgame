@@ -94,7 +94,7 @@ void replace_labels(symbol_table symtable, char **params, int numparams) {
 static int first_pass(symbol_table symtable, FILE* filein) {
 	char linein[MAXLINELEN];
 	
-	uint8_t addr = 0; 
+	uint32_t addr = 0; 
 	while(fgets(linein, MAXLINELEN, filein)) { 
 		//skip a newline
 		if (*linein == '\n') { continue; }
