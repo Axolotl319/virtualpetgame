@@ -33,7 +33,7 @@ static int sympair_qsort_cmp(const void *a, const void *b) {
 	return strcmp(spa->label, spb->label);
 }
 
-int addPair(symbol_table st, char *label, uint8_t address){
+int addPair(symbol_table st, char *label, uint32_t address){
 	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table pair\n");
@@ -71,6 +71,7 @@ int addPair(symbol_table st, char *label, uint8_t address){
 //free space when symbol table no longer needed
 void freeST(symbol_table st){
 	for(int i = 0; i < st->length; i++){
+		free(st->st_pairs[i]->label);
 		free(st->st_pairs[i]);
 	}
 	free(st->st_pairs);
@@ -78,7 +79,7 @@ void freeST(symbol_table st){
 }
 
 //get address. returns 1 on failure
-uint8_t getAddress(symbol_table st, char *label){
+uint32_t getAddress(symbol_table st, char *label){
 	symbol_pair *result = bsearch(label, st->st_pairs, st->length, sizeof(symbol_pair), sympair_bsearch_cmp);
 	if (result) { return (*result)->address; }
 	
