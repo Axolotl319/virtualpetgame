@@ -162,7 +162,7 @@ static int second_pass(symbol_table symtable, FILE* filein) {
         		int numparams = 1; 	
 			get_instr_params(line, params, &numparams); 
 			
-			//DEBUG PRINTING REMOVE THIS
+			//DEBUG PRINTING REMOVE THIS 
 			for (int i = 0; i < numparams; i++) {
 				printf("Params %d: %s\n", i, params[i]);
 			}

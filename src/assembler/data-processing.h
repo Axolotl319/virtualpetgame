@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Two operand instructions 
 extern int arith(char **params, int numparams); 
 extern int logic(char **params, int numparams);
