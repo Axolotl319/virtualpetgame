@@ -153,7 +153,7 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 				fprintf(stderr, "Instruction read failed.\n"); 
 				return EXIT_FAILURE;
 			}	
-			if (strchr(tok, '.') != NULL) {
+			if (strncmp(tok, "b.", 2) == 0) {
 				strcpy(tok, "b."); 
 			}
 			parse_f pf = lookup_alias(tok);
@@ -170,11 +170,6 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			
 			//Replaces label names with addresses
                         replace_labels(symtable, params, numparams, addr);
-
-			//DEBUG PRINTING REMOVE THIS
-			for (int i = 0; i < numparams; i++) {
-				printf("DEBUG: Params %d: %s\n", i, params[i]);
-			}
 
 			//CALL FUNCTION TO PARSE
 			if (!pf(params, numparams)) {

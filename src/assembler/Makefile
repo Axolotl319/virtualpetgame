@@ -8,7 +8,9 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o assembly-utils.o
+UTIL_OBJS = ../utils/instr-formats.o
+
+OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o assembly-utils.o $(UTIL_OBJS)
 
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
