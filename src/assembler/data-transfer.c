@@ -28,17 +28,18 @@ int dt(char **params, int numparams) {
 	if(loadLiteral){
 		toReturn = 0x18000000;
 
-		char *value = params[2]; //#imm or label
+		char *value = params[2]; //#imm or label offset
 		uint32_t simm19;
 		if(*value == '#'){
 			//immediate value
 			simm19 = extract_imm(value);
 		}else{
-			//value is a label, replace with address in symtable
+			//value is a label offset (label addr - curr addr)
+			simm19 = strtol(value, NULL, 16);
 		}
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
 	}else if(strcmp(type, "ldr") == 0){
-		//load instruction
+		//load instruction, no load literal
 		toReturn = 0xb9400000; //L bit set
 	}else if(strcmp(type, "str") == 0){
 		//store instruction
