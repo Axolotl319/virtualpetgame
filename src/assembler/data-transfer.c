@@ -24,8 +24,9 @@ int dt(char **params, int numparams) {
 	char *target = params[1]; // first argument is target register
 	uint8_t rt = obtain_reg_num(target);
 
-	bool loadLiteral = (numparams == 3);
+	bool loadLiteral = (numparams == 3) & (*params[2] != 'x');
 	//load literal is ldr with 2 args, sdts have an extra argument
+	//unsigned offset can also just have 3 params, the 3rd being a Xn reg
 	
 	if(loadLiteral){
 		printf("debug: this is a load literal\n");
@@ -43,8 +44,6 @@ int dt(char **params, int numparams) {
 		printf("debug: simm19 = %x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
 		printf("debug: toReturn with simm19 = %x\n", toReturn);
-		//TODO: simm19 is correct but toReturn seems to have
-		//2 random incorrect bits where simm19 should be. Will debug tonight/AM
 	}else if(strcmp(type, "ldr") == 0){
 		//load instruction, no load literal
 		toReturn = 0xb9400000; //L bit set
@@ -54,6 +53,12 @@ int dt(char **params, int numparams) {
 	}else{
 		fprintf(stderr, "Data transfer instruction is not ldr or str\n");
 		return 0;
+	}
+
+	if(!loadLiteral){
+		int mode;
+		uint8_t xn = param[2];
+		if(numparams == 3){ mode = MODE_UNSIGNED_OFFSET; } //Zero Unsigned Offset
 	}
 
 	update_sf(&toReturn, 30, target); //update register width based on target register
