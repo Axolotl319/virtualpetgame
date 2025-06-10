@@ -38,7 +38,7 @@ int dt(char **params, int numparams) {
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
-			simm19 = strtol(value, NULL, 10);
+			simm19 = strtol(value, NULL, 16);
 		}
 		printf("debug: simm19 = %x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
