@@ -74,17 +74,20 @@ void get_instr_params(char *instr, char **params, int *numparams) {
    }
 }
 
-/*//replaces labels with addresses from symtable
+//replaces labels with addresses from symtable
 void replace_labels(symbol_table symtable, char **params, int numparams) {
-	char addr[16];
+	char addr[4];
 	for (int i = 1; i < numparams; i++) {
-		uint8_t *address = getAddress(symtable, params[i]);
-		if (address == NULL) { continue; }
+		printf("DEBUG: To search: %s\n", params[i]);
+		uint8_t address = getAddress(symtable, params[i]);
+		if (address == 1) { continue; }
 		//dont rlly like the fact that i need to cast it here there might be a better idea
-		snprintf(addr, sizeof(addr), "%d", *address);
+		printf("DEBUG: Address: %d\n", address);
+		sprintf(addr, "%u", address);
 		params[i] = strdup(addr);
+
 	}
-}*/
+}
 
 
 // First pass: store labels and addresses in symbol table
@@ -99,9 +102,10 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		//strip newline character from end of line
 		strip_newline(linein);
 
-		if (is_label(linein)) { 
-			if (addPair(symtable, linein, &addr)) { return EXIT_FAILURE; }
-			printf("debug: Label: %s, address: %d\n", linein, *getAddress(symtable, linein));
+		if (is_label(linein)) {
+		        linein[strlen(linein) - 1] = '\0';	//remove the colon
+			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
+			printf("debug: Label: %s, address: %d\n", linein, getAddress(symtable, linein));
 		}
 
 		addr += WORD_SIZE_32; 
@@ -139,10 +143,10 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 
 		//int directive
 		if (is_int_directive(line)) {
-			printf("Int directive: %s\n", line);
+			printf("DEBUG: Int directive: %s\n", line);
 			//CALL FUNCTION TO PARSE
 		} else { 
-			printf("Instruction: %s\n", line);
+			printf("DEBUG: Instruction: %s\n", line);
 			char tok[10]; 	
 			if (!sscanf(line, "%s", tok)) {
 				fprintf(stderr, "Instruction read failed.\n"); 
@@ -162,13 +166,13 @@ static int second_pass(symbol_table symtable, FILE* filein) {
         		int numparams = 1; 	
 			get_instr_params(line, params, &numparams); 
 			
-			//DEBUG PRINTING REMOVE THIS 
-			for (int i = 0; i < numparams; i++) {
-				printf("Params %d: %s\n", i, params[i]);
-			}
-
 			//Replaces label names with addresses
-			//replace_labels(symtable, params, numparams);
+                        replace_labels(symtable, params, numparams);
+
+			//DEBUG PRINTING REMOVE THIS
+			for (int i = 0; i < numparams; i++) {
+				printf("DEBUG: Params %d: %s\n", i, params[i]);
+			}
 
 			//CALL FUNCTION TO PARSE
 			if (!pf(params, numparams)) {
