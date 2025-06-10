@@ -1,8 +1,55 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include "symtable.h"
 #include "data-transfer.h"
+#include "assembly-utils.h"
 
-// Return 1 if success, 0 if fail
+#define MAX_PARAMS 5
+#define MIN_PARAMS 3
+
+// Return encoded instruction if success, -1 if fail
 int dt(char **params, int numparams) {
-	printf("debug: this is a data transfer instruction\n"); 
-	return 1; 
+	printf("debug: this is a data transfer instruction\n");
+	uint32_t toReturn;
+	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
+		fprintf(stderr, "Unexpected no. parameters for dt instr");
+		return -1;
+	}
+	char *type = params[0]; // load/store instruction
+	char *target = params[1]; // first argument is target register
+	uint8_t rt = obtain_reg_num(target);
+
+	bool loadLiteral = (numparams == 3);
+	//load literal is ldr with 2 args, sdts have an extra argument
+	
+	if(loadLiteral){
+		toReturn = 0x18000000;
+
+		char *value = params[2]; //#imm or label
+		uint32_t simm19;
+		if(*value == '#'){
+			//immediate value
+			simm19 = extract_imm(value);
+		}else{
+			//value is a label, replace with address in symtable
+		}
+		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
+	}else if(strcmp(type, "ldr") == 0){
+		//load instruction
+		toReturn = 0xb9400000; //L bit set
+	}else if(strcmp(type, "str") == 0){
+		//store instruction
+		toReturn = 0xb9000000; //L bit not set
+	}else{
+		fprintf(stderr, "Data transfer instruction is not ldr or str");
+		return 0;
+	}
+
+	update_sf(&toReturn, 30, params[1]); //update register width based on target register
+	toReturn |= rt; //replace last 5 bits with target reg number
+
+	return toReturn; 
 }
