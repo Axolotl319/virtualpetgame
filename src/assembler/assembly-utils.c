@@ -10,7 +10,7 @@
  by param. 
  */
 void update_sf(uint32_t *toReturn, int bitnum, char *param) {
-        if (*param == 'x') {
+	if (*param == 'x') {
            *toReturn |= (1 << bitnum);
         }
 }

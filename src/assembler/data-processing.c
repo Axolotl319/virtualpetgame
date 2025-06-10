@@ -22,7 +22,7 @@ int arith(char **params, int numparams) {
 	toReturn |= rd; 
 	toReturn |= (rn << 5); 
 
-	update_sf(&toReturn, 31, params[1]); 
+	update_sf(&toReturn, 31, params[2]); 
 
 	// Update opc
 	if (!strcmp(params[0], "adds") || !strcmp(params[0], "subs")) {
@@ -142,5 +142,26 @@ int multiply(char **params, int numparams) {
 
 int compare(char **params, int numparams) {
 	printf("debug: this is a compare/test expression\n"); 
-	return 1; 
+	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
+	// Insert the zero register at params[1]
+	for (int i=numparams; i>1; i--) {
+	   params[i] = params[i-1];  
+	}
+	params[1] = zero; 
+	numparams++; 
+
+	uint32_t toReturn = 0x1f; 
+
+	if (!strcmp(params[0], "tst")) {
+	   params[0] = "ands"; 
+	   toReturn |= logic(params, numparams); 
+	} else if (!strcmp(params[0], "cmp")) {
+	   params[0] = "subs";  
+	   toReturn |= arith(params, numparams);
+	} else {
+	   params[0] = "adds"; 
+	   toReturn |= arith(params, numparams);
+	}
+	printf("Resulting compare output: %x\n", toReturn); 
+	return toReturn; 
 }
