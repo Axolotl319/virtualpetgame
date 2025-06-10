@@ -11,6 +11,7 @@
 
 #define NUM_ARGS 3
 #define MAXLINELEN 256
+#define MAX_PARAMS 5
 #define LABEL_REGEX "[a-zA-Z_.]([a-zA-Z0-9$_.])*:"
 
 static regex_t label_regex;
@@ -77,18 +78,14 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 //replaces labels with addresses from symtable
 //replaces labels with HEX address in the form of a string
 static void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
-	char addr[8];
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
-		//dont rlly like the fact that i need to cast it here there might be a better idea
 		printf("DEBUG: Address: %x\n", address);
 		int32_t offset = address - current_addr;
 		printf("DEBUG: Offset: %x\n", offset);
-		sprintf(addr, "%x", offset);
-		//memory leak here remembre to fix
-		params[i] = strdup(addr);
+		sprintf(params[i], "%x", offset);
 
 	}
 }
@@ -166,7 +163,8 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			}
 			
 			//gets array of operands
-			char *params[5];
+			char *params[MAX_PARAMS];
+			for (int i = 0; i < MAX_PARAMS; i++) { params[i] = NULL; }
         		int numparams = 1; 	
 			get_instr_params(line, params, &numparams); 
 			
@@ -181,8 +179,11 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			//CALL FUNCTION TO PARSE
 			if (!pf(params, numparams)) {
 				fprintf(stderr, "Instruction parse failed.\n");
+			
+
 			        return EXIT_FAILURE; 	
 			}	
+			
 		}
 
 		addr += WORD_SIZE_32;
@@ -225,7 +226,8 @@ int main(int argc, char **argv) {
 	if (second_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	// Clean up and prepare to exit 
-	fclose(filein); 
+	fclose(filein);
+	regfree(&label_regex);	
 	freeST(symtable);
         	
 	return EXIT_SUCCESS;
