@@ -59,7 +59,7 @@ static void strip_newline(char *linein) {
 }
 
 //tokenises the instruction
-void get_instr_params(char *instr, char **params, int *numparams) { 
+static void get_instr_params(char *instr, char **params, int *numparams) { 
    char *rest = NULL; 
    params[0] = strtok_r(instr, " ", &rest);
    char *param = strtok_r(NULL, ",", &rest);  
@@ -76,7 +76,7 @@ void get_instr_params(char *instr, char **params, int *numparams) {
 
 //replaces labels with addresses from symtable
 //replaces labels with HEX address in the form of a string
-void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+static void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	char addr[8];
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
@@ -171,7 +171,6 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			get_instr_params(line, params, &numparams); 
 			
 			//Replaces label names with addresses
-			printf("Current address: %d\n", addr);
                         replace_labels(symtable, params, numparams, addr);
 
 			//DEBUG PRINTING REMOVE THIS
