@@ -11,6 +11,35 @@
 #define MAX_PARAMS 5
 #define MIN_PARAMS 3
 
+static char *removeBrackets(char *str){
+	char *without = strtok(str, "[ ]");
+	return without;
+}
+
+static bool is_imm(char *value){
+	return (*value == '#');
+}
+
+//returns addressing mode or -1 if error occurs
+static int mode(char **params, int numparams){
+	if(numparams < 3){
+		fprintf(stderr, "Unknown addressing mode");
+		return -1;
+	}
+	if(numparams == 3){ return MODE_UNSIGNED_OFFSET; }
+	char last_char = *(params[3] + (strlen(params[3]) - 2));
+	if(last_char == '!'){ return MODE_PRE_INDEX; }
+	if(last_char == ']'){
+		if(is_imm(params[3])){
+			return MODE_UNSIGNED_OFFSET;
+		}else{
+			return MODE_REG_OFFSET;
+		}
+	}
+	//if no previous conditions were met
+	return MODE_POST_INDEX;
+}
+
 // Return encoded instruction if success, -1 if fail
 int dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
@@ -24,9 +53,9 @@ int dt(char **params, int numparams) {
 	char *target = params[1]; // first argument is target register
 	uint8_t rt = obtain_reg_num(target);
 
-	bool loadLiteral = (numparams == 3) & (*params[2] != 'x');
+	bool loadLiteral = (numparams == 3) & (*params[2] != '[');
 	//load literal is ldr with 2 args, sdts have an extra argument
-	//unsigned offset can also just have 3 params, the 3rd being a Xn reg
+	//unsigned offset can also just have 3 params, the 3rd being a [regname]
 	
 	if(loadLiteral){
 		printf("debug: this is a load literal\n");
@@ -34,7 +63,7 @@ int dt(char **params, int numparams) {
 
 		char *value = params[2]; //#imm or label offset
 		uint32_t simm19;
-		if(*value == '#'){
+		if(is_imm(value)){
 			//immediate value
 			simm19 = extract_imm(value);
 		}else{
@@ -55,10 +84,12 @@ int dt(char **params, int numparams) {
 		return 0;
 	}
 
+	//common algorithms for non-load literal sdt instrs
 	if(!loadLiteral){
-		int mode;
-		uint8_t xn = param[2];
-		if(numparams == 3){ mode = MODE_UNSIGNED_OFFSET; } //Zero Unsigned Offset
+		char *xn_name = removeBrackets(params[2]);
+		printf("debug: xn_name = %s\n", xn_name);
+		int amode = mode(params, numparams);
+		printf("debug: addressing mode = %d\n", amode);
 	}
 
 	update_sf(&toReturn, 30, target); //update register width based on target register
