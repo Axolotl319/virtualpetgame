@@ -53,7 +53,7 @@ int reg_branch(char **params, int numparams, uint32_t *instr) {
 
 	//form instr by masking + shifting xn:
 	
-	*instr |= (xn & ((1 << br_format.xn.bits) - 1)) << br_format.xn.index;
+	*instr |= mask_shift_val(xn, br_format.xn.bits, br_format.xn.index); 
 	printf("Encoded instruction: 0x%x\n", *instr);
 	return EXIT_SUCCESS;		
 }
@@ -75,7 +75,7 @@ int uncond_branch(char **params, int numparams, uint32_t *instr) {
 	}
 
 	//form the instruction by masking + shifting simm26
-	*instr |= (simm26 & ((1 << br_format.simm26.bits) - 1)) << br_format.simm26.index;
+	*instr |= mask_shift_val(simm26, br_format.simm26.bits, br_format.simm26.index);
 		
 	printf("Encoded instruction: 0x%x\n", *instr);
 	return EXIT_SUCCESS;
@@ -120,8 +120,8 @@ int cond_branch(char **params, int numparams, uint32_t *instr) {
 	}
 
 	//form the instruction by masking + shifting simm19 and cond
-	*instr |= (simm19 & ((1 << br_format.simm19.bits) - 1)) << br_format.simm19.index;
-	*instr |= (cond & ((1 << br_format.cond.bits) - 1)) << br_format.cond.index;
+	*instr |= mask_shift_val(simm19, br_format.simm19.bits, br_format.simm19.index);
+	*instr |= mask_shift_val(cond, br_format.cond.bits, br_format.cond.index); 
 	printf("Encoded instruction: 0x%x\n", *instr);
 
 	return EXIT_SUCCESS;

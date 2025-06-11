@@ -16,6 +16,7 @@
 #define MAXLINELEN 256
 #define MAX_PARAMS 5
 
+
 //checks if start character of label is fine
 static bool is_label_start(char start) {
 	return (isalpha(start) || start == '_' || start == '.'); 
@@ -169,9 +170,10 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 	//reread file
 	char linein[MAXLINELEN];
 	char *line = linein;
-    uint32_t addr = 0;
 
-    while (fgets(linein, MAXLINELEN, filein)) {
+	uint32_t addr = 0;
+	
+	while(fgets(line, MAXLINELEN, filein)) {
 		//skip new line 
 		if (*line == '\n') { continue; }
 
@@ -199,6 +201,8 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		if (strncmp(tok, "b.", 2) == 0) {
 			strcpy(tok, "b."); 
 		}
+		printf("DEBUG: token is '%s'\n", tok);
+
 		parse_f pf = lookup_alias(tok);
 	        if (pf == NULL) {
 			fprintf(stderr, "Invalid instruction.\n");
@@ -231,7 +235,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
         }
 
 		printf("debug: To convert to binary: %x\n", tobin); 
-		
+
 		addr += WORD_SIZE_32;
 	}
 
@@ -253,7 +257,6 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	}	
 	assert(filein != NULL);
-
 	
 	// First pass: store labels and addresses in symbol table
         symbol_table symtable = emptyST();
