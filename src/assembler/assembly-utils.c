@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include "assembly-utils.h"
 
 /*
@@ -52,10 +51,13 @@ bool is_imm(char *param) {
  Given a parameter specifying the shifttype and amount (for example, 
  "lsl #16"), extracts the amount to shift by and returns its integer
  representation.
+ Returns -1 if scanning failed. 
  */
 uint8_t obtain_shift_amt(char *param) {
         char shifttype[5];
         char shiftamt[5];
-        sscanf(param, "%s %s", shifttype, shiftamt);
+        if (sscanf(param, "%s %s", shifttype, shiftamt) == EOF) {
+		return -1;
+	}
         return extract_imm(shiftamt);
 }
