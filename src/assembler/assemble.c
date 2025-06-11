@@ -13,27 +13,34 @@
 #define NUM_ARGS 3
 #define MAXLINELEN 256
 #define MAX_PARAMS 5
-#define LABEL_REGEX "[a-zA-Z_.]([a-zA-Z0-9$_.])*:"
 
-static regex_t label_regex;
-
-//compiles regex 
-static int compile_regex( void ) {
-	// A regular expression to help identify labels:  
-	int reti = regcomp(&label_regex, LABEL_REGEX, REG_EXTENDED); 
-	if (reti) {
-		fprintf(stderr, "Regex could not be compiled.\n"); 
-		return EXIT_FAILURE; 
-	}
-	assert(!reti);
-	return EXIT_SUCCESS;
+//checks if start character of label is fine
+static bool is_label_start(char start) {
+	return (isalpha(start) || start == '_' || start == '.'); 
 }
+
+//checks if rest of characters in label are fine
+static bool is_label_char(char label_char) {
+	return (isalpha(label_char) || isdigit(label_char) || label_char == '$' || label_char == '_' || label_char == '.');
+}
+
 
 //checks if line is label
 //returns true if label, false if not
 static bool is_label(char *linein) {
-	int reti = regexec(&label_regex, linein, 0, NULL, 0);
-	return !reti;
+	int len = strlen(linein);
+	if (len < 2) { return false; }
+
+	//checks if start character is right
+	if (!is_label_start(linein[0])) { return false; }
+	
+	//checks if the middle characters are right
+	for (int i = 1; i < len - 1; i++) {
+		if (!is_label_char(linein[i])) { return false; }
+	}
+
+	//checks if the last character is a colon
+	return linein[len - 1] == ':';
 }
 
 //checks if line is an empty line
@@ -207,9 +214,6 @@ int main(int argc, char **argv) {
 	if (symtable == NULL) { return EXIT_FAILURE; }
 	assert(symtable != NULL);
 
-	//Compile regex for labels
-	if (compile_regex()) { return EXIT_FAILURE; }
-
 	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	//rewind file to go back to start
@@ -219,8 +223,7 @@ int main(int argc, char **argv) {
 	if (second_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	// Clean up and prepare to exit 
-	fclose(filein);
-	regfree(&label_regex);	
+	fclose(filein);	
 	freeST(symtable);
         	
 	return EXIT_SUCCESS;
