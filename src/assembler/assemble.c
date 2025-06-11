@@ -84,7 +84,7 @@ static void replace_labels(symbol_table symtable, char **params, int numparams, 
 		if (address == 1) { continue; }
 		printf("DEBUG: Label Address: 0x%x\n", address);
 		printf("DEBUG: Current Address: 0x%x\n", current_addr);
-		int32_t offset = address - (current_addr + WORD_SIZE_32);
+		int32_t offset = address - current_addr;
 		printf("DEBUG: Offset: %d\n", offset);
 		sprintf(params[i], "%d", offset);
 	}
@@ -103,12 +103,20 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		//strip newline character from end of line
 		strip_newline(linein);
 
-		if (is_label(linein)) {
-		        linein[strlen(linein) - 1] = '\0';	//remove the colon
-			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
-		}
+		if (is_empty_line(linein)) { continue; }
 
-		addr += WORD_SIZE_32; 
+		if (is_label(linein)) {
+			// Remove the colon
+			for (int i=strlen(linein)-1; i>=0; i--) {
+				if (linein[i] == ':') {
+					linein[i] = '\0'; 
+					break;
+				}
+			}
+			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
+		} else {
+			addr += WORD_SIZE_32; 
+		}
 	}
 	return EXIT_SUCCESS;
 	
@@ -213,6 +221,12 @@ int main(int argc, char **argv) {
 	if (compile_regex()) { return EXIT_FAILURE; }
 
 	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
+
+	printf("debug: symbol table pairs listed below:\n"); 
+	for (int i=0; i<symtable->length; i++) {
+		symbol_pair p = symtable->st_pairs[i]; 
+		printf("Pair %s, %d\n", p->label, p->address); 
+	}
 
 	//rewind file to go back to start
 	rewind(filein);

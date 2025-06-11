@@ -50,7 +50,7 @@ int addPair(symbol_table st, char *label, uint32_t address){
 
 	if(st->length >= st->capacity){ //current array too small to add pair
 		int new_capacity = st->capacity * 2; //double the array capacity
-		symbol_pair *tmp = realloc(st->st_pairs, st->capacity * sizeof(symbol_pair));
+		symbol_pair *tmp = realloc(st->st_pairs, new_capacity * sizeof(symbol_pair));
 		if(tmp == NULL){
 			fprintf(stderr, "Can't reallocate memory for symbol table pairs\n");
 			free(np->label);
