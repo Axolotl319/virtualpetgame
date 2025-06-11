@@ -66,7 +66,7 @@ int uncond_branch(char **params, int numparams) {
 	uint32_t instr = BR_UNCOND_BASE;
 	
 	//get simm26
-	int32_t simm26 = strtol(params[1], NULL, 16) / WORD_SIZE_32;
+	int32_t simm26 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
 
 	//check valid range
 	if (simm26 < -(MAX_26_BITS) || simm26 > MAX_26_BITS - 1) { 
@@ -111,7 +111,7 @@ int cond_branch(char **params, int numparams) {
 	printf("debug: Condition code is: %d\n", cond);
 
 	//get simm19
-	int32_t simm19 = strtol(params[1], NULL, 16) / WORD_SIZE_32;
+	int32_t simm19 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
 	printf("simm19: %d\n", simm19);
 
 	//check valid range
