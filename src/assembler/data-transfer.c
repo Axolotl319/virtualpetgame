@@ -72,7 +72,7 @@ uint32_t dt(char **params, int numparams) {
 	char *target = params[1]; // first argument is target register
 	uint8_t rt = obtain_reg_num(target);
 
-	bool loadLiteral = (numparams == 3) & (*params[2] != '[');
+	bool loadLiteral = (numparams == 3) && (*params[2] != '[');
 	//load literal is ldr with 2 args, sdts have an extra argument
 	//unsigned offset can also just have 3 params, the 3rd being a [regname]	
 	if(loadLiteral){
