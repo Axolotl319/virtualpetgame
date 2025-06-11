@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "instr-formats.h"
 #include "data-processing.h"
 #include "data-transfer.h"
 #include "branch.h"

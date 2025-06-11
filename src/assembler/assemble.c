@@ -76,16 +76,17 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 }
 
 //replaces labels with addresses from symtable
-//replaces labels with HEX address in the form of a string
+//replaces labels with decimal address in the form of a string
 static void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
-		printf("DEBUG: Address: %x\n", address);
-		int32_t offset = address - current_addr;
-		printf("DEBUG: Offset: %x\n", offset);
-		sprintf(params[i], "%x", offset);
+		printf("DEBUG: Label Address: 0x%x\n", address);
+		printf("DEBUG: Current Address: 0x%x\n", current_addr);
+		int32_t offset = address - (current_addr + WORD_SIZE_32);
+		printf("DEBUG: Offset: %d\n", offset);
+		sprintf(params[i], "%d", offset);
 	}
 }
 
@@ -170,7 +171,7 @@ static int second_pass(symbol_table symtable, FILE* filein) {
                         replace_labels(symtable, params, numparams, addr);
 
 			//Call function to parse and store result in variable "tobin"
-			int tobin = pf(params, numparams); 
+			uint32_t tobin = pf(params, numparams); 
 			printf("debug: To convert to binary: %x\n", tobin); 			
 			if (!tobin) {
 				fprintf(stderr, "Instruction parse failed.\n");

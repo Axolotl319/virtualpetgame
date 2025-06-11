@@ -4,6 +4,6 @@ typedef struct {
 } cond_pair;
 
 
-extern int reg_branch( char ** params, int numparams );
-extern int uncond_branch( char ** params, int numparams );
-extern int cond_branch( char ** params, int numparams ); 
+extern uint32_t reg_branch( char ** params, int numparams );
+extern uint32_t uncond_branch( char ** params, int numparams );
+extern uint32_t cond_branch( char ** params, int numparams ); 
