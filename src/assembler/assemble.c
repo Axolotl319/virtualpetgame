@@ -89,7 +89,7 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 //replaces labels with decimal address in the form of a string
 static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	for (int i = 1; i < numparams; i++) {
-		printf("DEBUG: To search: %s\n", params[i]);
+		//printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 		printf("DEBUG: Label Address: 0x%x\n", address);

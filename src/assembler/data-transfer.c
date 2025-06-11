@@ -7,6 +7,7 @@
 #include "data-transfer.h"
 #include "assembly-utils.h"
 #include "constants.h"
+#include "instr-formats.h"
 
 #define MAX_PARAMS 5
 #define MIN_PARAMS 3
@@ -93,10 +94,10 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		printf("debug: toReturn with simm19 = %x\n", *toReturn);
 	}else if(strcmp(type, "ldr") == 0){
 		//load instruction, no load literal
-		*toReturn = 0xb9400000; //L bit set
+		*toReturn = 0xb8400000; //L bit set
 	}else if(strcmp(type, "str") == 0){
 		//store instruction
-		*toReturn = 0xb9000000; //L bit not set
+		*toReturn = 0xb8000000; //L bit not set
 	}else{
 		fprintf(stderr, "Data transfer instruction is not ldr or str\n");
 		return EXIT_FAILURE;
@@ -112,8 +113,9 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		*toReturn |= (xn << 5);
 		uint32_t simm9; 
 		switch(amode){
-			case(MODE_UNSIGNED_OFFSET): 
-				*toReturn |= 0x01000000;
+			case(MODE_UNSIGNED_OFFSET):
+				printf("debug: unsigned offset\n"); 
+				*toReturn |= (1 << sdt_format.U.index);
 				//set U bit
 				int imm12;
 				if(numparams < 4){
@@ -127,20 +129,25 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				break;
 
 			case(MODE_PRE_INDEX): 
-				*toReturn |= 0x00000c00; //set I bit
+				printf("debug: pre-index\n"); 
+				*toReturn |= (1 << 10); 
+				*toReturn |= (1 << 11); //set I bit
 				simm9 = getSimm9(params[3]);
 				simm9 &= 0x1ff; //make sure it's 9 bits
 				*toReturn |= (simm9 << 12);
 				break;
 
 			case(MODE_POST_INDEX): 
-				*toReturn |= 0x00000400; //set bit indicating post index
+				printf("debug: post-index\n"); 
+				*toReturn |= (1 << 10); //set bit indicating post index
 				simm9 = getSimm9(params[3]);
+				simm9 &= 0x1ff; 
 				*toReturn |= (simm9 << 12);
 				break;
 
 			case(MODE_REG_OFFSET): 
-				*toReturn |= 0x00106800;
+				printf("debug: reg offset\n"); 
+				*toReturn |= 0x00206800;
 				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
 				*toReturn |= (xm << 16);
 				break;
@@ -152,7 +159,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		}
 	}
 
-	update_sf(toReturn, 30, target); //update register width based on target register
+	update_sf(toReturn, sdt_format.sf.index, target); //update register width based on target register
 	*toReturn |= rt; //replace last 5 bits with target reg number
 	printf("debug: toReturn = %x\n", *toReturn);
 
