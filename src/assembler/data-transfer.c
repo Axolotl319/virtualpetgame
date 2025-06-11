@@ -126,7 +126,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				}
 				imm12 &= 0xfff; //make sure it's 12 bits
 				printf("debug: imm12 = %x\n", imm12);
-				*toReturn |= mask_shift_val(imm12, immdp_format.imm12.bits, immdp_format.imm12.index);
+				*toReturn |= mask_shift_val(imm12, sdt_format.offset.bits, sdt_format.offset.index);
 				break;
 
 			case(MODE_PRE_INDEX): 
