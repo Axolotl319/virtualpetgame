@@ -11,19 +11,13 @@
 #include "data-transfer.h"
 #include "extract-data.h"
 #include "instr-formats.h"
+#include "emulate.h"
 #include <assert.h>
  
 #define HALT 0x8a000000 //halt instruction
 #define OPT_ARGS 3      //optional number of args for main
 #define ARG_INPUT 1    //argument for input file
 #define ARG_OUTPUT 2    //argument for output file
-
-typedef enum decode_flag {
-	DCD_FAIL = -1, //fail
-	DCD_SUCCESS,   //success
-	DCD_HLT,       //halt instruction reached
-	DCD_BRANCH     //branch instruction detected
-} decode_flag;
 
 //initialise the registers and memory to 0. Set PSTATE Z flag to 1.
 static void initialise(armv8_state *armv8) {
