@@ -73,8 +73,7 @@ int arith(char **params, int numparams) {
 		if (numparams == 5) {
 			set_shift_info(&toReturn, params[4]); 	   
 		}
-	}
-	printf("debug: Resulting arithmetic output: %x\n", toReturn); 
+	} 
 	return toReturn; 
 }
 
@@ -120,8 +119,7 @@ int logic(char **params, int numparams) {
 	if (numparams == 5) {
 		set_shift_info(&toReturn, params[4]);	
 	}
-	
-	printf("debug: Resulting logic output: %x\n", toReturn); 
+	 
 	return toReturn; 
 }
 
@@ -149,8 +147,7 @@ int wmove(char **params, int numparams) {
 	if (numparams == 4) {
 		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 21);
 	}
-
-	printf("debug: Resulting wide move output: %x\n", toReturn); 
+ 
 	return toReturn; 
 }
 
@@ -207,7 +204,6 @@ int multiply(char **params, int numparams) {
 	toReturn |= (ra << 10); 
 	toReturn |= (rm << 16); 	
 	 
-	printf("Resulting multiply output: %x\n", toReturn); 
 	return toReturn; 
 }
 

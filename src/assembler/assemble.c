@@ -169,13 +169,14 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 			//Replaces label names with addresses
                         replace_labels(symtable, params, numparams, addr);
 
-			//CALL FUNCTION TO PARSE
-			if (!pf(params, numparams)) {
+			//Call function to parse and store result in variable "tobin"
+			int tobin = pf(params, numparams); 
+			printf("debug: To convert to binary: %x\n", tobin); 			
+			if (!tobin) {
 				fprintf(stderr, "Instruction parse failed.\n");
-			
-
 			        return EXIT_FAILURE; 	
-			}	
+			}
+
 			
 		}
 
