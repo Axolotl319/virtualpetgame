@@ -200,20 +200,20 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 		multiply(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mov")) {
 		params[0] = "orr"; 
-		params[numparams++] = "xzr"; 
-		logic(params, numparams, toReturn); 
+		insert_zero(numparams);   
+		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "mvn")) {
 		params[0] = "orn"; 
 		insert_zero(numparams); 
-		logic(params, numparams++, toReturn); 
+		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "neg")) {
 		params[0] = "sub"; 
 		insert_zero(numparams);  
-		arith(params, numparams++, toReturn); 
+		arith(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "negs")) {
 		params[0] = "subs"; 
 		insert_zero(numparams); 
-		arith(params, numparams++, toReturn);
+		arith(params, ++numparams, toReturn);
 	} else {
 		fprintf(stderr, "Unrecognized mnemonic.\n"); 
 		return EXIT_FAILURE; 
