@@ -25,7 +25,7 @@ static void set_shift_info(uint32_t *toReturn, char *param) {
 }
 
 // Parses arithmetic instructions into decimal format 
-int arith(char **params, int numparams) {
+uint32_t arith(char **params, int numparams) {
 	printf("debug: this is an arithmetic expression\n");
         assert(numparams >= 4); 	
 	uint32_t toReturn = 0; 
