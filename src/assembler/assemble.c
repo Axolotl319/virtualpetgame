@@ -169,7 +169,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 	//reread file
 	char linein[MAXLINELEN];
 	char *line = linein;
-    uint8_t addr = 0;
+    uint32_t addr = 0;
 
     while (fgets(linein, MAXLINELEN, filein)) {
 		//skip new line 
