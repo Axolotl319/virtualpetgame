@@ -92,10 +92,10 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		printf("debug: simm19 = 0x%x\n", simm19);
 		*toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
 		printf("debug: toReturn with simm19 = %x\n", *toReturn);
-	}else if(strcmp(type, "ldr") == 0){
+	}else if(!strcmp(type, "ldr")){
 		//load instruction, no load literal
 		*toReturn = 0xb8400000; //L bit set
-	}else if(strcmp(type, "str") == 0){
+	}else if(!strcmp(type, "str")){
 		//store instruction
 		*toReturn = 0xb8000000; //L bit not set
 	}else{
@@ -110,7 +110,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		int amode = mode(params, numparams);
 		printf("debug: addressing mode = %d\n", amode);
 		uint8_t xn = obtain_reg_num(xn_name);
-		*toReturn |= (xn << 5);
+		*toReturn |= (xn << sdt_format.xn.index);
 		uint32_t simm9; 
 		switch(amode){
 			case(MODE_UNSIGNED_OFFSET):
@@ -134,7 +134,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				*toReturn |= (1 << 11); //set I bit
 				simm9 = getSimm9(params[3]);
 				simm9 &= 0x1ff; //make sure it's 9 bits
-				*toReturn |= (simm9 << 12);
+				*toReturn |= (simm9 << sdt_format.simm9.index);
 				break;
 
 			case(MODE_POST_INDEX): 
@@ -142,14 +142,14 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				*toReturn |= (1 << 10); //set bit indicating post index
 				simm9 = getSimm9(params[3]);
 				simm9 &= 0x1ff; 
-				*toReturn |= (simm9 << 12);
+				*toReturn |= (simm9 << sdt_format.simm9.index);
 				break;
 
 			case(MODE_REG_OFFSET): 
 				printf("debug: reg offset\n"); 
-				*toReturn |= 0x00206800;
+				*toReturn |= 0x00206800; //update the instruction base
 				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
-				*toReturn |= (xm << 16);
+				*toReturn |= (xm << sdt_format.xm.index);
 				break;
 
 			default: 
