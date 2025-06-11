@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
-#include <stdbool.h>
 #include "data-processing.h"
 #include "assembly-utils.h"
 #include "instr-formats.h"
