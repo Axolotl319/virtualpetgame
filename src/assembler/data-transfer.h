@@ -1,1 +1,1 @@
-extern int dt(char **params, int numparams); 
+extern uint32_t dt(char **params, int numparams); 

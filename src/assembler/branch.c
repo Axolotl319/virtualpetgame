@@ -41,7 +41,7 @@ static int check_numparams(int numparams) {
 
 // Register branch
 // Returns the instruction, or 0 if fail
-int reg_branch(char **params, int numparams) {
+uint32_t reg_branch(char **params, int numparams) {
 	printf("debug: this is a branch instruction\n"); 
 	if (check_numparams(numparams)) { return 0; }
 
@@ -59,7 +59,7 @@ int reg_branch(char **params, int numparams) {
 
 // Unconditional Branch
 // Returns the instruction, or 0 if fail
-int uncond_branch(char **params, int numparams) {
+uint32_t uncond_branch(char **params, int numparams) {
 	printf("debug: this is an unconditional branch\n");
 	if (check_numparams(numparams)) { return 0; }
 
@@ -83,7 +83,7 @@ int uncond_branch(char **params, int numparams) {
 
 // Conditional Branch
 // Returns the instruction, or 0 if fail
-int cond_branch(char **params, int numparams) {
+uint32_t cond_branch(char **params, int numparams) {
 	if (check_numparams(numparams)) { return 0; }
 
 	uint32_t instr = BR_COND_BASE;

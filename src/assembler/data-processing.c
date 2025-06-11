@@ -25,7 +25,7 @@ static void set_shift_info(uint32_t *toReturn, char *param) {
 }
 
 // Returns the encoded instruction if success, -1 if fail
-int arith(char **params, int numparams) {
+uint32_t arith(char **params, int numparams) {
 	printf("debug: this is an arithmetic expression\n"); 
 	uint32_t toReturn = 0; 
 	uint8_t rd = obtain_reg_num(params[1]); 
@@ -77,7 +77,7 @@ int arith(char **params, int numparams) {
 	return toReturn; 
 }
 
-int logic(char **params, int numparams) {
+uint32_t logic(char **params, int numparams) {
 	printf("debug: this is a logic expression\n"); 
 	uint32_t toReturn = 0x0a000000;
 
@@ -123,7 +123,7 @@ int logic(char **params, int numparams) {
 	return toReturn; 
 }
 
-int wmove(char **params, int numparams) {
+uint32_t wmove(char **params, int numparams) {
 	printf("debug: this is a wide move expression\n");
         uint32_t toReturn = 0x12800000;
 
@@ -153,7 +153,7 @@ int wmove(char **params, int numparams) {
 
 #define insert_zero(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
 
-int single_op_dest(char **params, int numparams) {
+uint32_t single_op_dest(char **params, int numparams) {
 	printf("debug: this is a single op and destination expression\n"); 
 	if (!strcmp(params[0], "mul")) {
 		params[0] = "madd"; 
@@ -181,7 +181,7 @@ int single_op_dest(char **params, int numparams) {
 	return arith(params, numparams++); 
 }
 
-int multiply(char **params, int numparams) {
+uint32_t multiply(char **params, int numparams) {
 	printf("debug: this is a multiply expression\n");
         assert(numparams == 5); 	
 	uint32_t toReturn = 0x1b000000; 
@@ -207,7 +207,7 @@ int multiply(char **params, int numparams) {
 	return toReturn; 
 }
 
-int compare(char **params, int numparams) {
+uint32_t compare(char **params, int numparams) {
 	printf("debug: this is a compare/test expression\n"); 
 	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
 	
