@@ -10,7 +10,7 @@ CFLAGS  ?= -std=c17 -g\
 
 UTIL_OBJS = ../utils/instr-formats.o
 
-OBJS = symtable.o assemble.o aliases.o branch.o data-transfer.o data-processing.o assembly-utils.o $(UTIL_OBJS)
+OBJS = symtable.o assemble.o aliases.o int-directives.o branch.o data-transfer.o data-processing.o assembly-utils.o $(UTIL_OBJS)
 
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
@@ -24,6 +24,7 @@ data-processing.o: data-processing.c assembly-utils.c
 data-transfer.o: data-transfer.c
 branch.o: branch.c
 assembly-utils.o: assembly-utils.c
+int-directives.o: int-directives.c
 
 clean:
 	$(RM) *.o assemble

@@ -40,30 +40,30 @@ static int check_numparams(int numparams) {
 }
 
 // Register branch
-// Returns the instruction, or 0 if fail
-uint32_t reg_branch(char **params, int numparams) {
+// Puts result into int pointer
+// Returns 1 for failure, 0 for success
+int reg_branch(char **params, int numparams, uint32_t *instr) {
 	printf("debug: this is a branch instruction\n"); 
-	if (check_numparams(numparams)) { return 0; }
+	if (check_numparams(numparams)) { return EXIT_FAILURE; }
 
-	uint32_t instr = BR_REG_BASE;
+	*instr = BR_REG_BASE;
 	
 	//get xn
 	uint8_t xn = obtain_reg_num(params[1]);
 
 	//form instr by masking + shifting xn:
 	
-	instr |= (xn & ((1 << br_format.xn.bits) - 1)) << br_format.xn.index;
-	printf("Encoded instruction: 0x%x\n", instr);
-	return instr;		
+	*instr |= (xn & ((1 << br_format.xn.bits) - 1)) << br_format.xn.index;
+	printf("Encoded instruction: 0x%x\n", *instr);
+	return EXIT_SUCCESS;		
 }
 
 // Unconditional Branch
-// Returns the instruction, or 0 if fail
-uint32_t uncond_branch(char **params, int numparams) {
+int uncond_branch(char **params, int numparams, uint32_t *instr) {
 	printf("debug: this is an unconditional branch\n");
-	if (check_numparams(numparams)) { return 0; }
+	if (check_numparams(numparams)) { return EXIT_FAILURE; }
 
-	uint32_t instr = BR_UNCOND_BASE;
+	*instr = BR_UNCOND_BASE;
 	
 	//get simm26
 	int32_t simm26 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
@@ -71,22 +71,21 @@ uint32_t uncond_branch(char **params, int numparams) {
 	//check valid range
 	if (simm26 < -(MAX_26_BITS) || simm26 > MAX_26_BITS - 1) { 
 		fprintf(stderr, "Offset not in  range\n");
-		return 0;
+		return EXIT_FAILURE;
 	}
 
 	//form the instruction by masking + shifting simm26
-	instr |= (simm26 & ((1 << br_format.simm26.bits) - 1)) << br_format.simm26.index;
+	*instr |= (simm26 & ((1 << br_format.simm26.bits) - 1)) << br_format.simm26.index;
 		
-	printf("Encoded instruction: 0x%x\n", instr);
-	return instr;
+	printf("Encoded instruction: 0x%x\n", *instr);
+	return EXIT_SUCCESS;
 }
 
 // Conditional Branch
-// Returns the instruction, or 0 if fail
-uint32_t cond_branch(char **params, int numparams) {
+int cond_branch(char **params, int numparams, uint32_t *instr) {
 	if (check_numparams(numparams)) { return 0; }
 
-	uint32_t instr = BR_COND_BASE;
+	*instr = BR_COND_BASE;
 
 	printf("debug: this is a conditional branch\n");
 	//check if instruction is valid
@@ -96,14 +95,14 @@ uint32_t cond_branch(char **params, int numparams) {
 		printf("debug: Condition is: %s\n", cond_str);
 	} else {
 		fprintf(stderr, "Invalid branch condition\n");
-		return 0;
+		return EXIT_FAILURE;
 	}
 	
 	cond_pair *pair = bsearch(cond_str, branch_conds, NUM_CONDS, sizeof(cond_pair), cond_pair_cmp);
 
 	if (pair == NULL) { 
 		fprintf(stderr, "Invalid branch condition\n");
-		return 0;
+		return EXIT_FAILURE;
 	}
 
 	//get the condition int
@@ -121,9 +120,9 @@ uint32_t cond_branch(char **params, int numparams) {
 	}
 
 	//form the instruction by masking + shifting simm19 and cond
-	instr |= (simm19 & ((1 << br_format.simm19.bits) - 1)) << br_format.simm19.index;
-	instr |= (cond & ((1 << br_format.cond.bits) - 1)) << br_format.cond.index;
-	printf("Encoded instruction: 0x%x\n", instr);
+	*instr |= (simm19 & ((1 << br_format.simm19.bits) - 1)) << br_format.simm19.index;
+	*instr |= (cond & ((1 << br_format.cond.bits) - 1)) << br_format.cond.index;
+	printf("Encoded instruction: 0x%x\n", *instr);
 
-	return instr;
+	return EXIT_SUCCESS;
 }

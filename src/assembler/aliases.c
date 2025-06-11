@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "instr-formats.h"
+#include "int-directives.h"
 #include "data-processing.h"
 #include "data-transfer.h"
 #include "branch.h"
@@ -12,6 +13,7 @@
 //alphabetically sorted alias table
 //This doesn't deal with b.cond because im not sure what to do for that
 static alias_t alias_table[] = {
+	{ ".int", &int_directive },
 	{ "add" , &arith },
 	{ "adds", &arith },
 	{ "and" , &logic },

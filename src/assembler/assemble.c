@@ -9,35 +9,38 @@
 #include "constants.h"
 #include "aliases.h"
 
+#define ONE_MB (1 << 20)
 #define NUM_ARGS 3
 #define MAXLINELEN 256
 #define MAX_PARAMS 5
-#define LABEL_REGEX "[a-zA-Z_.]([a-zA-Z0-9$_.])*:"
 
-static regex_t label_regex;
-
-//compiles regex 
-static int compile_regex( void ) {
-	// A regular expression to help identify labels:  
-	int reti = regcomp(&label_regex, LABEL_REGEX, REG_EXTENDED); 
-	if (reti) {
-		fprintf(stderr, "Regex could not be compiled.\n"); 
-		return EXIT_FAILURE; 
-	}
-	assert(!reti);
-	return EXIT_SUCCESS;
+//checks if start character of label is fine
+static bool is_label_start(char start) {
+	return (isalpha(start) || start == '_' || start == '.'); 
 }
+
+//checks if rest of characters in label are fine
+static bool is_label_char(char label_char) {
+	return (isalpha(label_char) || isdigit(label_char) || label_char == '$' || label_char == '_' || label_char == '.');
+}
+
 
 //checks if line is label
 //returns true if label, false if not
 static bool is_label(char *linein) {
-	int reti = regexec(&label_regex, linein, 0, NULL, 0);
-	return !reti;
-}
+	int len = strlen(linein);
+	if (len < 2) { return false; }
 
-//checks if line is an int directive
-static bool is_int_directive(char *linein) {
-	return !(strncmp(linein, ".int", 4));
+	//checks if start character is right
+	if (!is_label_start(linein[0])) { return false; }
+	
+	//checks if the middle characters are right
+	for (int i = 1; i < len - 1; i++) {
+		if (!is_label_char(linein[i])) { return false; }
+	}
+
+	//checks if the last character is a colon
+	return linein[len - 1] == ':';
 }
 
 //checks if line is an empty line
@@ -59,6 +62,13 @@ static void strip_newline(char *linein) {
         }
 }
 
+static void strip_whitespace(char *linein) {
+	int len = strlen(linein);
+	while (len > 0 && isspace(linein[len - 1])) {
+		linein[--len] = '\0';
+	}
+}
+
 //tokenises the instruction
 static void get_instr_params(char *instr, char **params, int *numparams) { 
    char *rest = NULL; 
@@ -77,17 +87,27 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 
 //replaces labels with addresses from symtable
 //replaces labels with decimal address in the form of a string
-static void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 		printf("DEBUG: Label Address: 0x%x\n", address);
 		printf("DEBUG: Current Address: 0x%x\n", current_addr);
+
+		//Calculate offset 
 		int32_t offset = address - current_addr;
+		
+		//check if offset is within 1MB
+		if (offset < -ONE_MB || offset > ONE_MB - 1) {
+			fprintf(stderr, "Offset out of range\n");
+			return EXIT_FAILURE;
+		}
+		
 		printf("DEBUG: Offset: %d\n", offset);
 		sprintf(params[i], "%d", offset);
 	}
+	return EXIT_SUCCESS;
 }
 
 
@@ -102,6 +122,7 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 
 		//strip newline character from end of line
 		strip_newline(linein);
+		strip_whitespace(linein);
 
 		if (is_empty_line(linein)) { continue; }
 
@@ -137,6 +158,7 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 
 		//strip newline character from end of line
 		strip_newline(line);
+		strip_whitespace(linein);
 
 		//check if it is an empty line
 		if (is_empty_line(line)) { continue; }
@@ -148,47 +170,43 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 		while (*line == ' ' || *line == '\t') {
 			line++;
 		}
-
-		//int directive
-		if (is_int_directive(line)) {
-			printf("DEBUG: Int directive: %s\n", line);
-			//CALL FUNCTION TO PARSE
-		} else { 
-			printf("DEBUG: Instruction: %s\n", line);
-			char tok[10]; 	
-			if (!sscanf(line, "%s", tok)) {
-				fprintf(stderr, "Instruction read failed.\n"); 
-				return EXIT_FAILURE;
-			}	
-			if (strncmp(tok, "b.", 2) == 0) {
-				strcpy(tok, "b."); 
-			}
-			parse_f pf = lookup_alias(tok);
-		        if (pf == NULL) {
-				fprintf(stderr, "Invalid instruction.\n");
-				return EXIT_FAILURE; 
-			}
+ 
+		printf("DEBUG: Instruction: %s\n", line);
+		char tok[10]; 	
+		if (!sscanf(line, "%s", tok)) {
+			fprintf(stderr, "Instruction read failed.\n"); 
+			return EXIT_FAILURE;
+		}	
+		if (strncmp(tok, "b.", 2) == 0) {
+			strcpy(tok, "b."); 
+		}
+		parse_f pf = lookup_alias(tok);
+	        if (pf == NULL) {
+			fprintf(stderr, "Invalid instruction.\n");
+			return EXIT_FAILURE; 
+		}
 			
-			//gets array of operands
-			char *params[MAX_PARAMS];
-			for (int i = 0; i < MAX_PARAMS; i++) { params[i] = NULL; }
-        		int numparams = 1; 	
-			get_instr_params(line, params, &numparams); 
-			
-			//Replaces label names with addresses
-                        replace_labels(symtable, params, numparams, addr);
-
-			//Call function to parse and store result in variable "tobin"
-			uint32_t tobin = pf(params, numparams); 
-			printf("debug: To convert to binary: %x\n", tobin); 			
-			if (!tobin) {
-				fprintf(stderr, "Instruction parse failed.\n");
-			        return EXIT_FAILURE; 	
-			}
-
-			
+		//gets array of operands
+		char *params[MAX_PARAMS];
+		for (int i = 0; i < MAX_PARAMS; i++) { params[i] = NULL; }
+       		int numparams = 1; 	
+		get_instr_params(line, params, &numparams); 
+		
+		//Replaces label names with addresse
+		if (replace_labels(symtable, params, numparams, addr)) {
+			return EXIT_FAILURE;
 		}
 
+		//Call function to parse and store result in variable "tobin"
+		uint32_t tobin; 
+				
+		if (pf(params, numparams, &tobin)) {
+			fprintf(stderr, "Instruction parse failed.\n");
+		        return EXIT_FAILURE; 	
+		}
+
+		printf("debug: To convert to binary: %x\n", tobin); 
+		
 		addr += WORD_SIZE_32;
 	}
 
@@ -217,9 +235,6 @@ int main(int argc, char **argv) {
 	if (symtable == NULL) { return EXIT_FAILURE; }
 	assert(symtable != NULL);
 
-	//Compile regex for labels
-	if (compile_regex()) { return EXIT_FAILURE; }
-
 	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	printf("debug: symbol table pairs listed below:\n"); 
@@ -235,8 +250,7 @@ int main(int argc, char **argv) {
 	if (second_pass(symtable, filein)) { return EXIT_FAILURE; }
 
 	// Clean up and prepare to exit 
-	fclose(filein);
-	regfree(&label_regex);	
+	fclose(filein);	
 	freeST(symtable);
         	
 	return EXIT_SUCCESS;
