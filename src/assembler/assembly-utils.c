@@ -33,10 +33,11 @@ uint8_t obtain_reg_num(char *param) {
  integer corresponding to the immediate value (for example, the integer "1"). 
  */
 uint32_t extract_imm(char *param) {
-	if (strchr(param, 'x') == NULL) {
+	if (param[0] == '#') { ++param; }
+	/*if (strchr(param, 'x') == NULL) {
 		return atoi(++param); 
-	}
-	return strtol(++param, NULL, 16); 	
+	}*/
+	return strtol(param, NULL, 0); 	
 }
 
 uint8_t obtain_shift_amt(char *param) {

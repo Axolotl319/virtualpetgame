@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "aliases.h"
 
+#define ONE_MB (1 << 20)
 #define NUM_ARGS 3
 #define MAXLINELEN 256
 #define MAX_PARAMS 5
@@ -33,11 +34,6 @@ static int compile_regex( void ) {
 static bool is_label(char *linein) {
 	int reti = regexec(&label_regex, linein, 0, NULL, 0);
 	return !reti;
-}
-
-//checks if line is an int directive
-static bool is_int_directive(char *linein) {
-	return !(strncmp(linein, ".int", 4));
 }
 
 //checks if line is an empty line
@@ -77,17 +73,25 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 
 //replaces labels with addresses from symtable
 //replaces labels with decimal address in the form of a string
-static void replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	for (int i = 1; i < numparams; i++) {
 		printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 		printf("DEBUG: Label Address: 0x%x\n", address);
 		printf("DEBUG: Current Address: 0x%x\n", current_addr);
+		//Calculate offset 
 		int32_t offset = address - (current_addr + WORD_SIZE_32);
+		
+		//check if offset is within 1MB
+		if (offset < -ONE_MB || offset > ONE_MB - 1) {
+			fprintf(stderr, "Offset out of range\n");
+			return EXIT_FAILURE;
+		}
 		printf("DEBUG: Offset: %d\n", offset);
 		sprintf(params[i], "%d", offset);
 	}
+	return EXIT_SUCCESS;
 }
 
 
@@ -140,45 +144,39 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 		while (*line == ' ' || *line == '\t') {
 			line++;
 		}
-
-		//int directive
-		if (is_int_directive(line)) {
-			printf("DEBUG: Int directive: %s\n", line);
-			//CALL FUNCTION TO PARSE
-		} else { 
-			printf("DEBUG: Instruction: %s\n", line);
-			char tok[10]; 	
-			if (!sscanf(line, "%s", tok)) {
-				fprintf(stderr, "Instruction read failed.\n"); 
-				return EXIT_FAILURE;
-			}	
-			if (strncmp(tok, "b.", 2) == 0) {
-				strcpy(tok, "b."); 
-			}
-			parse_f pf = lookup_alias(tok);
-		        if (pf == NULL) {
-				fprintf(stderr, "Invalid instruction.\n");
-				return EXIT_FAILURE; 
-			}
+ 
+		printf("DEBUG: Instruction: %s\n", line);
+		char tok[10]; 	
+		if (!sscanf(line, "%s", tok)) {
+			fprintf(stderr, "Instruction read failed.\n"); 
+			return EXIT_FAILURE;
+		}	
+		if (strncmp(tok, "b.", 2) == 0) {
+			strcpy(tok, "b."); 
+		}
+		parse_f pf = lookup_alias(tok);
+	        if (pf == NULL) {
+			fprintf(stderr, "Invalid instruction.\n");
+			return EXIT_FAILURE; 
+		}
 			
-			//gets array of operands
-			char *params[MAX_PARAMS];
-			for (int i = 0; i < MAX_PARAMS; i++) { params[i] = NULL; }
-        		int numparams = 1; 	
-			get_instr_params(line, params, &numparams); 
-			
-			//Replaces label names with addresses
-                        replace_labels(symtable, params, numparams, addr);
+		//gets array of operands
+		char *params[MAX_PARAMS];
+		for (int i = 0; i < MAX_PARAMS; i++) { params[i] = NULL; }
+       		int numparams = 1; 	
+		get_instr_params(line, params, &numparams); 
+		
+		//Replaces label names with addresse
+		if (replace_labels(symtable, params, numparams, addr)) {
+			return EXIT_FAILURE;
+		}
 
-			//Call function to parse and store result in variable "tobin"
-			uint32_t tobin = pf(params, numparams); 
-			printf("debug: To convert to binary: %x\n", tobin); 			
-			if (!tobin) {
-				fprintf(stderr, "Instruction parse failed.\n");
-			        return EXIT_FAILURE; 	
-			}
-
-			
+		//Call function to parse and store result in variable "tobin"
+		uint32_t tobin = pf(params, numparams); 
+		printf("debug: To convert to binary: %x\n", tobin); 			
+		if (!tobin) {
+			fprintf(stderr, "Instruction parse failed.\n");
+		        return EXIT_FAILURE; 	
 		}
 
 		addr += WORD_SIZE_32;
