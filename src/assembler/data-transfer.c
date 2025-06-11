@@ -85,7 +85,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 			simm19 = strtol(value, NULL, 10) / WORD_SIZE_32;
 		}
 		printf("debug: simm19 = 0x%x\n", simm19);
-		*toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
+		*toReturn |= mask_shift_val(simm19, sdt_format.simm19.bits, sdt_format.simm19.index); //set bits 5-23 with simm19 value
 		printf("debug: toReturn with simm19 = %x\n", *toReturn);
 	}else if(!strcmp(type, "ldr")){
 		//load instruction, no load literal
@@ -105,12 +105,12 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		int amode = mode(params, numparams);
 		printf("debug: addressing mode = %d\n", amode);
 		uint8_t xn = obtain_reg_num(xn_name);
-		*toReturn |= (xn << sdt_format.xn.index);
+		*toReturn |= mask_shift_val(xn, sdt_format.xn.bits, sdt_format.xn.index);
 		uint32_t simm9; 
 		switch(amode){
 			case(MODE_UNSIGNED_OFFSET):
 				printf("debug: unsigned offset\n"); 
-				*toReturn |= (1 << sdt_format.U.index);
+				*toReturn |= mask_shift_val(1, sdt_format.U.bits, sdt_format.U.index);
 				//set U bit
 				int imm12;
 				if(numparams < 4){
@@ -120,16 +120,16 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				}
 				imm12 &= 0xfff; //make sure it's 12 bits
 				printf("debug: imm12 = %x\n", imm12);
-				*toReturn |= (imm12 << 10);
+				*toReturn |= mask_shift_val(imm12, immdp_format.imm12.bits, immdp_format.imm12.index);
 				break;
 
 			case(MODE_PRE_INDEX): 
 				printf("debug: pre-index\n"); 
 				*toReturn |= (1 << 10); 
-				*toReturn |= (1 << 11); //set I bit
+				*toReturn |= mask_shift_val(1, sdt_format.I.bits, sdt_format.I.index); //set I bit
 				simm9 = getSimm9(params[3]);
 				simm9 &= 0x1ff; //make sure it's 9 bits
-				*toReturn |= (simm9 << sdt_format.simm9.index);
+				*toReturn |= mask_shift_val(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
 			case(MODE_POST_INDEX): 
@@ -137,14 +137,14 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				*toReturn |= (1 << 10); //set bit indicating post index
 				simm9 = getSimm9(params[3]);
 				simm9 &= 0x1ff; 
-				*toReturn |= (simm9 << sdt_format.simm9.index);
+				*toReturn |= mask_shift_val(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
 			case(MODE_REG_OFFSET): 
 				printf("debug: reg offset\n"); 
 				*toReturn |= 0x00206800; //update the instruction base
 				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
-				*toReturn |= (xm << sdt_format.xm.index);
+				*toReturn |= mask_shift_val(xm, sdt_format.xm.bits, sdt_format.xm.index);
 				break;
 
 			default: 

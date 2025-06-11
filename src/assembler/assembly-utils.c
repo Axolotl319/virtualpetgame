@@ -61,3 +61,7 @@ uint8_t obtain_shift_amt(char *param) {
 	}
         return extract_imm(shiftamt);
 }
+
+uint32_t mask_shift_val(uint32_t to_shift, int bits, int shift_amt) {
+	return (to_shift & ((1U << bits) - 1)) << shift_amt;
+}

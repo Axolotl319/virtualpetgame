@@ -8,7 +8,7 @@
 #include "branch.h"
 #include "aliases.h"
 
-#define NUM_ALIASES 31
+#define NUM_ALIASES 32
 
 //alphabetically sorted alias table
 //This doesn't deal with b.cond because im not sure what to do for that
