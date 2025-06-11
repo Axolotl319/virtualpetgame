@@ -80,14 +80,13 @@ uint32_t dt(char **params, int numparams) {
 		toReturn = 0x18000000;
 		uint32_t simm19; 
 
-		char *value = params[2]; //#imm or label offset
-		printf("This is given to simm19: %s\n", params[2]); 
+		char *value = params[2]; //#imm or label offset 
 		if(is_imm(value)){
 			//immediate valuae
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
-			simm19 = strtol(value, NULL, 10);
+			simm19 = strtol(value, NULL, 10) / WORD_SIZE_32;
 		}
 		printf("debug: simm19 = 0x%x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
