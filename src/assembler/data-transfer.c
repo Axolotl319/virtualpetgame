@@ -47,9 +47,9 @@ static int getImm12(char *imm_str, char *reg){
 
 	int imm = extract_imm(imm_str);
 	if(*reg == 'x'){ //64-bit width
-		return (imm / 8);
+		return (imm / WORD_SIZE_64);
 	}else if(*reg == 'w'){
-		return (imm / 4);
+		return (imm / WORD_SIZE_32);
 	}
 	
 	fprintf(stderr, "Unknown register width");
@@ -124,7 +124,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				}else{
 				   	imm12 = getImm12(params[3], target);
 				}
-				imm12 &= 0xfff; //make sure it's 12 bits
+				//imm12 &= 0xfff; //make sure it's 12 bits
 				printf("debug: imm12 = %x\n", imm12);
 				*toReturn |= mask_shift_val(imm12, sdt_format.offset.bits, sdt_format.offset.index);
 				break;
@@ -134,7 +134,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				*toReturn |= (1 << 10); 
 				*toReturn |= mask_shift_val(1, sdt_format.I.bits, sdt_format.I.index); //set I bit
 				simm9 = getSimm9(params[3]);
-				simm9 &= 0x1ff; //make sure it's 9 bits
+				//simm9 &= 0x1ff; //make sure it's 9 bits
 				*toReturn |= mask_shift_val(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
@@ -142,7 +142,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				printf("debug: post-index\n"); 
 				*toReturn |= (1 << 10); //set bit indicating post index
 				simm9 = getSimm9(params[3]);
-				simm9 &= 0x1ff; 
+				//simm9 &= 0x1ff; 
 				*toReturn |= mask_shift_val(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
