@@ -84,7 +84,7 @@ static void replace_labels(symbol_table symtable, char **params, int numparams, 
 		if (address == 1) { continue; }
 		printf("DEBUG: Label Address: 0x%x\n", address);
 		printf("DEBUG: Current Address: 0x%x\n", current_addr);
-		int32_t offset = address - (current_addr + WORD_SIZE_32);
+		int32_t offset = address - current_addr;
 		printf("DEBUG: Offset: %d\n", offset);
 		sprintf(params[i], "%d", offset);
 	}
@@ -103,6 +103,8 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		//strip newline character from end of line
 		strip_newline(linein);
 
+		if (is_empty_line(linein)) { continue; }
+
 		if (is_label(linein)) {
 			// Remove the colon
 			for (int i=strlen(linein)-1; i>=0; i--) {
@@ -112,9 +114,9 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 				}
 			}
 			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
+		} else {
+			addr += WORD_SIZE_32; 
 		}
-
-		addr += WORD_SIZE_32; 
 	}
 	return EXIT_SUCCESS;
 	
