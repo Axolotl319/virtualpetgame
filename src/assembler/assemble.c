@@ -86,7 +86,6 @@ static void replace_labels(symbol_table symtable, char **params, int numparams, 
 		int32_t offset = address - current_addr;
 		printf("DEBUG: Offset: %x\n", offset);
 		sprintf(params[i], "%x", offset);
-
 	}
 }
 
