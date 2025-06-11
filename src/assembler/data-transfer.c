@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 #include "symtable.h"
 #include "data-transfer.h"
 #include "assembly-utils.h"
@@ -40,7 +41,11 @@ static int mode(char **params, int numparams){
 
 //returns imm12 (when it isn't 0) or 0 if there's an error
 static int getImm12(char *imm_str, char *reg){
-	int imm = atoi(strtok(imm_str, "[ ]#"));
+	imm_str = strchr(imm_str, '#');
+	if (!imm_str) { return 0; }
+	while (*imm_str && isspace(*imm_str)) { imm_str++; }
+
+	int imm = extract_imm(imm_str);
 	if(*reg == 'x'){ //64-bit width
 		return (imm / 8);
 	}else if(*reg == 'w'){
@@ -51,8 +56,9 @@ static int getImm12(char *imm_str, char *reg){
 	return 0;
 }
 
-static int getSimm9(char *imm){ 
-	return atoi(strtok(imm, "[ ]#!"));
+static int getSimm9(char *imm){
+        while(*imm && !isdigit(*imm) && *imm != '-') { imm++; }	
+	return extract_imm(imm);
 }
 
 // Return 0 if success, 1 if fail
