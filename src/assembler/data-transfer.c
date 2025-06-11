@@ -27,7 +27,9 @@ static int mode(char **params, int numparams){
 		return -1;
 	}
 	if(numparams == 3){ return MODE_UNSIGNED_OFFSET; }
-	char last_char = *(params[3] + (strlen(params[3]) - 2));
+	//3 params -> zero unsigned offset
+	int len = strlen(params[3]);
+	char last_char = params[3][len-1];
 	if(last_char == '!'){ return MODE_PRE_INDEX; }
 	if(last_char == ']'){
 		if(is_imm(params[3])){
@@ -51,6 +53,10 @@ static int getImm12(char *imm_str, char *reg){
 	
 	fprintf(stderr, "Unknown register width");
 	return 0;
+}
+
+static int getSimm9(char *imm){
+	return atoi(strtok(imm, "[ ]#!"));
 }
 
 // Return encoded instruction if success, -1 if fail
@@ -115,17 +121,25 @@ int dt(char **params, int numparams) {
 						    	imm12 = getImm12(params[3], target);
 						    }
 						    imm12 &= 0xfff; //make sure it's 12 bits
+						    printf("debug: imm12 = %x\n", imm12);
 						    toReturn |= (imm12 << 10);
 						    break;
 
-			case(MODE_PRE_INDEX): //
+			case(MODE_PRE_INDEX): toReturn |= 0x00000c00; //set I bit
+					      int simm9 = getSimm9(params[3]);
+					      simm9 &= 0x1ff; //make sure it's 9 bits
+					      toReturn |= (simm9 << 12);
 					      break;
 
-			case(MODE_POST_INDEX): //
+			case(MODE_POST_INDEX): toReturn |= 0x00000400; //set bit indicating post index
+					       int simm9 = getSimm9(params[3]);
+					       toReturn |= (simm9 << 12);
 					       break;
 
-			case(MODE_REG_OFFSET): //
-					      break;
+			case(MODE_REG_OFFSET): toReturn |= 0x00106800
+					       uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
+					       toReturn |= (xm << 16);
+					       break;
 
 			default: fprintf(stderr, "Unknown addressing mode");
 				 return 0;
