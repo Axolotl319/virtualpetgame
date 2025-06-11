@@ -17,10 +17,6 @@ static char *removeBrackets(char *str){
 	return without;
 }
 
-static bool is_imm(char *value){
-	return (*value == '#');
-}
-
 //returns addressing mode or 0 if error occurs
 static int mode(char **params, int numparams){
 	if(numparams < 3){

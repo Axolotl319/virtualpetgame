@@ -8,10 +8,6 @@
 #include "assembly-utils.h"
 #include "instr-formats.h"
 
-static bool is_imm(char *param) {
-	return *param == '#';
-}
-
 static void set_shift_info(uint32_t *toReturn, char *param) {
 	char shifttype[4];
 	sscanf(param, "%s", shifttype); 

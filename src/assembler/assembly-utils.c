@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "assembly-utils.h"
 
 /*
@@ -40,6 +41,18 @@ uint32_t extract_imm(char *param) {
 	return strtol(param, NULL, 0); 	
 }
 
+/*
+ Given a parameter, determines if it is an immediate value
+ */
+bool is_imm(char *param) {
+	return *param == '#';
+}
+
+/*
+ Given a parameter specifying the shifttype and amount (for example, 
+ "lsl #16"), extracts the amount to shift by and returns its integer
+ representation.
+ */
 uint8_t obtain_shift_amt(char *param) {
         char shifttype[5];
         char shiftamt[5];
