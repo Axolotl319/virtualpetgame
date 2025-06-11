@@ -6,88 +6,196 @@
 #include <stdbool.h>
 #include "data-processing.h"
 #include "assembly-utils.h"
-//#include "tokenise_params.h"
+#include "instr-formats.h"
 
 static bool is_imm(char *param) {
 	return *param == '#';
 }
 
-// Returns the encoded instruction if success, -1 if fail
-int arith(char **params, int numparams) {
-	printf("debug: this is an arithmetic expression\n"); 
+static void set_shift_info(uint32_t *toReturn, char *param) {
+	char shifttype[4];
+	sscanf(param, "%s", shifttype); 
+	uint8_t oper = obtain_shift_amt(param);
+	if (!strcmp(shifttype, "lsr")) {
+		*toReturn |= (1 << regdp_format.shift.index); 
+	} else if (!strcmp(shifttype, "asr")) {
+	   	*toReturn |= (2 << regdp_format.shift.index); 
+	}
+	*toReturn |= (oper << regdp_format.operand.index); 
+}
+
+// Parses arithmetic instructions into decimal format 
+uint32_t arith(char **params, int numparams) {
+	printf("debug: this is an arithmetic expression\n");
+        assert(numparams >= 4); 	
 	uint32_t toReturn = 0; 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 
 	toReturn |= rd; 
-	toReturn |= (rn << 5); 
+	toReturn |= (rn << immdp_format.rn.index); 
+
+	update_sf(&toReturn, immdp_format.sf.index, params[2]); 
+
+	// Update opc
+	if (!strcmp(params[0], "adds") || !strcmp(params[0], "subs")) {
+		toReturn |= (1 << immdp_format.opc.index); 
+	}
+	if (!strcmp(params[0], "sub") || !strcmp(params[0], "subs")) {
+		toReturn |= (2 << immdp_format.opc.index); 
+	}
 
 	if (is_imm(params[3])) {
 		// Then it is immediate value arithmetic
-		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 22);
-	} else {
-		// Else it is register arithmetic 
+		// Set the constant base at bit 28
+		toReturn |= (1 << 28); 
+
+		// Update opi (binary 010) 
+		toReturn |= (2 << immdp_format.opi.index);
 		
-	}
-	return 1; 
+		// Obtain imm12 value 
+		toReturn |= (extract_imm(params[3]) << immdp_format.imm12.index);
+
+		// Update shift bit if needed
+		if (numparams == 5 && obtain_shift_amt(params[4]) == 12) {
+		   toReturn |= (1 << immdp_format.sh.index);
+		}
+	} else {
+		// Else it is register arithmetic
+		// Set constant bases at bits 27 and 25 
+		toReturn |= (1 << 27); 
+		toReturn |= (1 << 25); 
+		
+		uint8_t rm = obtain_reg_num(params[3]); 
+		toReturn |= (rm << regdp_format.rm.index); 
+
+		// Update opr (binary 1000)
+		toReturn |= (8 << regdp_format.opr.index); 
+
+		// Update shift and operand if needed
+		if (numparams == 5) {
+			set_shift_info(&toReturn, params[4]); 	   
+		}
+	} 
+	return toReturn; 
 }
 
-int logic(char **params, int numparams) {
+uint32_t logic(char **params, int numparams) {
 	printf("debug: this is a logic expression\n"); 
-	return 1; 
+	assert(numparams >= 4); 
+	uint32_t toReturn = 0x0a000000;
+
+	update_sf(&toReturn, regdp_format.sf.index, params[1]); 
+
+	// Obtain and update all the registers 
+	uint8_t rd = obtain_reg_num(params[1]); 
+	uint8_t rn = obtain_reg_num(params[2]); 
+	uint8_t rm = obtain_reg_num(params[3]);
+        toReturn |= rd; 
+	toReturn |= (rn << regdp_format.rn.index); 
+	toReturn |= (rm << regdp_format.rm.index); 
+
+	// Set opc and N depending on the mnemonic 
+	uint8_t opc = 0; 
+	uint8_t n = 0; 
+	if (!strcmp(params[0], "bic")) {
+		n = 1; 
+	} else if (!strcmp(params[0], "orr")) {
+		opc = 1; 
+	} else if (!strcmp(params[0], "orn")) {
+		opc = 1; 
+		n = 1; 
+	} else if (!strcmp(params[0], "eor")) {
+		opc = 2; 
+	} else if (!strcmp(params[0], "eon")) {
+		opc = 2; 
+		n = 1; 
+	} else if (!strcmp(params[0], "ands")) {
+		opc = 3; 
+	} else if (!strcmp(params[0], "bics")) {
+		opc = 3; 
+		n = 1; 
+	}
+	toReturn |= (opc << regdp_format.opc.index); 
+	toReturn |= (n << regdp_format.N.index); 
+
+	// Set the shift type if needed
+	if (numparams == 5) {
+		set_shift_info(&toReturn, params[4]);	
+	}
+	 
+	return toReturn; 
 }
 
-int wmove(char **params, int numparams) {
+uint32_t wmove(char **params, int numparams) {
 	printf("debug: this is a wide move expression\n");
-        uint32_t toReturn = 0x12800000;
+        assert(numparams >= 3); 
+	uint32_t toReturn = 0x12800000;
 
-	update_sf(&toReturn, 31, params[1]); 
+	update_sf(&toReturn, immdp_format.sf.index, params[1]); 
 
 	// Update rd 
 	toReturn |= obtain_reg_num(params[1]); 
 
 	// Update opc
 	if (!strcmp(params[0], "movz")) {
-		toReturn |= (1 << 30); 
+		toReturn |= (2 << immdp_format.opc.index); 
 	} else if (!strcmp(params[0], "movk")) {
-		toReturn |= (1 << 30); 
-		toReturn |= (1 << 29); 
+		toReturn |= (3 << immdp_format.opc.index);  
 	}
 
 	// Extract imm16 and update toReturn 
-	/*
-	if (strchr(params[2], 'x') != NULL) {
-		toReturn |= (extract_imm(params[2]) << 5);
-	} else {
-		toReturn |= (extract_imm_dec(params[2]) << 5);
-	}
-	*/
-	toReturn |= (extract_imm(params[2]) << 5);
+	toReturn |= (extract_imm(params[2]) << immdp_format.imm16.index);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == 4) {
-		toReturn |= ((obtain_shift_amt(params[3]) / 16) << 21);
+		uint8_t bit = obtain_shift_amt(params[3]) / 16; 
+		toReturn |= (bit << immdp_format.hw.index);
 	}
-
-	printf("debug: toReturn looks like this: %x\n", toReturn); 
+ 
 	return toReturn; 
 }
 
-int single_op_dest(char **params, int numparams) {
+#define insert_zero(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
+
+uint32_t single_op_dest(char **params, int numparams) {
 	printf("debug: this is a single op and destination expression\n"); 
-	return 1; 
+	if (!strcmp(params[0], "mul")) {
+		params[0] = "madd"; 
+		params[numparams++] = "xzr"; 
+		return multiply(params, numparams); 
+	} else if (!strcmp(params[0], "mneg")) {
+		params[0] = "msub"; 
+		params[numparams++] = "xzr"; 
+		return multiply(params, numparams); 
+	} else if (!strcmp(params[0], "mov")) {
+		params[0] = "orr"; 
+		params[numparams++] = "xzr"; 
+		return logic(params, numparams); 
+	} else if (!strcmp(params[0], "mvn")) {
+		params[0] = "orn"; 
+		insert_zero(numparams); 
+		return logic(params, numparams++); 
+	} else if (!strcmp(params[0], "neg")) {
+		params[0] = "sub"; 
+		insert_zero(numparams);  
+		return arith(params, numparams++); 
+	} 
+	params[0] = "subs"; 
+	insert_zero(numparams); 
+	return arith(params, numparams++); 
 }
 
-int multiply(char **params, int numparams) {
+uint32_t multiply(char **params, int numparams) {
 	printf("debug: this is a multiply expression\n");
         assert(numparams == 5); 	
 	uint32_t toReturn = 0x1b000000; 
  
-	update_sf(&toReturn, 31, params[1]); 
+	update_sf(&toReturn, regdp_format.sf.index, params[1]); 
 
 	// Update x: 
 	if (strcmp(params[0], "msub") == 0) {
-		toReturn |= (1 << 15); 
+		toReturn |= (1 << regdp_format.x.index); 
 	}
 
 	// Obtain the register numbers: 
@@ -97,15 +205,35 @@ int multiply(char **params, int numparams) {
 	uint8_t ra = obtain_reg_num(params[4]);
 
 	toReturn |= rd; 
-	toReturn |= (rn << 5); 
-	toReturn |= (ra << 10); 
-	toReturn |= (rm << 16); 	
+	toReturn |= (rn << regdp_format.rn.index); 
+	toReturn |= (ra << regdp_format.ra.index); 
+	toReturn |= (rm << regdp_format.rm.index); 	
 	 
-	printf("Resulting multiply output: %x\n", toReturn); 
 	return toReturn; 
 }
 
-int compare(char **params, int numparams) {
+uint32_t compare(char **params, int numparams) {
 	printf("debug: this is a compare/test expression\n"); 
-	return 1; 
+	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
+	
+	// Insert the zero register at params[1]
+	for (int i=numparams; i>1; i--) {
+	   params[i] = params[i-1];  
+	}
+	params[1] = zero; 
+	numparams++; 
+
+	uint32_t toReturn = 0x1f; 
+
+	if (!strcmp(params[0], "tst")) {
+	   params[0] = "ands"; 
+	   toReturn |= logic(params, numparams); 
+	} else if (!strcmp(params[0], "cmp")) {
+	   params[0] = "subs";  
+	   toReturn |= arith(params, numparams);
+	} else {
+	   params[0] = "adds"; 
+	   toReturn |= arith(params, numparams);
+	} 
+	return toReturn; 
 }

@@ -41,7 +41,7 @@ static int check_numparams(int numparams) {
 
 // Register branch
 // Returns the instruction, or 0 if fail
-int reg_branch(char **params, int numparams) {
+uint32_t reg_branch(char **params, int numparams) {
 	printf("debug: this is a branch instruction\n"); 
 	if (check_numparams(numparams)) { return 0; }
 
@@ -52,21 +52,21 @@ int reg_branch(char **params, int numparams) {
 
 	//form instr by masking + shifting xn:
 	
-	instr |= (xn & ((1U << br_format.xn.bits) - 1)) << br_format.xn.index;
+	instr |= (xn & ((1 << br_format.xn.bits) - 1)) << br_format.xn.index;
 	printf("Encoded instruction: 0x%x\n", instr);
 	return instr;		
 }
 
 // Unconditional Branch
 // Returns the instruction, or 0 if fail
-int uncond_branch(char **params, int numparams) {
+uint32_t uncond_branch(char **params, int numparams) {
 	printf("debug: this is an unconditional branch\n");
 	if (check_numparams(numparams)) { return 0; }
 
 	uint32_t instr = BR_UNCOND_BASE;
 	
 	//get simm26
-	int32_t simm26 = strtol(params[1], NULL, 16) / WORD_SIZE_32;
+	int32_t simm26 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
 
 	//check valid range
 	if (simm26 < -(MAX_26_BITS) || simm26 > MAX_26_BITS - 1) { 
@@ -75,7 +75,7 @@ int uncond_branch(char **params, int numparams) {
 	}
 
 	//form the instruction by masking + shifting simm26
-	instr |= (simm26 & ((1U << br_format.simm26.bits) - 1)) << br_format.simm26.index;
+	instr |= (simm26 & ((1 << br_format.simm26.bits) - 1)) << br_format.simm26.index;
 		
 	printf("Encoded instruction: 0x%x\n", instr);
 	return instr;
@@ -83,7 +83,7 @@ int uncond_branch(char **params, int numparams) {
 
 // Conditional Branch
 // Returns the instruction, or 0 if fail
-int cond_branch(char **params, int numparams) {
+uint32_t cond_branch(char **params, int numparams) {
 	if (check_numparams(numparams)) { return 0; }
 
 	uint32_t instr = BR_COND_BASE;
@@ -111,7 +111,7 @@ int cond_branch(char **params, int numparams) {
 	printf("debug: Condition code is: %d\n", cond);
 
 	//get simm19
-	int32_t simm19 = strtol(params[1], NULL, 16) / WORD_SIZE_32;
+	int32_t simm19 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
 	printf("simm19: %d\n", simm19);
 
 	//check valid range
@@ -121,8 +121,8 @@ int cond_branch(char **params, int numparams) {
 	}
 
 	//form the instruction by masking + shifting simm19 and cond
-	instr |= (simm19 & ((1U << br_format.simm19.bits) - 1)) << br_format.simm19.index;
-	instr |= (cond & ((1U << br_format.cond.bits) - 1)) << br_format.cond.index;
+	instr |= (simm19 & ((1 << br_format.simm19.bits) - 1)) << br_format.simm19.index;
+	instr |= (cond & ((1 << br_format.cond.bits) - 1)) << br_format.cond.index;
 	printf("Encoded instruction: 0x%x\n", instr);
 
 	return instr;

@@ -60,7 +60,7 @@ static int getSimm9(char *imm){
 }
 
 // Return encoded instruction if success, -1 if fail
-int dt(char **params, int numparams) {
+uint32_t dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
 	uint32_t toReturn;
 	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
@@ -74,22 +74,21 @@ int dt(char **params, int numparams) {
 
 	bool loadLiteral = (numparams == 3) & (*params[2] != '[');
 	//load literal is ldr with 2 args, sdts have an extra argument
-	//unsigned offset can also just have 3 params, the 3rd being a [regname]
-	
+	//unsigned offset can also just have 3 params, the 3rd being a [regname]	
 	if(loadLiteral){
 		printf("debug: this is a load literal\n");
 		toReturn = 0x18000000;
+		uint32_t simm19; 
 
 		char *value = params[2]; //#imm or label offset
-		uint32_t simm19;
 		if(is_imm(value)){
 			//immediate value
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
-			simm19 = strtol(value, NULL, 16);
+			simm19 = strtol(value, NULL, 10);
 		}
-		printf("debug: simm19 = %x\n", simm19);
+		printf("debug: simm19 = 0x%x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
 		printf("debug: toReturn with simm19 = %x\n", toReturn);
 	}else if(strcmp(type, "ldr") == 0){
@@ -111,39 +110,45 @@ int dt(char **params, int numparams) {
 		printf("debug: addressing mode = %d\n", amode);
 		uint8_t xn = obtain_reg_num(xn_name);
 		toReturn |= (xn << 5);
+		uint32_t simm9; 
 		switch(amode){
-			case(MODE_UNSIGNED_OFFSET): toReturn |= 0x01000000;
-						    //set U bit
-						    int imm12;
-						    if(numparams < 4){
-						    	imm12 = 0;
-						    }else{
-						    	imm12 = getImm12(params[3], target);
-						    }
-						    imm12 &= 0xfff; //make sure it's 12 bits
-						    printf("debug: imm12 = %x\n", imm12);
-						    toReturn |= (imm12 << 10);
-						    break;
+			case(MODE_UNSIGNED_OFFSET): 
+				toReturn |= 0x01000000;
+				//set U bit
+				int imm12;
+				if(numparams < 4){
+				   	imm12 = 0;
+				}else{
+				   	imm12 = getImm12(params[3], target);
+				}
+				imm12 &= 0xfff; //make sure it's 12 bits
+				printf("debug: imm12 = %x\n", imm12);
+				toReturn |= (imm12 << 10);
+				break;
 
-			case(MODE_PRE_INDEX): toReturn |= 0x00000c00; //set I bit
-					      int simm9 = getSimm9(params[3]);
-					      simm9 &= 0x1ff; //make sure it's 9 bits
-					      toReturn |= (simm9 << 12);
-					      break;
+			case(MODE_PRE_INDEX): 
+				toReturn |= 0x00000c00; //set I bit
+				simm9 = getSimm9(params[3]);
+				simm9 &= 0x1ff; //make sure it's 9 bits
+				toReturn |= (simm9 << 12);
+				break;
 
-			case(MODE_POST_INDEX): toReturn |= 0x00000400; //set bit indicating post index
-					       int simm9 = getSimm9(params[3]);
-					       toReturn |= (simm9 << 12);
-					       break;
+			case(MODE_POST_INDEX): 
+				toReturn |= 0x00000400; //set bit indicating post index
+				simm9 = getSimm9(params[3]);
+				toReturn |= (simm9 << 12);
+				break;
 
-			case(MODE_REG_OFFSET): toReturn |= 0x00106800
-					       uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
-					       toReturn |= (xm << 16);
-					       break;
+			case(MODE_REG_OFFSET): 
+				toReturn |= 0x00106800;
+				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
+				toReturn |= (xm << 16);
+				break;
 
-			default: fprintf(stderr, "Unknown addressing mode");
-				 return 0;
-				 break;
+			default: 
+				fprintf(stderr, "Unknown addressing mode");
+				return 0;
+				break;
 		}
 	}
 
