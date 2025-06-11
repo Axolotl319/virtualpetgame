@@ -40,6 +40,19 @@ static int mode(char **params, int numparams){
 	return MODE_POST_INDEX;
 }
 
+//returns imm12 (when it isn't 0) or 0 if there's an error
+static int getImm12(char *imm_str, char *reg){
+	int imm = atoi(strtok(imm_str, "[ ]#"));
+	if(*reg == 'x'){ //64-bit width
+		return (imm / 8);
+	}else if(*reg == 'w'){
+		return (imm / 4);
+	}
+	
+	fprintf(stderr, "Unknown register width");
+	return 0;
+}
+
 // Return encoded instruction if success, -1 if fail
 int dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
@@ -90,6 +103,34 @@ int dt(char **params, int numparams) {
 		printf("debug: xn_name = %s\n", xn_name);
 		int amode = mode(params, numparams);
 		printf("debug: addressing mode = %d\n", amode);
+		uint8_t xn = obtain_reg_num(xn_name);
+		toReturn |= (xn << 5);
+		switch(amode){
+			case(MODE_UNSIGNED_OFFSET): toReturn |= 0x01000000;
+						    //set U bit
+						    int imm12;
+						    if(numparams < 4){
+						    	imm12 = 0;
+						    }else{
+						    	imm12 = getImm12(params[3], target);
+						    }
+						    imm12 &= 0xfff; //make sure it's 12 bits
+						    toReturn |= (imm12 << 10);
+						    break;
+
+			case(MODE_PRE_INDEX): //
+					      break;
+
+			case(MODE_POST_INDEX): //
+					       break;
+
+			case(MODE_REG_OFFSET): //
+					      break;
+
+			default: fprintf(stderr, "Unknown addressing mode");
+				 return 0;
+				 break;
+		}
 	}
 
 	update_sf(&toReturn, 30, target); //update register width based on target register
