@@ -104,7 +104,13 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		strip_newline(linein);
 
 		if (is_label(linein)) {
-		        linein[strlen(linein) - 1] = '\0';	//remove the colon
+			// Remove the colon
+			for (int i=strlen(linein)-1; i>=0; i--) {
+				if (linein[i] == ':') {
+					linein[i] = '\0'; 
+					break;
+				}
+			}
 			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
 		}
 
@@ -213,6 +219,12 @@ int main(int argc, char **argv) {
 	if (compile_regex()) { return EXIT_FAILURE; }
 
 	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
+
+	printf("debug: symbol table pairs listed below:\n"); 
+	for (int i=0; i<symtable->length; i++) {
+		symbol_pair p = symtable->st_pairs[i]; 
+		printf("Pair %s, %d\n", p->label, p->address); 
+	}
 
 	//rewind file to go back to start
 	rewind(filein);

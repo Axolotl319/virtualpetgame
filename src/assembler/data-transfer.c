@@ -20,11 +20,11 @@ static bool is_imm(char *value){
 	return (*value == '#');
 }
 
-//returns addressing mode or -1 if error occurs
+//returns addressing mode or 0 if error occurs
 static int mode(char **params, int numparams){
 	if(numparams < 3){
 		fprintf(stderr, "Unknown addressing mode");
-		return -1;
+		return 0;
 	}
 	if(numparams == 3){ return MODE_UNSIGNED_OFFSET; }
 	//3 params -> zero unsigned offset
@@ -55,18 +55,18 @@ static int getImm12(char *imm_str, char *reg){
 	return 0;
 }
 
-static int getSimm9(char *imm){
+static int getSimm9(char *imm){ 
 	return atoi(strtok(imm, "[ ]#!"));
 }
 
-// Return encoded instruction if success, -1 if fail
+// Return encoded instruction if success, 0 if fail
 uint32_t dt(char **params, int numparams) {
 	printf("debug: this is a data transfer instruction\n");
 	uint32_t toReturn;
 	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
 		printf("debug: incorrect no. params\n");
 		fprintf(stderr, "Unexpected no. parameters for dt instr\n");
-		return -1;
+		return 0;
 	}
 	char *type = params[0]; // load/store instruction
 	char *target = params[1]; // first argument is target register
@@ -81,8 +81,9 @@ uint32_t dt(char **params, int numparams) {
 		uint32_t simm19; 
 
 		char *value = params[2]; //#imm or label offset
+		printf("This is given to simm19: %s\n", params[2]); 
 		if(is_imm(value)){
-			//immediate value
+			//immediate valuae
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
