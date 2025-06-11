@@ -8,22 +8,36 @@
 #include "assembly-utils.h"
 #include "instr-formats.h"
 
-static void set_shift_info(uint32_t *toReturn, char *param) {
+// Sets the bits for shift type and shift amount in toReturn. 
+// Returns 0 if failure, returns 1 if success. 
+static int set_shift_info(uint32_t *toReturn, char *param) {
 	char shifttype[4];
-	sscanf(param, "%s", shifttype); 
+	if (sscanf(param, "%s", shifttype) == EOF) {
+		fprintf(stderr, "Shift type could not be read.\n"); 
+		return 0; 
+	}	
 	uint8_t oper = obtain_shift_amt(param);
 	if (!strcmp(shifttype, "lsr")) {
 		*toReturn |= (1 << regdp_format.shift.index); 
 	} else if (!strcmp(shifttype, "asr")) {
 	   	*toReturn |= (2 << regdp_format.shift.index); 
+	} else if (!strcmp(shifttype, "lsl")) {
+		/* EMPTY BODY */
+	} else {
+		fprintf(stderr, "Shift type not recognized.\n"); 
+		return 0; 
 	}
-	*toReturn |= (oper << regdp_format.operand.index); 
+	*toReturn |= (oper << regdp_format.operand.index);
+        return 1; 	
 }
 
 // Parses arithmetic instructions into decimal format 
 int arith(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is an arithmetic expression\n");
-        assert(numparams >= 4); 	
+        if (numparams != 4 && numparams != 5) {
+		fprintf(stderr, "Incorrect number of parameters.\n"); 
+		return EXIT_FAILURE; 
+	}	
 	*toReturn = 0; 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
@@ -70,7 +84,9 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 
 		// Update shift and operand if needed
 		if (numparams == 5) {
-			set_shift_info(toReturn, params[4]); 	   
+			if (!set_shift_info(toReturn, params[4])) {
+				return EXIT_FAILURE; 
+			}		
 		}
 	} 
 	return EXIT_SUCCESS; 
@@ -78,7 +94,11 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 
 int logic(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a logic expression\n"); 
-	assert(numparams >= 4); 
+	if (numparams != 4 && numparams != 5) {
+		fprintf(stderr, "Invalid number of parameters.\n");
+	        return EXIT_FAILURE; 	
+	}
+	// Set up the instruction base 
 	*toReturn = 0x0a000000;
 
 	update_sf(toReturn, regdp_format.sf.index, params[1]); 
@@ -117,7 +137,9 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 
 	// Set the shift type if needed
 	if (numparams == 5) {
-		set_shift_info(toReturn, params[4]);	
+		if (!set_shift_info(toReturn, params[4])) {
+			return EXIT_FAILURE; 
+		}	
 	}
 	 
 	return EXIT_SUCCESS; 
@@ -125,7 +147,10 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 
 int wmove(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a wide move expression\n");
-        assert(numparams >= 3); 
+        if (numparams != 3 && numparams != 4) {
+		fprintf(stderr, "Invalid number of parameters.\n");
+	        return EXIT_FAILURE; 	
+	}
 	*toReturn = 0x12800000;
 
 	update_sf(toReturn, immdp_format.sf.index, params[1]); 
@@ -138,6 +163,11 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 		*toReturn |= (2 << immdp_format.opc.index); 
 	} else if (!strcmp(params[0], "movk")) {
 		*toReturn |= (3 << immdp_format.opc.index);  
+	} else if (!strcmp(params[0], "movn")) {
+		/* EMPTY BODY */
+	} else {
+		fprintf(stderr, "Unrecognized wide move mnemonic.\n"); 
+		return EXIT_FAILURE; 
 	}
 
 	// Extract imm16 and update toReturn 
@@ -156,6 +186,10 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 
 int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a single op and destination expression\n"); 
+	if (numparams != 3 && numparams != 4) {
+		fprintf(stderr, "Invalid number of parameters.\n"); 
+		return EXIT_FAILURE; 
+	}
 	if (!strcmp(params[0], "mul")) {
 		params[0] = "madd"; 
 		params[numparams++] = "xzr"; 
@@ -176,24 +210,35 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 		params[0] = "sub"; 
 		insert_zero(numparams);  
 		arith(params, numparams++, toReturn); 
-	} else {
+	} else if (!strcmp(params[0], "negs")) {
 		params[0] = "subs"; 
 		insert_zero(numparams); 
 		arith(params, numparams++, toReturn);
+	} else {
+		fprintf(stderr, "Unrecognized mnemonic.\n"); 
+		return EXIT_FAILURE; 
 	}
 	return EXIT_SUCCESS; 
 }
 
 int multiply(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a multiply expression\n");
-        assert(numparams == 5); 	
+        if (numparams != 5) {
+		fprintf(stderr, "Invalid number of parameters.\n"); 
+		return EXIT_FAILURE; 
+	}
 	*toReturn = 0x1b000000; 
  
 	update_sf(toReturn, regdp_format.sf.index, params[1]); 
 
 	// Update x: 
-	if (strcmp(params[0], "msub") == 0) {
+	if (!strcmp(params[0], "msub")) {
 		*toReturn |= (1 << regdp_format.x.index); 
+	} else if (!strcmp(params[0], "madd")) {
+		/* EMPTY BODY */
+	} else {
+		fprintf(stderr, "Unrecognized multiply mnemonic.\n"); 
+		return EXIT_FAILURE; 
 	}
 
 	// Obtain the register numbers: 
@@ -221,21 +266,19 @@ int compare(char **params, int numparams, uint32_t *toReturn) {
 	params[1] = zero; 
 	numparams++; 
 
-	*toReturn = 0x1f; 
-	uint32_t ret;
-
 	if (!strcmp(params[0], "tst")) {
 	   params[0] = "ands"; 
-	   logic(params, numparams, &ret);
-	   *toReturn |= ret; 
+	   logic(params, numparams, toReturn);
 	} else if (!strcmp(params[0], "cmp")) {
 	   params[0] = "subs";
-	   arith(params, numparams,  &ret);  
-	   *toReturn |= ret;
-	} else {
+	   arith(params, numparams,  toReturn);  
+	} else if (!strcmp(params[0], "cmn")) {
 	   params[0] = "adds";
-	   arith(params, numparams, &ret); 
-	   *toReturn |= ret;
-	} 
+	   arith(params, numparams, toReturn); 
+	} else {
+		fprintf(stderr, "Unrecognized compare mnemonic.\n"); 
+		return EXIT_FAILURE; 
+	}
+	*toReturn |= 0x1f; 
 	return EXIT_SUCCESS; 
 }
