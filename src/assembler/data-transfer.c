@@ -38,9 +38,9 @@ int dt(char **params, int numparams) {
 			simm19 = extract_imm(value);
 		}else{
 			//value is a label offset (label addr - curr addr)
-			simm19 = strtol(value, NULL, 16);
+			simm19 = strtol(value, NULL, 10);
 		}
-		printf("debug: simm19 = %x\n", simm19);
+		printf("debug: simm19 = 0x%x\n", simm19);
 		toReturn |= (simm19 << 5); //set bits 5-23 with simm19 value
 		printf("debug: toReturn with simm19 = %x\n", toReturn);
 		//TODO: simm19 is correct but toReturn seems to have
