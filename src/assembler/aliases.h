@@ -1,4 +1,4 @@
-typedef uint32_t (*parse_f)(char **, int); 
+typedef int (*parse_f)(char **, int, uint32_t *tobin); 
 
 typedef struct {
 	char *alias;

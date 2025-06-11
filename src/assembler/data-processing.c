@@ -25,75 +25,75 @@ static void set_shift_info(uint32_t *toReturn, char *param) {
 }
 
 // Parses arithmetic instructions into decimal format 
-uint32_t arith(char **params, int numparams) {
+int arith(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is an arithmetic expression\n");
         assert(numparams >= 4); 	
-	uint32_t toReturn = 0; 
+	*toReturn = 0; 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 
-	toReturn |= rd; 
-	toReturn |= (rn << immdp_format.rn.index); 
+	*toReturn |= rd; 
+	*toReturn |= (rn << immdp_format.rn.index); 
 
-	update_sf(&toReturn, immdp_format.sf.index, params[2]); 
+	update_sf(toReturn, immdp_format.sf.index, params[2]); 
 
 	// Update opc
 	if (!strcmp(params[0], "adds") || !strcmp(params[0], "subs")) {
-		toReturn |= (1 << immdp_format.opc.index); 
+		*toReturn |= (1 << immdp_format.opc.index); 
 	}
 	if (!strcmp(params[0], "sub") || !strcmp(params[0], "subs")) {
-		toReturn |= (2 << immdp_format.opc.index); 
+		*toReturn |= (2 << immdp_format.opc.index); 
 	}
 
 	if (is_imm(params[3])) {
 		// Then it is immediate value arithmetic
 		// Set the constant base at bit 28
-		toReturn |= (1 << 28); 
+		*toReturn |= (1 << 28); 
 
 		// Update opi (binary 010) 
-		toReturn |= (2 << immdp_format.opi.index);
+		*toReturn |= (2 << immdp_format.opi.index);
 		
 		// Obtain imm12 value 
-		toReturn |= (extract_imm(params[3]) << immdp_format.imm12.index);
+		*toReturn |= (extract_imm(params[3]) << immdp_format.imm12.index);
 
 		// Update shift bit if needed
 		if (numparams == 5 && obtain_shift_amt(params[4]) == 12) {
-		   toReturn |= (1 << immdp_format.sh.index);
+		   *toReturn |= (1 << immdp_format.sh.index);
 		}
 	} else {
 		// Else it is register arithmetic
 		// Set constant bases at bits 27 and 25 
-		toReturn |= (1 << 27); 
-		toReturn |= (1 << 25); 
+		*toReturn |= (1 << 27); 
+		*toReturn |= (1 << 25); 
 		
 		uint8_t rm = obtain_reg_num(params[3]); 
-		toReturn |= (rm << regdp_format.rm.index); 
+		*toReturn |= (rm << regdp_format.rm.index); 
 
 		// Update opr (binary 1000)
-		toReturn |= (8 << regdp_format.opr.index); 
+		*toReturn |= (8 << regdp_format.opr.index); 
 
 		// Update shift and operand if needed
 		if (numparams == 5) {
-			set_shift_info(&toReturn, params[4]); 	   
+			set_shift_info(toReturn, params[4]); 	   
 		}
 	} 
-	return toReturn; 
+	return EXIT_SUCCESS; 
 }
 
-uint32_t logic(char **params, int numparams) {
+int logic(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a logic expression\n"); 
 	assert(numparams >= 4); 
-	uint32_t toReturn = 0x0a000000;
+	*toReturn = 0x0a000000;
 
-	update_sf(&toReturn, regdp_format.sf.index, params[1]); 
+	update_sf(toReturn, regdp_format.sf.index, params[1]); 
 
 	// Obtain and update all the registers 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 	uint8_t rm = obtain_reg_num(params[3]);
-        toReturn |= rd; 
-	toReturn |= (rn << regdp_format.rn.index); 
-	toReturn |= (rm << regdp_format.rm.index); 
+        *toReturn |= rd; 
+	*toReturn |= (rn << regdp_format.rn.index); 
+	*toReturn |= (rm << regdp_format.rm.index); 
 
 	// Set opc and N depending on the mnemonic 
 	uint8_t opc = 0; 
@@ -116,86 +116,88 @@ uint32_t logic(char **params, int numparams) {
 		opc = 3; 
 		n = 1; 
 	}
-	toReturn |= (opc << regdp_format.opc.index); 
-	toReturn |= (n << regdp_format.N.index); 
+	*toReturn |= (opc << regdp_format.opc.index); 
+	*toReturn |= (n << regdp_format.N.index); 
 
 	// Set the shift type if needed
 	if (numparams == 5) {
-		set_shift_info(&toReturn, params[4]);	
+		set_shift_info(toReturn, params[4]);	
 	}
 	 
-	return toReturn; 
+	return EXIT_SUCCESS; 
 }
 
-uint32_t wmove(char **params, int numparams) {
+int wmove(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a wide move expression\n");
         assert(numparams >= 3); 
-	uint32_t toReturn = 0x12800000;
+	*toReturn = 0x12800000;
 
-	update_sf(&toReturn, immdp_format.sf.index, params[1]); 
+	update_sf(toReturn, immdp_format.sf.index, params[1]); 
 
 	// Update rd 
-	toReturn |= obtain_reg_num(params[1]); 
+	*toReturn |= obtain_reg_num(params[1]); 
 
 	// Update opc
 	if (!strcmp(params[0], "movz")) {
-		toReturn |= (2 << immdp_format.opc.index); 
+		*toReturn |= (2 << immdp_format.opc.index); 
 	} else if (!strcmp(params[0], "movk")) {
-		toReturn |= (3 << immdp_format.opc.index);  
+		*toReturn |= (3 << immdp_format.opc.index);  
 	}
 
 	// Extract imm16 and update toReturn 
-	toReturn |= (extract_imm(params[2]) << immdp_format.imm16.index);
+	*toReturn |= (extract_imm(params[2]) << immdp_format.imm16.index);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == 4) {
 		uint8_t bit = obtain_shift_amt(params[3]) / 16; 
-		toReturn |= (bit << immdp_format.hw.index);
+		*toReturn |= (bit << immdp_format.hw.index);
 	}
  
-	return toReturn; 
+	return EXIT_SUCCESS; 
 }
 
 #define insert_zero(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
 
-uint32_t single_op_dest(char **params, int numparams) {
+int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a single op and destination expression\n"); 
 	if (!strcmp(params[0], "mul")) {
 		params[0] = "madd"; 
 		params[numparams++] = "xzr"; 
-		return multiply(params, numparams); 
+		multiply(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mneg")) {
 		params[0] = "msub"; 
 		params[numparams++] = "xzr"; 
-		return multiply(params, numparams); 
+		multiply(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mov")) {
 		params[0] = "orr"; 
 		params[numparams++] = "xzr"; 
-		return logic(params, numparams); 
+		logic(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mvn")) {
 		params[0] = "orn"; 
 		insert_zero(numparams); 
-		return logic(params, numparams++); 
+		logic(params, numparams++, toReturn); 
 	} else if (!strcmp(params[0], "neg")) {
 		params[0] = "sub"; 
 		insert_zero(numparams);  
-		return arith(params, numparams++); 
-	} 
-	params[0] = "subs"; 
-	insert_zero(numparams); 
-	return arith(params, numparams++); 
+		arith(params, numparams++, toReturn); 
+	} else {
+		params[0] = "subs"; 
+		insert_zero(numparams); 
+		arith(params, numparams++, toReturn);
+	}
+	return EXIT_SUCCESS; 
 }
 
-uint32_t multiply(char **params, int numparams) {
+int multiply(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a multiply expression\n");
         assert(numparams == 5); 	
-	uint32_t toReturn = 0x1b000000; 
+	*toReturn = 0x1b000000; 
  
-	update_sf(&toReturn, regdp_format.sf.index, params[1]); 
+	update_sf(toReturn, regdp_format.sf.index, params[1]); 
 
 	// Update x: 
 	if (strcmp(params[0], "msub") == 0) {
-		toReturn |= (1 << regdp_format.x.index); 
+		*toReturn |= (1 << regdp_format.x.index); 
 	}
 
 	// Obtain the register numbers: 
@@ -204,15 +206,15 @@ uint32_t multiply(char **params, int numparams) {
 	uint8_t rm = obtain_reg_num(params[3]); 
 	uint8_t ra = obtain_reg_num(params[4]);
 
-	toReturn |= rd; 
-	toReturn |= (rn << regdp_format.rn.index); 
-	toReturn |= (ra << regdp_format.ra.index); 
-	toReturn |= (rm << regdp_format.rm.index); 	
+	*toReturn |= rd; 
+	*toReturn |= (rn << regdp_format.rn.index); 
+	*toReturn |= (ra << regdp_format.ra.index); 
+	*toReturn |= (rm << regdp_format.rm.index); 	
 	 
-	return toReturn; 
+	return EXIT_SUCCESS; 
 }
 
-uint32_t compare(char **params, int numparams) {
+int compare(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a compare/test expression\n"); 
 	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
 	
@@ -223,17 +225,21 @@ uint32_t compare(char **params, int numparams) {
 	params[1] = zero; 
 	numparams++; 
 
-	uint32_t toReturn = 0x1f; 
+	*toReturn = 0x1f; 
+	uint32_t ret;
 
 	if (!strcmp(params[0], "tst")) {
 	   params[0] = "ands"; 
-	   toReturn |= logic(params, numparams); 
+	   logic(params, numparams, &ret);
+	   *toReturn |= ret; 
 	} else if (!strcmp(params[0], "cmp")) {
-	   params[0] = "subs";  
-	   toReturn |= arith(params, numparams);
+	   params[0] = "subs";
+	   arith(params, numparams,  &ret);  
+	   *toReturn |= ret;
 	} else {
-	   params[0] = "adds"; 
-	   toReturn |= arith(params, numparams);
+	   params[0] = "adds";
+	   arith(params, numparams, &ret); 
+	   *toReturn |= ret;
 	} 
-	return toReturn; 
+	return EXIT_SUCCESS; 
 }

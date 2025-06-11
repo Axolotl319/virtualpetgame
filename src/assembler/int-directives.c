@@ -1,14 +1,15 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "assembly-utils.h"
 
-uint32_t int_directive(char **params, int numparams) {
+int int_directive(char **params, int numparams, uint32_t *toReturn) {
 	if (numparams != 2) {
 		fprintf(stderr, "Invalid int directive\n");
-		return 0;
+		return EXIT_FAILURE;
 	}
 
 	char *value = params[1];
-	uint32_t val_to_write = extract_imm(value);
-	return val_to_write;
+	*toReturn = extract_imm(value);
+	return EXIT_SUCCESS;
 }

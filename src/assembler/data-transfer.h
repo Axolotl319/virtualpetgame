@@ -6,5 +6,5 @@ typedef enum {
 	MODE_POST_INDEX
 }addressing_mode_t;
 
-extern uint32_t dt(char **params, int numparams); 
+extern int dt( char ** params, int numparams, uint32_t * toReturn ); 
 

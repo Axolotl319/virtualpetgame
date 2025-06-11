@@ -62,6 +62,13 @@ static void strip_newline(char *linein) {
         }
 }
 
+static void strip_whitespace(char *linein) {
+	int len = strlen(linein);
+	while (len > 0 && isspace(linein[len - 1])) {
+		linein[--len] = '\0';
+	}
+}
+
 //tokenises the instruction
 static void get_instr_params(char *instr, char **params, int *numparams) { 
    char *rest = NULL; 
@@ -115,6 +122,7 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 
 		//strip newline character from end of line
 		strip_newline(linein);
+		strip_whitespace(linein);
 
 		if (is_empty_line(linein)) { continue; }
 
@@ -150,6 +158,7 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 
 		//strip newline character from end of line
 		strip_newline(line);
+		strip_whitespace(linein);
 
 		//check if it is an empty line
 		if (is_empty_line(line)) { continue; }
@@ -189,13 +198,15 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 		}
 
 		//Call function to parse and store result in variable "tobin"
-		uint32_t tobin = pf(params, numparams); 
-		printf("debug: To convert to binary: %x\n", tobin); 			
-		if (!tobin) {
+		uint32_t tobin; 
+				
+		if (pf(params, numparams, &tobin)) {
 			fprintf(stderr, "Instruction parse failed.\n");
 		        return EXIT_FAILURE; 	
 		}
 
+		printf("debug: To convert to binary: %x\n", tobin); 
+		
 		addr += WORD_SIZE_32;
 	}
 
