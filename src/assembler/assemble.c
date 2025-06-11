@@ -5,9 +5,11 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
+#include <limits.h>
 #include "symtable.h"
 #include "constants.h"
 #include "aliases.h"
+#include "assembly-utils.h"
 
 #define ONE_MB (1 << 20)
 #define NUM_ARGS 3
@@ -144,13 +146,31 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 	
 }
 
+
+//Writes 32-bit instruction word starting from least significant byte to file
+static int write32bit(FILE *fileout, uint32_t tobin) {
+    uint8_t bytes[WORD_SIZE_32];
+    //Splits word into bytes and stores each in array
+    for (size_t i = 0; i < WORD_SIZE_32; ++i) {
+        bytes[i] = (tobin >> (i * CHAR_BIT)) & MASK_8;
+    }
+
+    //Writes word into file and checks for failure
+    if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) != WORD_SIZE_32) {
+        return -1;
+    }
+    return 0;
+}
+
+
 //Second pass: reads each instruction and int directive
 //Calls functions to generate binary code
 //Replaces label references with addresses from symtable
-static int second_pass(symbol_table symtable, FILE* filein) {
+static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 	//reread file
 	char linein[MAXLINELEN];
 	char *line = linein;
+
 	uint32_t addr = 0;
 	
 	while(fgets(line, MAXLINELEN, filein)) {
@@ -208,6 +228,12 @@ static int second_pass(symbol_table symtable, FILE* filein) {
 		        return EXIT_FAILURE; 	
 		}
 
+        //Write the 32-bit word
+        if (write32bit(fileout, tobin) < 0) {
+            fprintf(stderr, "error: failed to write 4 bytes for instruction at 0x%08x\n", addr);
+            return EXIT_FAILURE;
+        }
+
 		printf("debug: To convert to binary: %x\n", tobin); 
 
 		addr += WORD_SIZE_32;
@@ -249,7 +275,13 @@ int main(int argc, char **argv) {
 	rewind(filein);
 
 	// Second pass: generate binary encoding
-	if (second_pass(symtable, filein)) { return EXIT_FAILURE; }
+    FILE *fileout = fopen(argv[2], "wb");
+    if (!fileout) {
+		perror("Unable to open output file"); 
+		return EXIT_FAILURE;
+	}
+    if (second_pass(symtable, filein, fileout)) return EXIT_FAILURE;
+	
 
 	// Clean up and prepare to exit 
 	fclose(filein);	
