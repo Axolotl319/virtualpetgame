@@ -228,11 +228,11 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		        return EXIT_FAILURE; 	
 		}
 
-        //Write the 32-bit word
-        if (write32bit(fileout, tobin) < 0) {
-            fprintf(stderr, "error: failed to write 4 bytes for instruction at 0x%08x\n", addr);
-            return EXIT_FAILURE;
-        }
+        	//Write the 32-bit word
+        	if (write32bit(fileout, tobin) < 0) {
+            		fprintf(stderr, "error: failed to write 4 bytes for instruction at 0x%08x\n", addr);
+            		return EXIT_FAILURE;
+        	}
 
 		printf("debug: To convert to binary: %x\n", tobin); 
 
@@ -275,16 +275,18 @@ int main(int argc, char **argv) {
 	rewind(filein);
 
 	// Second pass: generate binary encoding
-    FILE *fileout = fopen(argv[2], "wb");
-    if (!fileout) {
-		perror("Unable to open output file"); 
-		return EXIT_FAILURE;
+    	FILE *fileout = fopen(argv[2], "wb");
+    	if (!fileout) {
+			perror("Unable to open output file"); 
+			return EXIT_FAILURE;
 	}
-    if (second_pass(symtable, filein, fileout)) return EXIT_FAILURE;
+
+    	if (second_pass(symtable, filein, fileout)) return EXIT_FAILURE;
 	
 
 	// Clean up and prepare to exit 
 	fclose(filein);	
+	fclose(fileout);
 	freeST(symtable);
         	
 	return EXIT_SUCCESS;
