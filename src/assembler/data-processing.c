@@ -8,7 +8,7 @@
 
 // Sets the bits for shift type and shift amount in toReturn. 
 // Returns 0 if failure, returns 1 if success. 
-static int set_shift_info(uint32_t *toReturn, char *param) {
+static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 	char shifttype[4];
 	if (sscanf(param, "%s", shifttype) == EOF) {
 		fprintf(stderr, "Shift type could not be read.\n"); 
@@ -19,6 +19,8 @@ static int set_shift_info(uint32_t *toReturn, char *param) {
 		*toReturn |= (1 << regdp_format.shift.index); 
 	} else if (!strcmp(shifttype, "asr")) {
 	   	*toReturn |= (2 << regdp_format.shift.index); 
+	} else if (logic && !strcmp(shifttype, "ror")) {
+		*toReturn |= (3 << regdp_format.shift.index); 
 	} else if (!strcmp(shifttype, "lsl")) {
 		/* EMPTY BODY */
 	} else {
@@ -82,7 +84,7 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 
 		// Update shift and operand if needed
 		if (numparams == 5) {
-			if (!set_shift_info(toReturn, params[4])) {
+			if (!set_shift_info(toReturn, false, params[4])) {
 				return EXIT_FAILURE; 
 			}		
 		}
@@ -135,7 +137,7 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 
 	// Set the shift type if needed
 	if (numparams == 5) {
-		if (!set_shift_info(toReturn, params[4])) {
+		if (!set_shift_info(toReturn, true, params[4])) {
 			return EXIT_FAILURE; 
 		}	
 	}
@@ -198,20 +200,20 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 		multiply(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mov")) {
 		params[0] = "orr"; 
-		params[numparams++] = "xzr"; 
-		logic(params, numparams, toReturn); 
+		insert_zero(numparams);   
+		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "mvn")) {
 		params[0] = "orn"; 
 		insert_zero(numparams); 
-		logic(params, numparams++, toReturn); 
+		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "neg")) {
 		params[0] = "sub"; 
 		insert_zero(numparams);  
-		arith(params, numparams++, toReturn); 
+		arith(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "negs")) {
 		params[0] = "subs"; 
 		insert_zero(numparams); 
-		arith(params, numparams++, toReturn);
+		arith(params, ++numparams, toReturn);
 	} else {
 		fprintf(stderr, "Unrecognized mnemonic.\n"); 
 		return EXIT_FAILURE; 
