@@ -35,7 +35,18 @@ is converted to binary and written to the specified output file.
 Note that in the second pass, any line consisting of only a label, directive, 
 or newline is automatically skipped. 
 
-While writing our assembler... 
+While writing our assembler, we realized the importance of fleshing out 
+useful data structures before implementing other functionality. For example, 
+the dynamic symbol table was originally fixed-length, which is inefficient 
+given there could be any number of labels in an assembly file. Also, the
+table initially stored addresses as integer pointers instead of just integers, 
+which caused issues when looking up addresses using labels. Thus, thorough brainstorming, 
+testing, and review are always necessary before a data structure is deployed. 
+In addition, our group focused on the challenging implementation task we identified 
+last week: writing utility functions early on. Throughout the assembler task, 
+any function that seemed usable in multiple modules -- like extracting immediate 
+values and register numbers -- were written in a file called \texttt{assembly-utils.c}. 
+As a result, many of our tasks were simplified, and we enjoyed more efficient development. 
 
 \section{Blinking LED Implementation}
 
