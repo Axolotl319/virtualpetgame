@@ -79,6 +79,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 	//unsigned offset can also just have 3 params, the 3rd being a [regname]	
 	if(loadLiteral){
 		printf("debug: this is a load literal\n");
+		// Set the instruction base 
 		*toReturn = 0x18000000;
 		uint32_t simm19; 
 
@@ -90,9 +91,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 			//value is a label offset (label addr - curr addr)
 			simm19 = strtol(value, NULL, 10) / WORD_SIZE_32;
 		}
-		printf("debug: simm19 = 0x%x\n", simm19);
 		*toReturn |= mask_shift_val(simm19, sdt_format.simm19.bits, sdt_format.simm19.index); //set bits 5-23 with simm19 value
-		printf("debug: toReturn with simm19 = %x\n", *toReturn);
 	}else if(!strcmp(type, "ldr")){
 		//load instruction, no load literal
 		*toReturn = 0xb8400000; //L bit set
@@ -107,9 +106,7 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 	//common algorithms for non-load literal sdt instrs
 	if(!loadLiteral){
 		char *xn_name = removeBrackets(params[2]);
-		printf("debug: xn_name = %s\n", xn_name);
 		int amode = mode(params, numparams);
-		printf("debug: addressing mode = %d\n", amode);
 		uint8_t xn = obtain_reg_num(xn_name);
 		*toReturn |= mask_shift_val(xn, sdt_format.xn.bits, sdt_format.xn.index);
 		uint32_t simm9; 
@@ -125,7 +122,6 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				   	imm12 = getImm12(params[3], target);
 				}
 				//imm12 &= 0xfff; //make sure it's 12 bits
-				printf("debug: imm12 = %x\n", imm12);
 				*toReturn |= mask_shift_val(imm12, sdt_format.offset.bits, sdt_format.offset.index);
 				break;
 

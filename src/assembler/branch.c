@@ -83,7 +83,7 @@ int uncond_branch(char **params, int numparams, uint32_t *instr) {
 
 // Conditional Branch
 int cond_branch(char **params, int numparams, uint32_t *instr) {
-	if (check_numparams(numparams)) { return 0; }
+	if (check_numparams(numparams)) { return EXIT_FAILURE; }
 
 	*instr = BR_COND_BASE;
 
@@ -111,12 +111,11 @@ int cond_branch(char **params, int numparams, uint32_t *instr) {
 
 	//get simm19
 	int32_t simm19 = strtol(params[1], NULL, 10) / WORD_SIZE_32;
-	printf("simm19: %d\n", simm19);
 
 	//check valid range
 	if (simm19 < -(MAX_19_BITS) || simm19 > MAX_19_BITS - 1) { 
 		fprintf(stderr, "Offset not in  range\n");
-		return 0;
+		return EXIT_FAILURE;
 	}
 
 	//form the instruction by masking + shifting simm19 and cond

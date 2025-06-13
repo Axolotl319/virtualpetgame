@@ -58,14 +58,14 @@ static bool is_empty_line(const char *linein) {
 }	
 
 //strips newline from end of line
-static void strip_newline(char *linein) {
+static void strip_end_newline(char *linein) {
 	int len = strlen(linein);
         if (len > 0 && linein[len - 1] == '\n') {
 		linein[len - 1] = '\0';
         }
 }
 
-static void strip_whitespace(char *linein) {
+static void strip_end_whitespace(char *linein) {
 	int len = strlen(linein);
 	while (len > 0 && isspace(linein[len - 1])) {
 		linein[--len] = '\0';
@@ -92,11 +92,8 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 //replaces labels with decimal address in the form of a string
 static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
 	for (int i = 1; i < numparams; i++) {
-		//printf("DEBUG: To search: %s\n", params[i]);
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
-		printf("DEBUG: Label Address: 0x%x\n", address);
-		printf("DEBUG: Current Address: 0x%x\n", current_addr);
 
 		//Calculate offset 
 		int32_t offset = address - current_addr;
@@ -107,7 +104,6 @@ static int replace_labels(symbol_table symtable, char **params, int numparams, u
 			return EXIT_FAILURE;
 		}
 		
-		printf("DEBUG: Offset: %d\n", offset);
 		sprintf(params[i], "%d", offset);
 	}
 	return EXIT_SUCCESS;
@@ -124,8 +120,8 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		if (*linein == '\n') { continue; }
 
 		//strip newline character from end of line
-		strip_newline(linein);
-		strip_whitespace(linein);
+		strip_end_newline(linein);
+		strip_end_whitespace(linein);
 
 		if (is_empty_line(linein)) { continue; }
 
@@ -157,9 +153,9 @@ static int write32bit(FILE *fileout, uint32_t tobin) {
 
     //Writes word into file and checks for failure
     if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) != WORD_SIZE_32) {
-        return -1;
+        return EXIT_FAILURE;
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 
@@ -178,8 +174,8 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		if (*line == '\n') { continue; }
 
 		//strip newline character from end of line
-		strip_newline(line);
-		strip_whitespace(linein);
+		strip_end_newline(line);
+		strip_end_whitespace(linein);
 
 		//check if it is an empty line
 		if (is_empty_line(line)) { continue; }
@@ -188,7 +184,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		if (is_label(line)) { continue; }
 
 		//strip spaces from start of line
-		while (*line == ' ' || *line == '\t') {
+		while (isspace(*line)) {
 			line++;
 		}
  
@@ -197,11 +193,11 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		if (!sscanf(line, "%s", tok)) {
 			fprintf(stderr, "Instruction read failed.\n"); 
 			return EXIT_FAILURE;
-		}	
+		}
+
 		if (strncmp(tok, "b.", 2) == 0) {
 			strcpy(tok, "b."); 
-		}
-		printf("DEBUG: token is '%s'\n", tok);
+		} 
 
 		parse_f pf = lookup_alias(tok);
 	        if (pf == NULL) {
@@ -229,7 +225,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		}
 
         	//Write the 32-bit word
-        	if (write32bit(fileout, tobin) < 0) {
+        	if (write32bit(fileout, tobin)) {
             		fprintf(stderr, "error: failed to write 4 bytes for instruction at 0x%08x\n", addr);
             		return EXIT_FAILURE;
         	}
@@ -263,13 +259,7 @@ int main(int argc, char **argv) {
 	if (symtable == NULL) { return EXIT_FAILURE; }
 	assert(symtable != NULL);
 
-	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }
-
-	printf("debug: symbol table pairs listed below:\n"); 
-	for (int i=0; i<symtable->length; i++) {
-		symbol_pair p = symtable->st_pairs[i]; 
-		printf("Pair %s, %d\n", p->label, p->address); 
-	}
+	if (first_pass(symtable, filein)) { return EXIT_FAILURE; }	
 
 	//rewind file to go back to start
 	rewind(filein);

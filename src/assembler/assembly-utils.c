@@ -34,9 +34,6 @@ uint8_t obtain_reg_num(char *param) {
  */
 uint32_t extract_imm(char *param) {
 	if (param[0] == '#') { ++param; }
-	/*if (strchr(param, 'x') == NULL) {
-		return atoi(++param); 
-	}*/
 	return strtol(param, NULL, 0); 	
 }
 

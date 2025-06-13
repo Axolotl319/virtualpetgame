@@ -7,12 +7,12 @@
 #include "instr-formats.h"
 
 // Sets the bits for shift type and shift amount in toReturn. 
-// Returns 0 if failure, returns 1 if success. 
-static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
+// Returns true for failure and false for success
+static bool set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 	char shifttype[4];
 	if (sscanf(param, "%s", shifttype) == EOF) {
 		fprintf(stderr, "Shift type could not be read.\n"); 
-		return 0; 
+		return true; 
 	}	
 	uint8_t oper = obtain_shift_amt(param);
 	if (!strcmp(shifttype, "lsr")) {
@@ -25,10 +25,10 @@ static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 		/* EMPTY BODY */
 	} else {
 		fprintf(stderr, "Shift type not recognized.\n"); 
-		return 0; 
+		return true; 
 	}
 	*toReturn |= (oper << regdp_format.operand.index);
-        return 1; 	
+        return false; 	
 }
 
 // Parses arithmetic instructions into decimal format 
@@ -84,7 +84,7 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 
 		// Update shift and operand if needed
 		if (numparams == 5) {
-			if (!set_shift_info(toReturn, false, params[4])) {
+			if (set_shift_info(toReturn, false, params[4])) {
 				return EXIT_FAILURE; 
 			}		
 		}
@@ -137,7 +137,7 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 
 	// Set the shift type if needed
 	if (numparams == 5) {
-		if (!set_shift_info(toReturn, true, params[4])) {
+		if (set_shift_info(toReturn, true, params[4])) {
 			return EXIT_FAILURE; 
 		}	
 	}
@@ -151,6 +151,7 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 		fprintf(stderr, "Invalid number of parameters.\n");
 	        return EXIT_FAILURE; 	
 	}
+	// Set the instruction base 
 	*toReturn = 0x12800000;
 
 	update_sf(toReturn, immdp_format.sf.index, params[1]); 
@@ -182,7 +183,9 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 	return EXIT_SUCCESS; 
 }
 
-#define insert_zero(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
+// The following macro inserts the zero register in place 
+// of rm
+#define insert_zero_reg(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
 
 int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 	printf("debug: this is a single op and destination expression\n"); 
@@ -200,19 +203,19 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 		multiply(params, numparams, toReturn); 
 	} else if (!strcmp(params[0], "mov")) {
 		params[0] = "orr"; 
-		insert_zero(numparams);   
+		insert_zero_reg(numparams);   
 		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "mvn")) {
 		params[0] = "orn"; 
-		insert_zero(numparams); 
+		insert_zero_reg(numparams); 
 		logic(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "neg")) {
 		params[0] = "sub"; 
-		insert_zero(numparams);  
+		insert_zero_reg(numparams);  
 		arith(params, ++numparams, toReturn); 
 	} else if (!strcmp(params[0], "negs")) {
 		params[0] = "subs"; 
-		insert_zero(numparams); 
+		insert_zero_reg(numparams); 
 		arith(params, ++numparams, toReturn);
 	} else {
 		fprintf(stderr, "Unrecognized mnemonic.\n"); 
@@ -227,6 +230,7 @@ int multiply(char **params, int numparams, uint32_t *toReturn) {
 		fprintf(stderr, "Invalid number of parameters.\n"); 
 		return EXIT_FAILURE; 
 	}
+	// Set the instruction base 
 	*toReturn = 0x1b000000; 
  
 	update_sf(toReturn, regdp_format.sf.index, params[1]); 
@@ -279,6 +283,7 @@ int compare(char **params, int numparams, uint32_t *toReturn) {
 		fprintf(stderr, "Unrecognized compare mnemonic.\n"); 
 		return EXIT_FAILURE; 
 	}
+	// Set destination to the zero register 
 	*toReturn |= 0x1f; 
 	return EXIT_SUCCESS; 
 }
