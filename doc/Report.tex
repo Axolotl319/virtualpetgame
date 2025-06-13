@@ -13,27 +13,29 @@
 
 Our assembler is composed of three main components: the emulate file, where
 instruction fetch and encode is performed; the modules, which consist of 
-all instruction-encoding functions; and the data structures. One such data 
+all instruction-encoding functions; and the data structures. The first data 
 structure is the dynamic \texttt{symtable}, a dictionary of labels to addresses. 
 The second data structure is the alias table, a dictionary of mnemonics to 
 function pointers where the instruction type is handled. 
 
 This assembler utilizes two-pass assembly. The function \texttt{first\_pass} 
-loops through the input assembly file, identifying and storing labels in 
+loops through each line of the input assembly file, identifying and storing labels in 
 a symbol table with their corresponding addresses. Next, the function 
-\texttt{second\_pass} loops through the assembly file again, tokenising each 
+\texttt{second\_pass} accesses each line of the assembly file again, tokenising each 
 line to identify the instruction name, replace labels with offsets, and 
-extract instruction parameters. The instruction name is then inputted to a 
-lookup table to obtain a function pointer to the proper encode function. 
+extract instruction parameters. The instruction name is then inputted to the alias
+table's lookup function, which returns a function pointer to the proper encode function. 
 For example, inputting the \texttt{add} instruction to lookup table 
 returns a pointer to function \texttt{arith} in module \texttt{data-processing}. 
-Each of these functions takes the list of tokens, the number of tokens in 
-the list, and an integer pointer where the encoded instruction is to be stored. 
-The function returns a status indicating encoding success, either 
+Each of these functions takes the list of tokens, the size of the token list, 
+and an integer pointer to where the encoded instruction is to be stored. 
+Each function also returns a status code indicating encoding success, either 
 \texttt{EXIT\_SUCCESS} or \texttt{EXIT\_FAILURE}. Lastly, the encoded instruction
 is converted to binary and written to the specified output file. 
 Note that in the second pass, any line consisting of only a label, directive, 
 or newline is automatically skipped. 
+
+While writing our assembler... 
 
 \section{Blinking LED Implementation}
 
