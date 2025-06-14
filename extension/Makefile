@@ -8,7 +8,7 @@ CFLAGS  ?= -std=c17 -g\
 
 .PHONY: all clean
 
-OBJS = pet.o
+OBJS = pet.o user-actions.o virtual-pet-exe.o
 
 all: pet
 
