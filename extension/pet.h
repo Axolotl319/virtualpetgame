@@ -11,3 +11,7 @@ typedef struct hearts *hearts;
 extern void check_bounds(hearts h);
 
 extern void print_hearts(hearts h);
+
+extern hearts new_pet(void);
+
+extern void free_hearts(hearts h);

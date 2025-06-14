@@ -1,17 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include "user-actions.h"
 
-int feed() {
+int feed(void) {
 	return EXIT_FAILURE; 
 }
 
-int play() {
+int play(void) {
 	return EXIT_FAILURE; 
 }
 
-int clean() {
+int clean(void) {
 	return EXIT_FAILURE; 
 }
 
-int gift() {
+int gift(void) {
 	return EXIT_FAILURE; 
 }	

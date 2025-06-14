@@ -61,7 +61,7 @@ void print_hearts(hearts h){
 	print_stat(2, h->hunger);
 }
 
-static hearts new_pet(void){
+hearts new_pet(void){
 	hearts new = malloc(sizeof(struct hearts));
 	new->cleanliness = 5;
 	new->happiness = 5;
@@ -69,11 +69,6 @@ static hearts new_pet(void){
 	return new;
 }
 
-static void free_hearts(hearts h){
+void free_hearts(hearts h){
 	free(h);
-}
-
-int main(void){
-	hearts pet = new_pet();
-	return EXIT_SUCCESS;
 }
