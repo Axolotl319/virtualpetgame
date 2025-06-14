@@ -4,7 +4,7 @@
 
 \begin{document}
 
-\title{Assembler, LED, and Text-Based Tamagotchi}
+\title{Assembler, LED, and Text-Based Virtual Pet}
 \author{Tangina Kader, Amy Showell, Shriya Sistla, Yao Tong}
 
 \maketitle
@@ -19,8 +19,8 @@ The second data structure is the alias table, a dictionary of mnemonics to
 function pointers where the instruction type is handled. 
 
 This assembler utilizes two-pass assembly. The function \texttt{first\_pass} 
-loops through each line of the input assembly file, identifying and storing labels in 
-a symbol table with their corresponding addresses. Next, the function 
+loops through each line of the input assembly file, storing labels and their 
+corresponding addresses in a symbol table. Next, the function 
 \texttt{second\_pass} accesses each line of the assembly file again, tokenising each 
 line to identify the instruction name, replace labels with offsets, and 
 extract instruction parameters. The instruction name is then inputted to the alias
@@ -28,14 +28,15 @@ table's lookup function, which returns a function pointer to the proper encode f
 For example, inputting the \texttt{add} instruction to lookup table 
 returns a pointer to function \texttt{arith} in module \texttt{data-processing}. 
 Each of these functions takes the list of tokens, the size of the token list, 
-and an integer pointer to where the encoded instruction is to be stored. 
+and an integer pointer to where the encoded instruction is to be stored. The integer 
+pointer's contents are updated based on the instruction type and tokens. 
 Each function also returns a status code indicating encoding success, either 
 \texttt{EXIT\_SUCCESS} or \texttt{EXIT\_FAILURE}. Lastly, the encoded instruction
 is converted to binary and written to the specified output file. 
 Note that in the second pass, any line consisting of only a label, directive, 
 or newline is automatically skipped. 
 
-While writing our assembler, we realized the importance of fleshing out 
+While writing our assembler, we learned to appreciate the importance of fleshing out 
 useful data structures before implementing other functionality. For example, 
 the dynamic symbol table was originally fixed-length, which is inefficient 
 given there could be any number of labels in an assembly file. Also, the
@@ -50,9 +51,9 @@ As a result, many of our tasks were simplified, and we enjoyed more efficient de
 
 \section{Blinking LED Implementation}
 
-\section{Text-Based Tamagotchi}
+\section{Text-Based Virtual Pet}
 
-\subsection{Tamagotchi Design}
+\subsection{Virtual Pet Design}
 
 \subsection{Challenges} 
 
