@@ -26,6 +26,6 @@ int main(void) {
          * INFINITE LOOP TO BE IMPLEMENTED
          */
 
-	free_pet(vpet); 
+	free_pet(); 
         return EXIT_SUCCESS;
 }

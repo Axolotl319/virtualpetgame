@@ -9,11 +9,11 @@ typedef struct pet *pet;
 
 //if any hearts are set to > 5 or < 0
 //check_bounds changes them to 0/5
-extern void check_bounds(pet p);
+extern void check_bounds(void);
 
-extern void print_hearts(pet p);
+extern void print_hearts(void);
 
-extern void free_pet(pet p); 
+extern void free_pet(void); 
 
 extern pet new_pet(char *name); 
 

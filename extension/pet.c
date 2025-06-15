@@ -2,31 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pet.h"
+#include "global-vars.h"
 
+extern pet vpet; 
 //#define MAX/MIN as 5/0, not sure if we want an overall too?
 
-void check_bounds(pet p){
-	if(p->cleanliness > 5){
-		p->cleanliness = 5;
+void check_bounds(void){
+	if(vpet->cleanliness > 5){
+		vpet->cleanliness = 5;
 		printf("debug: cleanliness set to > 5, reset to 5");
-	}else if(p->cleanliness < 0){
-		p->cleanliness = 0;
+	}else if(vpet->cleanliness < 0){
+		vpet->cleanliness = 0;
 		printf("debug: cleanliness set to < 0, reset to 0");
 	}
 
-	if(p->happiness > 5){
-		p->happiness = 5;
+	if(vpet->happiness > 5){
+		vpet->happiness = 5;
 		printf("debug: happiness set to > 5, reset to 5");
-	}else if(p->happiness < 0){
-		p->happiness = 0;
+	}else if(vpet->happiness < 0){
+		vpet->happiness = 0;
 		printf("debug: happiness set to < 0, reset to 0");
 	}
 
-	if(p->hunger > 5){
-		p->hunger = 5;
+	if(vpet->hunger > 5){
+		vpet->hunger = 5;
 		printf("debug: hunger set to > 5, reset to 5");
-	}else if(p->hunger < 0){
-		p->hunger = 0;
+	}else if(vpet->hunger < 0){
+		vpet->hunger = 0;
 		printf("debug: hunger set to < 0, reset to 0");
 	}
 }
@@ -54,12 +56,12 @@ static void print_stat(int category, int amt){
 	fprintf(stdout, "\n");
 }
 
-void print_hearts(pet p) {
+void print_hearts(void) {
 	fprintf(stdout, "Stats:\n");
-	check_bounds(p); //ensure all stats between 0-5
-	print_stat(0, p->cleanliness);
-	print_stat(1, p->happiness);
-	print_stat(2, p->hunger);
+	check_bounds(vpet); //ensure all stats between 0-5
+	print_stat(0, vpet->cleanliness);
+	print_stat(1, vpet->happiness);
+	print_stat(2, vpet->hunger);
 }
 
 pet new_pet(char *name) {
@@ -71,6 +73,6 @@ pet new_pet(char *name) {
 	return new;
 }
 
-void free_pet(pet p) {
-	free(p);
+void free_pet(void) {
+	free(vpet);
 }
