@@ -1,3 +1,6 @@
+#ifndef INSTR_FORMATS_H
+#define INSTR_FORMATS_H
+
 #include <stdint.h>
 
 #define OP0_INDEX 25 //op0 index
@@ -89,6 +92,13 @@ typedef enum branch_cond {
 	BR_AL,       //always
 } branch_cond;
 
+//operation types
+typedef enum operation {
+	OP_ADD,
+	OP_SUB,
+	OP_LOGIC
+} operation;
+
 //arithmetic opcode
 typedef enum arith_opc {
 	ARITH_ADD,  //add
@@ -126,3 +136,5 @@ extern const regdp_format_t regdp_format;
 extern const sdt_format_t sdt_format;
 extern const branch_format_t br_format;
 extern op0_group_t get_op0_group(unsigned int op0);
+
+#endif

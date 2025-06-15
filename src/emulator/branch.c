@@ -5,10 +5,8 @@
 #include <string.h>
 #include "constants.h"
 #include "armv8.h"
-#include "sign-extension.h"
+#include "emulator-utils.h"
 #include "branch.h"
-#include "modify-regs.h"
-#include "extract-data.h"
 #include "instr-formats.h"
 
 // Input: integer representing an instruction 
@@ -82,7 +80,7 @@ int branch(uint32_t instr, armv8_state *armv8) {
 					return BR_SUCCESS; 
 					break; 
 				default: 
-					fprintf(stderr, "Invalid condition code in branch.");
+					fprintf(stderr, "Invalid condition code in branch.\n");
 					return BR_FAIL; 
 					break; 
 			}
@@ -99,7 +97,7 @@ int branch(uint32_t instr, armv8_state *armv8) {
 			}
 			break; 	
 		default: 
-			fprintf(stderr, "Invalid branch instruction.");
+			fprintf(stderr, "Invalid branch instruction.\n");
 			return BR_FAIL; 
 	} 
 	return BR_NOTHING; 

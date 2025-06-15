@@ -5,11 +5,10 @@
 #include <string.h>
 #include "constants.h"
 #include "armv8.h" 
-#include "modify-regs.h"
 #include "data-processing.h"
 #include "branch.h"
 #include "data-transfer.h"
-#include "extract-data.h"
+#include "emulator-utils.h"
 #include "instr-formats.h"
 #include "emulate.h"
 #include <assert.h>
@@ -125,9 +124,7 @@ static int fetch(armv8_state *armv8) {
 		}	
 		assert(armv8->PC <= MEM_SIZE - WORD_SIZE_32);
 
-		status = decode(armv8);
-		
-		printf("Status code: %d\n", status); 
+		status = decode(armv8); 
 
 		if ( status == DCD_HLT ) { 	//HALT
 			break;
@@ -150,7 +147,7 @@ int main(int argc, char **argv)
   	FILE *inFile = fopen(argv[ARG_INPUT], "rb");
 	FILE *outFile;
 	if(inFile == NULL){
-		perror("Couldn't open input file.");
+		perror("Couldn't open input file.\n");
 
 		return 1;
 	}
@@ -163,7 +160,7 @@ int main(int argc, char **argv)
 	}
 
 	if(outFile == NULL) {
-		perror("Couldn't open output file.");
+		perror("Couldn't open output file.\n");
 		return 1;
 	}
 	assert(outFile != NULL);
@@ -174,7 +171,7 @@ int main(int argc, char **argv)
 	
 	armv8->memory = malloc(MEM_SIZE);
 	if(armv8->memory == NULL){
-		fprintf(stderr, "Couldn't allocate buffer memory");
+		fprintf(stderr, "Couldn't allocate buffer memory\n");
 		fclose(inFile);
 		return 1;
 	}

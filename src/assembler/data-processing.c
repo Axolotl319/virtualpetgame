@@ -59,8 +59,8 @@ static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 		fprintf(stderr, "Shift type not recognized.\n"); 
 		return EXIT_FAILURE; 
 	}
-	*toReturn |= mask_shift_val(shift, regdp_format.shift.bits, regdp_format.shift.index);
-	*toReturn |= mask_shift_val(oper, regdp_format.operand.bits, regdp_format.operand.index);
+	*toReturn |= place_bits(shift, regdp_format.shift.bits, regdp_format.shift.index);
+	*toReturn |= place_bits(oper, regdp_format.operand.bits, regdp_format.operand.index);
         return EXIT_SUCCESS; 	
 }
 
@@ -75,8 +75,8 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 
-	*toReturn |= mask_shift_val(rd, immdp_format.rd.bits, immdp_format.rd.index); 
-	*toReturn |= mask_shift_val(rn, immdp_format.rn.bits, immdp_format.rn.index); 
+	*toReturn |= place_bits(rd, immdp_format.rd.bits, immdp_format.rd.index); 
+	*toReturn |= place_bits(rn, immdp_format.rn.bits, immdp_format.rn.index); 
 
 	update_sf(toReturn, immdp_format.sf.index, params[2]); 
 
@@ -91,7 +91,7 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 		opc = ARITH_SUBS;
 	}
 
-	*toReturn |= mask_shift_val(opc, immdp_format.opc.bits, immdp_format.opc.index);
+	*toReturn |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
 
 	if (is_imm(params[3])) {
 		// Then it is immediate value arithmetic
@@ -99,14 +99,14 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 		*toReturn |= IMM_BASE;
 
 		// Update opi (binary 010) 
-		*toReturn |= mask_shift_val(OPI_ARITH, immdp_format.opi.bits, immdp_format.opi.index);
+		*toReturn |= place_bits(OPI_ARITH, immdp_format.opi.bits, immdp_format.opi.index);
 		
 		// Obtain imm12 value 
-		*toReturn |= mask_shift_val(extract_imm(params[3]), immdp_format.imm12.bits, immdp_format.imm12.index);
+		*toReturn |= place_bits(extract_imm(params[3]), immdp_format.imm12.bits, immdp_format.imm12.index);
 
 		// Update shift bit if needed
 		if (numparams == MAX_AL_PARAMS && obtain_shift_amt(params[4]) == IMM12_LEN) {
-		   *toReturn |= mask_shift_val(1, immdp_format.sh.bits, immdp_format.sh.index);
+		   *toReturn |= place_bits(1, immdp_format.sh.bits, immdp_format.sh.index);
 		}
 	} else {
 		// Else it is register arithmetic
@@ -114,10 +114,10 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 		*toReturn |= REG_BASE;
 		
 		uint8_t rm = obtain_reg_num(params[3]); 
-		*toReturn |= mask_shift_val(rm, regdp_format.rm.bits, regdp_format.rm.index); 
+		*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 		// Update opr (binary 1000)
-		*toReturn |= mask_shift_val(ARITH_OPR_BASE, regdp_format.opr.bits, regdp_format.opr.index); 
+		*toReturn |= place_bits(ARITH_OPR_BASE, regdp_format.opr.bits, regdp_format.opr.index); 
 
 		// Update shift and operand if needed
 		if (numparams == MAX_AL_PARAMS) {
@@ -144,9 +144,9 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 	uint8_t rm = obtain_reg_num(params[3]);
-        *toReturn |= mask_shift_val(rd, regdp_format.rd.bits, regdp_format.rd.index); 
-	*toReturn |= mask_shift_val(rn, regdp_format.rd.bits, regdp_format.rn.index); 
-	*toReturn |= mask_shift_val(rm, regdp_format.rm.bits, regdp_format.rm.index); 
+        *toReturn |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
+	*toReturn |= place_bits(rn, regdp_format.rd.bits, regdp_format.rn.index); 
+	*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 	// Set opc and N (negate flag) depending on the mnemonic 
 	uint8_t opc = 0; 
@@ -169,8 +169,8 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 		opc = LOG_ANDS; 
 		n = 1; 
 	}
-	*toReturn |= mask_shift_val(opc, regdp_format.opc.bits, regdp_format.opc.index); 
-	*toReturn |= mask_shift_val(n, regdp_format.N.bits, regdp_format.N.index); 
+	*toReturn |= place_bits(opc, regdp_format.opc.bits, regdp_format.opc.index); 
+	*toReturn |= place_bits(n, regdp_format.N.bits, regdp_format.N.index); 
 
 	// Set the shift type if needed
 	if (numparams == MAX_AL_PARAMS) {
@@ -194,13 +194,13 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 	update_sf(toReturn, immdp_format.sf.index, params[1]); 
 
 	// Update rd 
-	*toReturn |= mask_shift_val(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
+	*toReturn |= place_bits(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
 
 	// Update opc
 	if (!strcmp(params[0], "movz")) {
-		*toReturn |= mask_shift_val(MOVZ, immdp_format.opc.bits, immdp_format.opc.index); 
+		*toReturn |= place_bits(MOVZ, immdp_format.opc.bits, immdp_format.opc.index); 
 	} else if (!strcmp(params[0], "movk")) {
-		*toReturn |= mask_shift_val(MOVK, immdp_format.opc.bits, immdp_format.opc.index);  
+		*toReturn |= place_bits(MOVK, immdp_format.opc.bits, immdp_format.opc.index);  
 	} else if (!strcmp(params[0], "movn")) {
 		/* EMPTY BODY */
 	} else {
@@ -209,12 +209,12 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 	}
 
 	// Extract imm16 and update toReturn 
-	*toReturn |= mask_shift_val(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
+	*toReturn |= place_bits(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == MAX_MOV_PARAMS) {
 		uint8_t bit = obtain_shift_amt(params[3]) / IMM16_LEN; 
-		*toReturn |= mask_shift_val(bit, immdp_format.hw.bits, immdp_format.hw.index);
+		*toReturn |= place_bits(bit, immdp_format.hw.bits, immdp_format.hw.index);
 	}
  
 	return EXIT_SUCCESS; 
@@ -271,7 +271,7 @@ int multiply(char **params, int numparams, uint32_t *toReturn) {
 
 	// Update x: 
 	if (!strcmp(params[0], "msub")) {
-		*toReturn |= mask_shift_val(1, regdp_format.x.bits, regdp_format.x.index); 
+		*toReturn |= place_bits(1, regdp_format.x.bits, regdp_format.x.index); 
 	} else if (!strcmp(params[0], "madd")) {
 		/* EMPTY BODY */
 	} else {
@@ -285,10 +285,10 @@ int multiply(char **params, int numparams, uint32_t *toReturn) {
 	uint8_t rm = obtain_reg_num(params[3]); 
 	uint8_t ra = obtain_reg_num(params[4]);
 
-	*toReturn |= mask_shift_val(rd, regdp_format.rd.bits, regdp_format.rd.index); 
-	*toReturn |= mask_shift_val(rn, regdp_format.rn.bits, regdp_format.rn.index); 
-	*toReturn |= mask_shift_val(ra, regdp_format.ra.bits, regdp_format.ra.index); 
-	*toReturn |= mask_shift_val(rm, regdp_format.rm.bits, regdp_format.rm.index); 	
+	*toReturn |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
+	*toReturn |= place_bits(rn, regdp_format.rn.bits, regdp_format.rn.index); 
+	*toReturn |= place_bits(ra, regdp_format.ra.bits, regdp_format.ra.index); 
+	*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 	
 	 
 	return EXIT_SUCCESS; 
 }

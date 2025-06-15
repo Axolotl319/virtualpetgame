@@ -5,10 +5,8 @@
 #include <string.h>
 #include "constants.h"
 #include "armv8.h"
-#include "sign-extension.h"
+#include "emulator-utils.h"
 #include "data-transfer.h"
-#include "modify-regs.h"
-#include "extract-data.h"
 #include "instr-formats.h"
 #include <limits.h>
 #include <assert.h>

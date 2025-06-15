@@ -5,13 +5,25 @@
 #include <string.h>
 #include "constants.h"
 #include "armv8.h"
-#include "data-processing.h"
-#include "modify-regs.h"
-#include "sign-extension.h"
-#include "extract-data.h"
+#include "emulator-utils.h"
 #include "instr-formats.h"
+#include "data-processing.h"
 #include <limits.h>
 #include <assert.h>
+
+//immdp instructions
+#define OPI_ARITH 0x2 //opi = 0b010 then immdp arithmetic instr
+#define OPI_MOV   0x5 //opi = 0b101 then immdp wide move
+//regdp instructions
+#define ARITH_MASK 0x19 //arith instrs = 01xx0
+#define ARITH_CODE 0x8
+#define LOG_MASK 0x18 //log instrs = 00xxx
+#define LOG_CODE 0x0
+#define MUL_CODE 0x18 //mul instrs = 11000
+//possible shifts for arith or move instructions
+#define ARITH_SHIFT_AMT 12
+#define MOV_SHIFT_AMT 16
+
 
 //Get regdp instruction type
 static regdp_instr_t get_instr_type(unsigned int mopr) {
@@ -101,7 +113,7 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 			break;
 
 		default: 
-			fprintf(stderr, "Error. Unknown arithmetic opcode.");
+			fprintf(stderr, "Error. Unknown arithmetic opcode.\n");
 			return 1;
 			break;
 	}
@@ -150,7 +162,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 		case OPI_MOV: //wide move
 			
 			if (width == WIDTH_32 && hw > hw_min_32) {
-				fprintf(stderr, "Invalid shift for 32 bit");
+				fprintf(stderr, "Invalid shift for 32 bit\n");
 				return 1;
 			}
 			assert(width == WIDTH_64 || (width == WIDTH_32 && hw <= hw_min_32));
@@ -180,13 +192,13 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 					break;
 
 				default:
-					fprintf(stderr, "Unknown OPC for wide move instruction.");
+					fprintf(stderr, "Unknown OPC for wide move instruction.\n");
 					return 1;
 			}
 			break;
 
 		default: 
-			fprintf(stderr, "Unknown OPI in immediate data processing instruction.");
+			fprintf(stderr, "Unknown OPI in immediate data processing instruction.\n");
 			return 1;
 			break;
 		

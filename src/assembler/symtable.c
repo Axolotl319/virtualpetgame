@@ -37,13 +37,13 @@ int addPair(symbol_table st, char *label, uint32_t address){
 	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
 		fprintf(stderr, "Can't allocate memory for new symbol table pair\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	np->label = strdup(label);
 	if (np->label == NULL) { 
 		fprintf(stderr, "Cannot allocate memory for label\n");
 		free(np);
-		return 1; 
+		return EXIT_FAILURE; 
 	}
 
 	np->address = address;
@@ -55,7 +55,7 @@ int addPair(symbol_table st, char *label, uint32_t address){
 			fprintf(stderr, "Can't reallocate memory for symbol table pairs\n");
 			free(np->label);
 			free(np);
-			return 1;
+			return EXIT_FAILURE;
 		}
 		
 		st->st_pairs = tmp;
@@ -65,7 +65,7 @@ int addPair(symbol_table st, char *label, uint32_t address){
 	st->st_pairs[st->length++] = np;
 	assert(st->capacity >= st->length);
 	qsort(st->st_pairs, st->length, sizeof(symbol_pair), sympair_qsort_cmp);
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 //free space when symbol table no longer needed

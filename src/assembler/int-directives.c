@@ -3,8 +3,10 @@
 #include <stdlib.h>
 #include "assembly-utils.h"
 
+#define NUM_PARAMS 2
+
 int int_directive(char **params, int numparams, uint32_t *toReturn) {
-	if (numparams != 2) {
+	if (numparams != NUM_PARAMS) {
 		fprintf(stderr, "Invalid int directive\n");
 		return EXIT_FAILURE;
 	}
