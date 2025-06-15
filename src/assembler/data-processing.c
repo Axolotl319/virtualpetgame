@@ -9,13 +9,13 @@
 #include "constants.h"
 
 //base instructions
-#define IMM_BASE 0x10000000
-#define REG_BASE 0x0A000000
-#define LOGIC_BASE 0x0A000000
-#define MOV_BASE 0x12800000
-#define MUL_BASE 0x1b000000
+#define IMM_BASE       0x10000000
+#define REG_BASE       0x0A000000
+#define LOGIC_BASE     0x0A000000
+#define MOV_BASE       0x12800000
+#define MUL_BASE       0x1b000000
 #define ARITH_OPR_BASE 0x8
-#define OPI_ARITH 0x2
+#define OPI_ARITH      0x2
 
 //param numbers for arith/logic instrs
 #define MIN_AL_PARAMS 4
@@ -36,6 +36,100 @@
 // of rm
 #define insert_zero_reg(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
 
+//shift codes
+static const code_map shift_codes[] = {
+	{"lsl", LSL, 0},
+	{"lsr", LSR, 0},
+	{"asr", ASR, 0},
+	{"ror", ROR, 0},
+	{ NULL, 0  , 0}
+};
+
+//logic instructions opcodes
+static const code_map logic_opcs[] = {
+	{"and" , LOG_AND , 0},
+	{"bic" , LOG_AND , 1},
+	{"orr" , LOG_OR  , 0},
+	{"orn" , LOG_OR  , 1},
+	{"eor" , LOG_XOR , 0},
+	{"eon" , LOG_XOR , 1},
+	{"ands", LOG_ANDS, 0},
+	{"bics", LOG_ANDS, 1},
+	{ NULL , 0       , 0}
+};
+
+//arithmetic instruction opcodes
+static const code_map arith_opcs[] = {
+	{"add" , ARITH_ADD , 0},
+	{"adds", ARITH_ADDS, 0},
+	{"sub" , ARITH_SUB , 0},
+	{"subs", ARITH_SUBS, 0},
+	{ NULL , 0         , 0}
+};
+
+//move instruction opcodes
+static const code_map mov_opcs[] = {
+	{"movk", MOVK, 0},
+	{"movz", MOVZ, 0},
+	{"movn", MOVN, 0},
+	{ NULL , 0   , 0}
+};
+
+//single operand destination map
+static const func_map sop_functions[] = {
+	{"mul" , "madd", &multiply, 0},
+	{"mneg", "msub", &multiply, 0},
+	{"mov" , "orr" , &logic   , 1},
+	{"mvn" , "orn" , &logic   , 1},
+	{"neg" , "sub" , &arith   , 1},
+	{"negs", "subs", &arith   , 1},
+	{ NULL , NULL  , NULL     , 0}
+};
+
+static const func_map cmp_functions[] = {
+	{"tst", "ands", &logic, 0},
+	{"cmp", "subs", &arith, 0},
+	{"cmn", "adds", &arith, 0},
+	{ NULL,  NULL , NULL  , 0}
+};
+
+//sets a single code for an instruction
+//Used by: arithmetic instructions, shift type
+static int set_codes(char *instr, int *code, int *n, const code_map *codes) {
+	for(int i = 0; codes[i].instr != NULL; i++) {
+		if (!strcmp(instr, codes[i].instr)) {
+			*code = codes[i].code;
+			if (n != NULL) { *n = codes[i].n; }
+			return EXIT_SUCCESS;
+		}
+	}
+	return EXIT_FAILURE;
+}
+
+//returns the parse function for single operand destination function
+//also replaces an operand with the zero register
+static parse_f redirect_func(char **params, int numparams, const func_map *funcs) {
+	for (int i = 0; funcs[i].instr != NULL; i++) {
+		if (strcmp(params[0], funcs[i].instr)) { continue; }
+		
+		params[0] = funcs[i].alias;
+		
+		//deal with compare function
+		if (numparams == 0) {
+			return funcs[i].pf;
+		}
+
+		//single operand destination function - replace with zr
+		if (funcs[i].insert_xzr) {
+			insert_zero_reg(numparams);
+		} else { //insert it as the last parameter
+			params[numparams++] = "xzr";
+		}
+			
+		return funcs[i].pf;
+	}
+	return NULL;
+}
 
 // Sets the bits for shift type and shift amount in instr. 
 // Returns true for failure and false for success
@@ -49,19 +143,12 @@ static int set_shift_info(uint32_t *instr, bool logic, char *param) {
 	uint8_t oper = obtain_shift_amt(param);
 
 	//get shift type code
-	int shift = LSL;
-	if (!strcmp(shifttype, "lsr")) {
-		shift = LSR; 
-	} else if (!strcmp(shifttype, "asr")) {
-	   	shift = ASR; 
-	} else if (logic && !strcmp(shifttype, "ror")) {
-		shift = ROR; 
-	} else if (!strcmp(shifttype, "lsl")) {
-		/* EMPTY BODY */
-	} else {
-		fprintf(stderr, "Shift type not recognized.\n"); 
-		return EXIT_FAILURE; 
+	int shift;
+	if (set_codes(shifttype, &shift, NULL, shift_codes)) {
+		fprintf(stderr, "Shift type not recognised.\n");
+		return EXIT_FAILURE;
 	}
+
 	*instr |= place_bits(shift, regdp_format.shift.bits, regdp_format.shift.index);
 	*instr |= place_bits(oper, regdp_format.operand.bits, regdp_format.operand.index);
         return EXIT_SUCCESS; 	
@@ -85,14 +172,10 @@ int arith(char **params, int numparams, uint32_t *instr) {
 	update_sf(instr, immdp_format.sf.index, params[2]); 
 
 	// Update opc
-	int opc = ARITH_ADD;
-
-	if (!strcmp(params[0], "adds")) {
-		opc = ARITH_ADDS;
-	} else if (!strcmp(params[0], "sub")) {
-		opc = ARITH_SUB;
-	} else if (!strcmp(params[0], "subs")) {
-		opc = ARITH_SUBS;
+	int opc;
+	if(set_codes(params[0], &opc, NULL, arith_opcs)) {
+		fprintf(stderr, "Unrecognised arithmetic instruction\n");
+		return EXIT_FAILURE;
 	}
 
 	*instr |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
@@ -154,26 +237,13 @@ int logic(char **params, int numparams, uint32_t *instr) {
 	*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 	// Set opc and N (negate flag) depending on the mnemonic 
-	uint8_t opc = 0; 
-	uint8_t n = 0; 
-	if (!strcmp(params[0], "bic")) {
-		n = 1; 
-	} else if (!strcmp(params[0], "orr")) {
-		opc = LOG_OR; 
-	} else if (!strcmp(params[0], "orn")) {
-		opc = LOG_OR; 
-		n = 1; 
-	} else if (!strcmp(params[0], "eor")) {
-		opc = LOG_XOR; 
-	} else if (!strcmp(params[0], "eon")) {
-		opc = LOG_XOR; 
-		n = 1; 
-	} else if (!strcmp(params[0], "ands")) {
-		opc = LOG_ANDS; 
-	} else if (!strcmp(params[0], "bics")) {
-		opc = LOG_ANDS; 
-		n = 1; 
+	int opc; 
+	int n;
+	if (set_codes(params[0], &opc, &n, logic_opcs)) { 
+		fprintf(stderr, "Unrecognised logic instruction\n");
+		return EXIT_FAILURE; 
 	}
+
 	*instr |= place_bits(opc, regdp_format.opc.bits, regdp_format.opc.index); 
 	*instr |= place_bits(n, regdp_format.N.bits, regdp_format.N.index); 
 
@@ -201,16 +271,12 @@ int wmove(char **params, int numparams, uint32_t *instr) {
 	*instr |= place_bits(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
 
 	// Update opc
-	if (!strcmp(params[0], "movz")) {
-		*instr |= place_bits(MOVZ, immdp_format.opc.bits, immdp_format.opc.index); 
-	} else if (!strcmp(params[0], "movk")) {
-		*instr |= place_bits(MOVK, immdp_format.opc.bits, immdp_format.opc.index);  
-	} else if (!strcmp(params[0], "movn")) {
-		/* EMPTY BODY */
-	} else {
-		fprintf(stderr, "Unrecognized wide move mnemonic.\n"); 
-		return EXIT_FAILURE; 
+	int opc;
+	if (set_codes(params[0], &opc, NULL, mov_opcs)) {
+		fprintf(stderr, "Unrecognised wide move mnemonic.\n");
+		return EXIT_FAILURE;
 	}
+	*instr |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
 
 	// Extract imm16 and update instr 
 	*instr |= place_bits(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
@@ -230,34 +296,18 @@ int single_op_dest(char **params, int numparams, uint32_t *instr) {
 		fprintf(stderr, "Invalid number of parameters.\n"); 
 		return EXIT_FAILURE; 
 	}
-	if (!strcmp(params[0], "mul")) {
-		params[0] = "madd"; 
-		params[numparams++] = "xzr"; 
-		multiply(params, numparams, instr); 
-	} else if (!strcmp(params[0], "mneg")) {
-		params[0] = "msub"; 
-		params[numparams++] = "xzr"; 
-		multiply(params, numparams, instr); 
-	} else if (!strcmp(params[0], "mov")) {
-		params[0] = "orr"; 
-		insert_zero_reg(numparams);   
-		logic(params, ++numparams, instr); 
-	} else if (!strcmp(params[0], "mvn")) {
-		params[0] = "orn"; 
-		insert_zero_reg(numparams); 
-		logic(params, ++numparams, instr); 
-	} else if (!strcmp(params[0], "neg")) {
-		params[0] = "sub"; 
-		insert_zero_reg(numparams);  
-		arith(params, ++numparams, instr); 
-	} else if (!strcmp(params[0], "negs")) {
-		params[0] = "subs"; 
-		insert_zero_reg(numparams); 
-		arith(params, ++numparams, instr);
-	} else {
-		fprintf(stderr, "Unrecognized mnemonic.\n"); 
-		return EXIT_FAILURE; 
+	
+	parse_f pf = redirect_func(params, numparams, sop_functions);
+
+	if (pf == NULL) {
+		fprintf(stderr, "Unrecognized mnemonic.\n");
+		return EXIT_FAILURE;
 	}
+	assert(pf != NULL);
+
+	numparams++;
+	pf(params, numparams, instr);
+
 	return EXIT_SUCCESS; 
 }
 
@@ -305,21 +355,15 @@ int compare(char **params, int numparams, uint32_t *instr) {
 	   params[i] = params[i - 1];  
 	}
 	params[1] = zero; 
-	numparams++; 
+	numparams++;
 
-	if (!strcmp(params[0], "tst")) {
-	   params[0] = "ands"; 
-	   logic(params, numparams, instr);
-	} else if (!strcmp(params[0], "cmp")) {
-	   params[0] = "subs";
-	   arith(params, numparams,  instr);  
-	} else if (!strcmp(params[0], "cmn")) {
-	   params[0] = "adds";
-	   arith(params, numparams, instr); 
-	} else {
-		fprintf(stderr, "Unrecognized compare mnemonic.\n"); 
-		return EXIT_FAILURE; 
-	}
+	parse_f pf = redirect_func(params, 0, cmp_functions);
+	if (pf == NULL) {
+		fprintf(stderr, "Unrecognized compare mnemonic.\n");
+		return EXIT_FAILURE;
+	}	
+	pf(params, numparams, instr);
+
 	// Set destination to the zero register 
 	*instr |= ZRSP; 
 	return EXIT_SUCCESS; 
