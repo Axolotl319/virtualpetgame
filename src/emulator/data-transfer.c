@@ -18,11 +18,11 @@ static int load(armv8_state *armv8, int width, int rt, uint64_t addr){
 
 	int word_size = width == WIDTH_32 ? WORD_SIZE_32 : WORD_SIZE_64;
 
-	if (get_memory_data(armv8, addr, word_size, &data)) { return 1;}
+	if (get_memory_data(armv8, addr, word_size, &data)) { return EXIT_FAILURE;}
 
-	if (write_reg(armv8, rt, data, width)) { return 1; }
+	if (write_reg(armv8, rt, data, width)) { return EXIT_FAILURE; }
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
@@ -33,17 +33,17 @@ static int store(armv8_state *armv8, int width, int rt, uint64_t addr){
 
 	//bounds checking
 	if (addr + word_limit > MEM_SIZE) { 
-		return 1; 
+		return EXIT_FAILURE; 
 	}
 	assert(addr + word_limit <= MEM_SIZE);
 
-	if (read_reg(armv8, rt, &towrite, width)) { return 1; }
+	if (read_reg(armv8, rt, &towrite, width)) { return EXIT_FAILURE; }
 
 	for (int i = 0; i < word_limit; i++) {
 		armv8->memory[addr+i] = towrite & MASK_8;
 		towrite >>= WORD_SIZE_64;
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Input: 32-bit instruction and pointer to armv8 state 
@@ -58,15 +58,15 @@ int loadliteral(uint32_t instr, armv8_state *armv8) {
 	uint64_t data;
 	if (sf) {
 		width = WIDTH_64;
-		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_64, &data)) { return 1; }
+		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_64, &data)) { return EXIT_FAILURE; }
 	} else {
 		width = WIDTH_32;
-		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_32, &data)) { return 1; }
+		if (get_memory_data(armv8, armv8->PC+imm, WORD_SIZE_32, &data)) { return EXIT_FAILURE; }
 	}
 
-	if (write_reg(armv8, reg, data, width)) { return 1; }
+	if (write_reg(armv8, reg, data, width)) { return EXIT_FAILURE; }
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int datatransfer(uint32_t instr, armv8_state *armv8) {
@@ -84,8 +84,8 @@ int datatransfer(uint32_t instr, armv8_state *armv8) {
 	uint64_t transferAddress = 0;
 	int rt = extract_bits(instr, sdt_format.rt.index, sdt_format.rt.bits); //target register, contains data to store
 	int xn = extract_bits(instr, sdt_format.xn.index, sdt_format.xn.bits); //base register Xn
-	if (xn == ZRSP) { return 0; } //Handle case when xn is the SP
-	if (read_reg(armv8, xn, &transferAddress, WIDTH_64)) { return 1; }  // Store base in transferAddress
+	if (xn == ZRSP) { return EXIT_SUCCESS; } //Handle case when xn is the SP
+	if (read_reg(armv8, xn, &transferAddress, WIDTH_64)) { return EXIT_FAILURE; }  // Store base in transferAddress
 
 	int width = extract_bits(instr, sdt_format.sf.index, sdt_format.sf.bits) ? WIDTH_64 : WIDTH_32;
 
@@ -111,25 +111,25 @@ int datatransfer(uint32_t instr, armv8_state *armv8) {
 			break;
 
 		case MODE_REG_OFFSET: //register offset
-			if (read_reg(armv8, xm, &regoffset, WIDTH_64)) { return 1; } 
+			if (read_reg(armv8, xm, &regoffset, WIDTH_64)) { return EXIT_FAILURE; } 
 			transferAddress += regoffset;
 			break;
 
 		case MODE_PRE_INDEX: //pre-index
 			transferAddress += simm9;
-			if (write_reg(armv8, xn, transferAddress, width)) { return 1; }
+			if (write_reg(armv8, xn, transferAddress, width)) { return EXIT_FAILURE; }
 			break;
 
 		case MODE_POST_INDEX: //post-index
-			if (write_reg(armv8, xn, transferAddress + simm9, width)) { return 1;}
+			if (write_reg(armv8, xn, transferAddress + simm9, width)) { return EXIT_FAILURE;}
 			break;
 	}
  
 	if(extract_bits(instr, sdt_format.L.index, sdt_format.L.bits)){ 
-		if (load(armv8, width, rt, transferAddress)) { return 1; }
+		if (load(armv8, width, rt, transferAddress)) { return EXIT_FAILURE; }
 	} else{
-		if (store(armv8, width, rt, transferAddress)) { return 1; }
+		if (store(armv8, width, rt, transferAddress)) { return EXIT_FAILURE; }
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

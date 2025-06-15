@@ -114,7 +114,7 @@ static int64_t perform_arithmetic(armv8_state *armv8, int opcode, int64_t arg1, 
 
 		default: 
 			fprintf(stderr, "Error. Unknown arithmetic opcode.\n");
-			return 1;
+			return EXIT_FAILURE;
 			break;
 	}
 
@@ -155,7 +155,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 	switch(opi){
 		case OPI_ARITH: //arithmetic			
 			//performs arithmetic based on bit width
-			if (read_reg(armv8, rn, &op, width)) { return 1; }
+			if (read_reg(armv8, rn, &op, width)) { return EXIT_FAILURE; }
 			result = perform_arithmetic(armv8, opc, op, imm, width);
 			break;
 
@@ -163,7 +163,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 			
 			if (width == WIDTH_32 && hw > hw_min_32) {
 				fprintf(stderr, "Invalid shift for 32 bit\n");
-				return 1;
+				return EXIT_FAILURE;
 			}
 			assert(width == WIDTH_64 || (width == WIDTH_32 && hw <= hw_min_32));
 			
@@ -184,7 +184,7 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 				case MOVK: //move wide with keep
 					//reads rd register 	
-                        		if (read_reg(armv8, rd, &value, WIDTH_64)) { return 1; }
+                        		if (read_reg(armv8, rd, &value, WIDTH_64)) { return EXIT_FAILURE; }
 
 					//Masking bits
 					result = (value) & ~((uint64_t)(MASK_16) << mov_shift); //set appropriate 16 bits to zero
@@ -193,19 +193,19 @@ int immdp(uint32_t instr, armv8_state *armv8) {
 
 				default:
 					fprintf(stderr, "Unknown OPC for wide move instruction.\n");
-					return 1;
+					return EXIT_FAILURE;
 			}
 			break;
 
 		default: 
 			fprintf(stderr, "Unknown OPI in immediate data processing instruction.\n");
-			return 1;
+			return EXIT_FAILURE;
 			break;
 		
 	}
 	
 	// If destination is 0 register, do not write. 
-	if (rd == ZRSP) { return 0; }
+	if (rd == ZRSP) { return EXIT_SUCCESS; }
 	
 	return write_reg(armv8, rd, result, width);
 }
@@ -228,18 +228,18 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 	//check that operand is in the valid range
 	if (operand > (WIDTH_64 - 1) || (type != MUL_INSTR && operand > width - 1)) {
 		fprintf(stderr, "Invalid operand.\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(operand < WIDTH_64 && (type == MUL_INSTR || operand < width)); 
 
 	//reads register rn into op1, if rn is not ZR
 	if (rn != ZRSP) {
-		if (read_reg(armv8, rn, &op1, width)) { return 1; }
+		if (read_reg(armv8, rn, &op1, width)) { return EXIT_FAILURE; }
 	}
 
 	//reads register rm into op2, if rm is not ZR
 	if (rm != ZRSP) {
-		if (read_reg(armv8, rm, &op2, width)) { return 1; }
+		if (read_reg(armv8, rm, &op2, width)) { return EXIT_FAILURE; }
 	}
 
 	//perform shift
@@ -248,7 +248,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		//Checks if the shift amount is within the valid range
 		if (operand < 0 || operand > width - 1) {
 			fprintf(stderr, "Invalid shift amount.\n");
-			return 1;
+			return EXIT_FAILURE;
 		}
 		assert(operand >= 0 && operand < width);
 
@@ -272,13 +272,13 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 					op2 = rotate_right(armv8, op2, operand, width);
 				} else {
 					fprintf(stderr, "Unknown shift type for arithmetic instructions.\n");
-					return 1;
+					return EXIT_FAILURE;
 				}
 				break;
 			
 			default: 
 			        fprintf(stderr, "Unknown shift type.\n");
-				return 1;
+				return EXIT_FAILURE;
 		}
 		
 	}
@@ -309,7 +309,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 
 			default: 
 				fprintf(stderr, "Invalid operation code for logical dp operation.\n");
-				return 1;
+				return EXIT_FAILURE;
 		}
 
 	}else if(type == ARITH_INSTR){ 
@@ -324,7 +324,7 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		//read in ra register, if ra is not ZR
 		uint64_t op3 = 0;
 		if (ra != ZRSP) {
-			if (read_reg(armv8, ra, &op3, width)) { return 1; }
+			if (read_reg(armv8, ra, &op3, width)) { return EXIT_FAILURE; }
 		}
 		
 		//sign extend the operands to avoid signed arithmetic errors
@@ -339,11 +339,11 @@ int regdp(uint32_t instr, armv8_state *armv8) {
 		}
 	}else{
 		fprintf(stderr, "Unknown type of data processing register instruction.\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	
 	// If zero register, do not write 
-	if (rd == ZRSP) { return 0; }
+	if (rd == ZRSP) { return EXIT_SUCCESS; }
 
 	return write_reg(armv8, rd, result, width);
 

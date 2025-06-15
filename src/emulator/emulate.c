@@ -120,7 +120,7 @@ static int fetch(armv8_state *armv8) {
 		//if PC is out of bounds
 		if (armv8->PC > MEM_SIZE - WORD_SIZE_32) {
 			fprintf(stderr, "PC out of bounds\n");
-			return 1;
+			return EXIT_FAILURE;
 		}	
 		assert(armv8->PC <= MEM_SIZE - WORD_SIZE_32);
 
@@ -130,14 +130,14 @@ static int fetch(armv8_state *armv8) {
 			break;
 		}
 		if ( status == DCD_FAIL ) {	//Decode failed
-			return 1; 
+			return EXIT_FAILURE; 
 		}
 
 		if ( status == DCD_SUCCESS ) {	//Increment PC if decode success and not branch
 			incrementPC(armv8); 
 		} 
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv) 
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 	if(inFile == NULL){
 		perror("Couldn't open input file.\n");
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(inFile != NULL);
 
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
 
 	if(outFile == NULL) {
 		perror("Couldn't open output file.\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(outFile != NULL);
 
@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 	if(armv8->memory == NULL){
 		fprintf(stderr, "Couldn't allocate buffer memory\n");
 		fclose(inFile);
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(armv8->memory != NULL);
 	
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 	int fetch_status = fetch(armv8);
 	if (fetch_status) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(!fetch_status);
 	

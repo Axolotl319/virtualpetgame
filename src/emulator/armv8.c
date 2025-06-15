@@ -16,7 +16,7 @@ static int check_reg_bounds(int reg_num) {
 int write_reg(armv8_state *armv8, int reg_num, uint64_t data, int width) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	if (width == WIDTH_32) {
@@ -24,7 +24,7 @@ int write_reg(armv8_state *armv8, int reg_num, uint64_t data, int width) {
 	}
 
 	armv8->GP_regs[reg_num] = data;
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 //Reads GP register
@@ -32,7 +32,7 @@ int write_reg(armv8_state *armv8, int reg_num, uint64_t data, int width) {
 int read_reg(armv8_state *armv8, int reg_num, uint64_t *data, int width) {
 	if (check_reg_bounds(reg_num)) {
 		fprintf(stderr, "Register out of bounds\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 
 	uint64_t raw_data = armv8->GP_regs[reg_num];
@@ -42,7 +42,7 @@ int read_reg(armv8_state *armv8, int reg_num, uint64_t *data, int width) {
 		(uint64_t)((uint32_t)raw_data) :
 		(raw_data);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
@@ -57,11 +57,11 @@ void incrementPC(armv8_state *armv8) {
 int setPC(armv8_state *armv8, uint64_t addr) {
 	if (addr >= MEM_SIZE) { //PC too large
 		fprintf(stderr, "Address out of bounds\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
        	assert(addr < MEM_SIZE);	
 	armv8->PC = addr;
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
@@ -117,7 +117,7 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 int get_memory_data(armv8_state *armv8, uint64_t addr, int num_bytes, uint64_t *data) {
 	if (addr + WORD_SIZE_32 > MEM_SIZE) {
 		fprintf(stderr, "Invalid memory address\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(addr + WORD_SIZE_32 <= MEM_SIZE);
 
@@ -127,7 +127,7 @@ int get_memory_data(armv8_state *armv8, uint64_t addr, int num_bytes, uint64_t *
 		*data |= (uint64_t)(armv8->memory[addr + i]) << (WORD_SIZE_64 * i); 
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 
