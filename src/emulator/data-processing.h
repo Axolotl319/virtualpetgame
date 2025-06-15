@@ -19,37 +19,6 @@ typedef enum regdp_instr_t {
 	REGDP_INVALID
 } regdp_instr_t;
 
-//arithmetic opcode
-typedef enum arith_opc {
-	ARITH_ADD,  //add
-	ARITH_ADDS, //add and set flags
-	ARITH_SUB,  //sub
-	ARITH_SUBS  //sub and set flags
-} arith_opc;
-
-//wide move opc
-typedef enum mov_opc {
-	MOVN,        //move wide with NOT
-	MOV_INVALID, //no move instr corresponding to 0b01
-	MOVZ,        //move wide with zero
-	MOVK         //move wide with keep
-} mov_opc;
-
-//shift type
-typedef enum shift_t {
-	LSL, //logical shift left
-	LSR, //logical shift right
-	ASR, //arithmetic shift right
-	ROR  //rotate right
-} shift_t;
-
-//log operation type
-typedef enum log_type_t {
-	LOG_AND, 
-	LOG_OR,
-	LOG_XOR,
-	LOG_ANDS //and set flags
-} log_type_t;
 
 extern int immdp(uint32_t instr, armv8_state *armv8); 
 extern int regdp(uint32_t instr, armv8_state *armv8);

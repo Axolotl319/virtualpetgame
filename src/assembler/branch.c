@@ -34,9 +34,9 @@ static int cond_pair_cmp(const void *key, const void *elem) {
 static int check_numparams(int numparams) {
 	if (numparams != NUM_BR_PARAMS) {
 		fprintf(stderr, "Invalid branch instruction\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 // Register branch

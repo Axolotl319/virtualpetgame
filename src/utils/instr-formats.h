@@ -89,6 +89,38 @@ typedef enum branch_cond {
 	BR_AL,       //always
 } branch_cond;
 
+//arithmetic opcode
+typedef enum arith_opc {
+	ARITH_ADD,  //add
+	ARITH_ADDS, //add and set flags
+	ARITH_SUB,  //sub
+	ARITH_SUBS  //sub and set flags
+} arith_opc;
+
+//wide move opc
+typedef enum mov_opc {
+	MOVN,        //move wide with NOT
+	MOV_INVALID, //no move instr corresponding to 0b01
+	MOVZ,        //move wide with zero
+	MOVK         //move wide with keep
+} mov_opc;
+
+//shift type
+typedef enum shift_t {
+	LSL, //logical shift left
+	LSR, //logical shift right
+	ASR, //arithmetic shift right
+	ROR  //rotate right
+} shift_t;
+
+//log operation type
+typedef enum log_type_t {
+	LOG_AND, 
+	LOG_OR,
+	LOG_XOR,
+	LOG_ANDS //and set flags
+} log_type_t;
+
 extern const immdp_format_t immdp_format;
 extern const regdp_format_t regdp_format;
 extern const sdt_format_t sdt_format;

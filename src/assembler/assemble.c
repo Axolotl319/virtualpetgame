@@ -15,6 +15,7 @@
 #define NUM_ARGS 3
 #define MAXLINELEN 256
 #define MAX_PARAMS 5
+#define MAX_INSTR_LEN 5
 
 
 //checks if start character of label is fine
@@ -75,7 +76,11 @@ static void strip_end_whitespace(char *linein) {
 //tokenises the instruction
 static void get_instr_params(char *instr, char **params, int *numparams) { 
    char *rest = NULL; 
+
+   //Get the instruction
    params[0] = strtok_r(instr, " ", &rest);
+
+   //Get the parameters
    char *param = strtok_r(NULL, ",", &rest);  
    while (param != NULL) {
 	// Remove all whitespace from the front of any parameters: 
@@ -83,8 +88,8 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 		param++; 
 	}
 	params[*numparams] = param;  
-   	param = strtok_r(NULL, ",", &rest);
-	(*numparams)++; 
+   	param = strtok_r(NULL, ",", &rest); 
+	(*numparams)++;
    }
 }
 
@@ -188,13 +193,14 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 			line++;
 		}
  
-		printf("DEBUG: Instruction: %s\n", line);
-		char tok[10]; 	
-		if (!sscanf(line, "%s", tok)) {
+		char tok[MAX_INSTR_LEN]; 	
+		if (!sscanf(line, "%4s", tok)) {
 			fprintf(stderr, "Instruction read failed.\n"); 
 			return EXIT_FAILURE;
 		}
 
+		//if the instruction starts with b., redirect to the 
+		//b. alias
 		if (strncmp(tok, "b.", 2) == 0) {
 			strcpy(tok, "b."); 
 		} 
