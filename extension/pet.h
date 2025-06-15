@@ -16,3 +16,4 @@ extern void print_hearts(pet p);
 extern void free_pet(pet p); 
 
 extern pet new_pet(char *name); 
+

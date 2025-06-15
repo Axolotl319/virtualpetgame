@@ -54,7 +54,7 @@ static void print_stat(int category, int amt){
 	fprintf(stdout, "\n");
 }
 
-void print_hearts(pet p){
+void print_hearts(pet p) {
 	fprintf(stdout, "Stats:\n");
 	check_bounds(p); //ensure all stats between 0-5
 	print_stat(0, p->cleanliness);
@@ -62,7 +62,7 @@ void print_hearts(pet p){
 	print_stat(2, p->hunger);
 }
 
-pet new_pet(char *name){
+pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
 	new->cleanliness = 5;
@@ -71,6 +71,6 @@ pet new_pet(char *name){
 	return new;
 }
 
-void free_pet(pet p){
+void free_pet(pet p) {
 	free(p);
 }

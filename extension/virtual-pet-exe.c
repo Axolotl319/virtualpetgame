@@ -21,9 +21,11 @@ int main(void) {
 
 	init(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
-        /*
+
+ 	/*
          * INFINITE LOOP TO BE IMPLEMENTED
          */
 
+	free_pet(vpet); 
         return EXIT_SUCCESS;
 }
