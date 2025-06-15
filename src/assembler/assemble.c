@@ -60,6 +60,8 @@ static bool is_empty_line(const char *linein) {
 
 //strips newline from end of line
 static void strip_end_newline(char *linein) {
+	assert(linein != NULL);
+
 	int len = strlen(linein);
         if (len > 0 && linein[len - 1] == '\n') {
 		linein[len - 1] = '\0';
@@ -67,6 +69,7 @@ static void strip_end_newline(char *linein) {
 }
 
 static void strip_end_whitespace(char *linein) {
+	assert(linein != NULL);
 	int len = strlen(linein);
 	while (len > 0 && isspace(linein[len - 1])) {
 		linein[--len] = '\0';
@@ -80,9 +83,13 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
    //Get the instruction
    params[0] = strtok_r(instr, " ", &rest);
 
+   assert(params != NULL);
+   assert(numparams != NULL);
+
    //Get the parameters
    char *param = strtok_r(NULL, ",", &rest);  
    while (param != NULL) {
+	assert (*numparams < MAX_PARAMS);
 	// Remove all whitespace from the front of any parameters: 
 	while (isspace(*param)) {
 		param++; 
@@ -96,7 +103,13 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 //replaces labels with addresses from symtable
 //replaces labels with decimal address in the form of a string
 static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+	assert(params != NULL);
+	assert(numparams > 0);
+	assert(symtable != NULL);
+
 	for (int i = 1; i < numparams; i++) {
+		assert(params[i] != NULL);
+
 		uint32_t address = getAddress(symtable, params[i]);
 		if (address == 1) { continue; }
 
@@ -108,19 +121,44 @@ static int replace_labels(symbol_table symtable, char **params, int numparams, u
 			fprintf(stderr, "Offset out of range\n");
 			return EXIT_FAILURE;
 		}
+		assert(-ONE_MB <= offset && offset <= ONE_MB - 1);
 		
 		sprintf(params[i], "%d", offset);
 	}
 	return EXIT_SUCCESS;
 }
 
+//Writes 32-bit instruction word starting from least significant byte to file
+static int write32bit(FILE *fileout, uint32_t tobin) {
+	assert(fileout != NULL);
+
+	uint8_t bytes[WORD_SIZE_32];
+
+	//Splits word into bytes and stores each in array
+	for (size_t i = 0; i < WORD_SIZE_32; ++i) {
+		bytes[i] = (tobin >> (i * CHAR_BIT)) & MASK_8;
+	}
+
+	//Writes word into file and checks for failure
+	if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) != WORD_SIZE_32) {
+		fprintf(stderr, "Could not write to file\n");
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 
 // First pass: store labels and addresses in symbol table
 static int first_pass(symbol_table symtable, FILE* filein) {
+	assert(symtable != NULL);
+	assert(filein != NULL);
+
 	char linein[MAXLINELEN];
 	
 	uint32_t addr = 0; 
 	while(fgets(linein, MAXLINELEN, filein)) { 
+
 		//skip a newline
 		if (*linein == '\n') { continue; }
 
@@ -128,11 +166,14 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 		strip_end_newline(linein);
 		strip_end_whitespace(linein);
 
+		//should be null terminated somewhere
+		assert(memchr(linein, '\0', MAXLINELEN) != NULL);
+
 		if (is_empty_line(linein)) { continue; }
 
 		if (is_label(linein)) {
 			// Remove the colon
-			for (int i=strlen(linein)-1; i>=0; i--) {
+			for (int i = strlen(linein) - 1; i >= 0; i--) {
 				if (linein[i] == ':') {
 					linein[i] = '\0'; 
 					break;
@@ -140,6 +181,12 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 			}
 			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
 		} else {
+			if (addr > MEM_SIZE - WORD_SIZE_32) {
+				fprintf(stderr, "Instructions exceed memory\n");
+				return EXIT_FAILURE;
+			}
+
+			assert(addr <= MEM_SIZE - WORD_SIZE_32);
 			addr += WORD_SIZE_32; 
 		}
 	}
@@ -148,26 +195,14 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 }
 
 
-//Writes 32-bit instruction word starting from least significant byte to file
-static int write32bit(FILE *fileout, uint32_t tobin) {
-    uint8_t bytes[WORD_SIZE_32];
-    //Splits word into bytes and stores each in array
-    for (size_t i = 0; i < WORD_SIZE_32; ++i) {
-        bytes[i] = (tobin >> (i * CHAR_BIT)) & MASK_8;
-    }
-
-    //Writes word into file and checks for failure
-    if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) != WORD_SIZE_32) {
-        return EXIT_FAILURE;
-    }
-    return EXIT_SUCCESS;
-}
-
-
 //Second pass: reads each instruction and int directive
 //Calls functions to generate binary code
 //Replaces label references with addresses from symtable
 static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
+	assert(filein != NULL);
+	assert(fileout != NULL);
+	assert(symtable != NULL);
+	
 	//reread file
 	char linein[MAXLINELEN];
 	char *line = linein;
@@ -175,12 +210,16 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 	uint32_t addr = 0;
 	
 	while(fgets(line, MAXLINELEN, filein)) {
+		
 		//skip new line 
 		if (*line == '\n') { continue; }
 
 		//strip newline character from end of line
 		strip_end_newline(line);
 		strip_end_whitespace(linein);
+
+		//line should be null terminated somewhere
+		assert(memchr(linein, '\0', MAXLINELEN) != NULL);
 
 		//check if it is an empty line
 		if (is_empty_line(line)) { continue; }
@@ -192,6 +231,9 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 		while (isspace(*line)) {
 			line++;
 		}
+
+		//should not be an empty line
+		assert(*line != '\0');
  
 		char tok[MAX_INSTR_LEN]; 	
 		if (!sscanf(line, "%4s", tok)) {
@@ -210,6 +252,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 			fprintf(stderr, "Invalid instruction.\n");
 			return EXIT_FAILURE; 
 		}
+		assert(pf != NULL);
 			
 		//gets array of operands
 		char *params[MAX_PARAMS];
@@ -217,6 +260,9 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
        		int numparams = 1; 	
 		get_instr_params(line, params, &numparams); 
 		
+		//check if there are correct number of params
+		assert(numparams >= 1 && numparams <= MAX_PARAMS);
+
 		//Replaces label names with addresse
 		if (replace_labels(symtable, params, numparams, addr)) {
 			return EXIT_FAILURE;
@@ -236,7 +282,6 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
             		return EXIT_FAILURE;
         	}
 
-		printf("debug: To convert to binary: %x\n", tobin); 
 
 		addr += WORD_SIZE_32;
 	}
@@ -273,7 +318,7 @@ int main(int argc, char **argv) {
 	// Second pass: generate binary encoding
     	FILE *fileout = fopen(argv[2], "wb");
     	if (!fileout) {
-			perror("Unable to open output file"); 
+			perror("Unable to open output file\n"); 
 			return EXIT_FAILURE;
 	}
 

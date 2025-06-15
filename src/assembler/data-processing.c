@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 #include "data-processing.h"
 #include "assembly-utils.h"
 #include "instr-formats.h"
@@ -36,9 +37,10 @@
 #define insert_zero_reg(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
 
 
-// Sets the bits for shift type and shift amount in toReturn. 
+// Sets the bits for shift type and shift amount in instr. 
 // Returns true for failure and false for success
-static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
+static int set_shift_info(uint32_t *instr, bool logic, char *param) {
+	//read in shift type
 	char shifttype[4];
 	if (sscanf(param, "%s", shifttype) == EOF) {
 		fprintf(stderr, "Shift type could not be read.\n"); 
@@ -46,6 +48,7 @@ static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 	}	
 	uint8_t oper = obtain_shift_amt(param);
 
+	//get shift type code
 	int shift = LSL;
 	if (!strcmp(shifttype, "lsr")) {
 		shift = LSR; 
@@ -59,26 +62,27 @@ static int set_shift_info(uint32_t *toReturn, bool logic, char *param) {
 		fprintf(stderr, "Shift type not recognized.\n"); 
 		return EXIT_FAILURE; 
 	}
-	*toReturn |= place_bits(shift, regdp_format.shift.bits, regdp_format.shift.index);
-	*toReturn |= place_bits(oper, regdp_format.operand.bits, regdp_format.operand.index);
+	*instr |= place_bits(shift, regdp_format.shift.bits, regdp_format.shift.index);
+	*instr |= place_bits(oper, regdp_format.operand.bits, regdp_format.operand.index);
         return EXIT_SUCCESS; 	
 }
 
 // Parses arithmetic instructions into decimal format 
-int arith(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is an arithmetic expression\n");
+int arith(char **params, int numparams, uint32_t *instr) {
         if (numparams != MIN_AL_PARAMS && numparams != MAX_AL_PARAMS) {
 		fprintf(stderr, "Incorrect number of parameters.\n"); 
 		return EXIT_FAILURE; 
-	}	
-	*toReturn = 0; 
+	}
+	assert(numparams == MIN_AL_PARAMS || numparams == MAX_AL_PARAMS);
+
+	*instr = 0; 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 
-	*toReturn |= place_bits(rd, immdp_format.rd.bits, immdp_format.rd.index); 
-	*toReturn |= place_bits(rn, immdp_format.rn.bits, immdp_format.rn.index); 
+	*instr |= place_bits(rd, immdp_format.rd.bits, immdp_format.rd.index); 
+	*instr |= place_bits(rn, immdp_format.rn.bits, immdp_format.rn.index); 
 
-	update_sf(toReturn, immdp_format.sf.index, params[2]); 
+	update_sf(instr, immdp_format.sf.index, params[2]); 
 
 	// Update opc
 	int opc = ARITH_ADD;
@@ -91,37 +95,37 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 		opc = ARITH_SUBS;
 	}
 
-	*toReturn |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
+	*instr |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
 
 	if (is_imm(params[3])) {
 		// Then it is immediate value arithmetic
 		// Set the constant base at bit 28 
-		*toReturn |= IMM_BASE;
+		*instr |= IMM_BASE;
 
 		// Update opi (binary 010) 
-		*toReturn |= place_bits(OPI_ARITH, immdp_format.opi.bits, immdp_format.opi.index);
+		*instr |= place_bits(OPI_ARITH, immdp_format.opi.bits, immdp_format.opi.index);
 		
 		// Obtain imm12 value 
-		*toReturn |= place_bits(extract_imm(params[3]), immdp_format.imm12.bits, immdp_format.imm12.index);
+		*instr |= place_bits(extract_imm(params[3]), immdp_format.imm12.bits, immdp_format.imm12.index);
 
 		// Update shift bit if needed
 		if (numparams == MAX_AL_PARAMS && obtain_shift_amt(params[4]) == IMM12_LEN) {
-		   *toReturn |= place_bits(1, immdp_format.sh.bits, immdp_format.sh.index);
+		   *instr |= place_bits(1, immdp_format.sh.bits, immdp_format.sh.index);
 		}
 	} else {
 		// Else it is register arithmetic
 		// Set constant bases at bits 27 and 25 
-		*toReturn |= REG_BASE;
+		*instr |= REG_BASE;
 		
 		uint8_t rm = obtain_reg_num(params[3]); 
-		*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
+		*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 		// Update opr (binary 1000)
-		*toReturn |= place_bits(ARITH_OPR_BASE, regdp_format.opr.bits, regdp_format.opr.index); 
+		*instr |= place_bits(ARITH_OPR_BASE, regdp_format.opr.bits, regdp_format.opr.index); 
 
 		// Update shift and operand if needed
 		if (numparams == MAX_AL_PARAMS) {
-			if (set_shift_info(toReturn, false, params[4])) {
+			if (set_shift_info(instr, false, params[4])) {
 				return EXIT_FAILURE; 
 			}		
 		}
@@ -129,24 +133,25 @@ int arith(char **params, int numparams, uint32_t *toReturn) {
 	return EXIT_SUCCESS; 
 }
 
-int logic(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is a logic expression\n"); 
+int logic(char **params, int numparams, uint32_t *instr) {
 	if (numparams != MIN_AL_PARAMS && numparams != MAX_AL_PARAMS) {
 		fprintf(stderr, "Invalid number of parameters.\n");
 	        return EXIT_FAILURE; 	
 	}
-	// Set up the instruction base 
-	*toReturn = LOGIC_BASE;
+	assert(numparams == MIN_AL_PARAMS || numparams == MAX_AL_PARAMS);
 
-	update_sf(toReturn, regdp_format.sf.index, params[1]); 
+	// Set up the instruction base 
+	*instr = LOGIC_BASE;
+
+	update_sf(instr, regdp_format.sf.index, params[1]); 
 
 	// Obtain and update all the registers 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
 	uint8_t rm = obtain_reg_num(params[3]);
-        *toReturn |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
-	*toReturn |= place_bits(rn, regdp_format.rd.bits, regdp_format.rn.index); 
-	*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
+        *instr |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
+	*instr |= place_bits(rn, regdp_format.rd.bits, regdp_format.rn.index); 
+	*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 	// Set opc and N (negate flag) depending on the mnemonic 
 	uint8_t opc = 0; 
@@ -169,12 +174,12 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 		opc = LOG_ANDS; 
 		n = 1; 
 	}
-	*toReturn |= place_bits(opc, regdp_format.opc.bits, regdp_format.opc.index); 
-	*toReturn |= place_bits(n, regdp_format.N.bits, regdp_format.N.index); 
+	*instr |= place_bits(opc, regdp_format.opc.bits, regdp_format.opc.index); 
+	*instr |= place_bits(n, regdp_format.N.bits, regdp_format.N.index); 
 
 	// Set the shift type if needed
 	if (numparams == MAX_AL_PARAMS) {
-		if (set_shift_info(toReturn, true, params[4])) {
+		if (set_shift_info(instr, true, params[4])) {
 			return EXIT_FAILURE; 
 		}	
 	}
@@ -182,25 +187,24 @@ int logic(char **params, int numparams, uint32_t *toReturn) {
 	return EXIT_SUCCESS; 
 }
 
-int wmove(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is a wide move expression\n");
+int wmove(char **params, int numparams, uint32_t *instr) {
         if (numparams != MIN_MOV_PARAMS && numparams != MAX_MOV_PARAMS) {
 		fprintf(stderr, "Invalid number of parameters.\n");
 	        return EXIT_FAILURE; 	
 	}
 	// Set the instruction base 
-	*toReturn = MOV_BASE;
+	*instr = MOV_BASE;
 
-	update_sf(toReturn, immdp_format.sf.index, params[1]); 
+	update_sf(instr, immdp_format.sf.index, params[1]); 
 
 	// Update rd 
-	*toReturn |= place_bits(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
+	*instr |= place_bits(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
 
 	// Update opc
 	if (!strcmp(params[0], "movz")) {
-		*toReturn |= place_bits(MOVZ, immdp_format.opc.bits, immdp_format.opc.index); 
+		*instr |= place_bits(MOVZ, immdp_format.opc.bits, immdp_format.opc.index); 
 	} else if (!strcmp(params[0], "movk")) {
-		*toReturn |= place_bits(MOVK, immdp_format.opc.bits, immdp_format.opc.index);  
+		*instr |= place_bits(MOVK, immdp_format.opc.bits, immdp_format.opc.index);  
 	} else if (!strcmp(params[0], "movn")) {
 		/* EMPTY BODY */
 	} else {
@@ -208,21 +212,20 @@ int wmove(char **params, int numparams, uint32_t *toReturn) {
 		return EXIT_FAILURE; 
 	}
 
-	// Extract imm16 and update toReturn 
-	*toReturn |= place_bits(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
+	// Extract imm16 and update instr 
+	*instr |= place_bits(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == MAX_MOV_PARAMS) {
 		uint8_t bit = obtain_shift_amt(params[3]) / IMM16_LEN; 
-		*toReturn |= place_bits(bit, immdp_format.hw.bits, immdp_format.hw.index);
+		*instr |= place_bits(bit, immdp_format.hw.bits, immdp_format.hw.index);
 	}
  
 	return EXIT_SUCCESS; 
 }
 
 
-int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is a single op and destination expression\n"); 
+int single_op_dest(char **params, int numparams, uint32_t *instr) {
 	if (numparams != MIN_SOP_PARAMS && numparams != MAX_SOP_PARAMS) {
 		fprintf(stderr, "Invalid number of parameters.\n"); 
 		return EXIT_FAILURE; 
@@ -230,27 +233,27 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 	if (!strcmp(params[0], "mul")) {
 		params[0] = "madd"; 
 		params[numparams++] = "xzr"; 
-		multiply(params, numparams, toReturn); 
+		multiply(params, numparams, instr); 
 	} else if (!strcmp(params[0], "mneg")) {
 		params[0] = "msub"; 
 		params[numparams++] = "xzr"; 
-		multiply(params, numparams, toReturn); 
+		multiply(params, numparams, instr); 
 	} else if (!strcmp(params[0], "mov")) {
 		params[0] = "orr"; 
 		insert_zero_reg(numparams);   
-		logic(params, ++numparams, toReturn); 
+		logic(params, ++numparams, instr); 
 	} else if (!strcmp(params[0], "mvn")) {
 		params[0] = "orn"; 
 		insert_zero_reg(numparams); 
-		logic(params, ++numparams, toReturn); 
+		logic(params, ++numparams, instr); 
 	} else if (!strcmp(params[0], "neg")) {
 		params[0] = "sub"; 
 		insert_zero_reg(numparams);  
-		arith(params, ++numparams, toReturn); 
+		arith(params, ++numparams, instr); 
 	} else if (!strcmp(params[0], "negs")) {
 		params[0] = "subs"; 
 		insert_zero_reg(numparams); 
-		arith(params, ++numparams, toReturn);
+		arith(params, ++numparams, instr);
 	} else {
 		fprintf(stderr, "Unrecognized mnemonic.\n"); 
 		return EXIT_FAILURE; 
@@ -258,20 +261,21 @@ int single_op_dest(char **params, int numparams, uint32_t *toReturn) {
 	return EXIT_SUCCESS; 
 }
 
-int multiply(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is a multiply expression\n");
+int multiply(char **params, int numparams, uint32_t *instr) {
         if (numparams != MUL_PARAMS) {
 		fprintf(stderr, "Invalid number of parameters.\n"); 
 		return EXIT_FAILURE; 
 	}
+	assert(numparams == MUL_PARAMS);
+
 	// Set the instruction base 
-	*toReturn = MUL_BASE; 
+	*instr = MUL_BASE; 
  
-	update_sf(toReturn, regdp_format.sf.index, params[1]); 
+	update_sf(instr, regdp_format.sf.index, params[1]); 
 
 	// Update x: 
 	if (!strcmp(params[0], "msub")) {
-		*toReturn |= place_bits(1, regdp_format.x.bits, regdp_format.x.index); 
+		*instr |= place_bits(1, regdp_format.x.bits, regdp_format.x.index); 
 	} else if (!strcmp(params[0], "madd")) {
 		/* EMPTY BODY */
 	} else {
@@ -285,16 +289,15 @@ int multiply(char **params, int numparams, uint32_t *toReturn) {
 	uint8_t rm = obtain_reg_num(params[3]); 
 	uint8_t ra = obtain_reg_num(params[4]);
 
-	*toReturn |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
-	*toReturn |= place_bits(rn, regdp_format.rn.bits, regdp_format.rn.index); 
-	*toReturn |= place_bits(ra, regdp_format.ra.bits, regdp_format.ra.index); 
-	*toReturn |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 	
+	*instr |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
+	*instr |= place_bits(rn, regdp_format.rn.bits, regdp_format.rn.index); 
+	*instr |= place_bits(ra, regdp_format.ra.bits, regdp_format.ra.index); 
+	*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 	
 	 
 	return EXIT_SUCCESS; 
 }
 
-int compare(char **params, int numparams, uint32_t *toReturn) {
-	printf("debug: this is a compare/test expression\n"); 
+int compare(char **params, int numparams, uint32_t *instr) {
 	char *zero = strchr(params[1], 'x') ? "xzr" : "wzr";
 	
 	// Insert the zero register at params[1]
@@ -306,18 +309,18 @@ int compare(char **params, int numparams, uint32_t *toReturn) {
 
 	if (!strcmp(params[0], "tst")) {
 	   params[0] = "ands"; 
-	   logic(params, numparams, toReturn);
+	   logic(params, numparams, instr);
 	} else if (!strcmp(params[0], "cmp")) {
 	   params[0] = "subs";
-	   arith(params, numparams,  toReturn);  
+	   arith(params, numparams,  instr);  
 	} else if (!strcmp(params[0], "cmn")) {
 	   params[0] = "adds";
-	   arith(params, numparams, toReturn); 
+	   arith(params, numparams, instr); 
 	} else {
 		fprintf(stderr, "Unrecognized compare mnemonic.\n"); 
 		return EXIT_FAILURE; 
 	}
 	// Set destination to the zero register 
-	*toReturn |= ZRSP; 
+	*instr |= ZRSP; 
 	return EXIT_SUCCESS; 
 }

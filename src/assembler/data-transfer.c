@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include "symtable.h"
 #include "data-transfer.h"
 #include "assembly-utils.h"
@@ -29,6 +30,8 @@ static int mode(char **params, int numparams){
 		fprintf(stderr, "Unknown addressing mode");
 		return 0;
 	}
+	assert(numparams >= MIN_PARAMS);
+
 	if(numparams == MIN_PARAMS){ return MODE_UNSIGNED_OFFSET; }
 	//3 params -> zero unsigned offset
 	int len = strlen(params[3]);
@@ -49,6 +52,7 @@ static int mode(char **params, int numparams){
 static int getImm12(char *imm_str, char *reg, int *imm12){
 	imm_str = strchr(imm_str, '#');
 	if (!imm_str) { return EXIT_FAILURE; }
+	assert(imm_str != NULL);
 	while (*imm_str && isspace(*imm_str)) { imm_str++; }
 
 	int imm = extract_imm(imm_str);
@@ -70,12 +74,13 @@ static int getSimm9(char *imm){
 }
 
 // Return 0 if success, 1 if fail
-int dt(char **params, int numparams, uint32_t *toReturn) {
+int dt(char **params, int numparams, uint32_t *instr) {
 	//Bounds check the number of parameters
 	if(numparams > MAX_PARAMS || numparams < MIN_PARAMS){
 		fprintf(stderr, "Unexpected no. parameters for dt instr\n");
 		return EXIT_FAILURE;
 	}
+	assert(numparams <= MAX_PARAMS && numparams >= MIN_PARAMS);
 
 	char *type = params[0]; // load/store instruction
 	char *target = params[1]; // first argument is target register
@@ -85,9 +90,8 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 	//load literal is ldr with 2 args, sdts have an extra argument
 	//unsigned offset can also just have 3 params, the 3rd being a [regname]	
 	if(loadLiteral){
-		printf("debug: this is a load literal\n");
 		// Set the instruction base 
-		*toReturn = LOADLIT_BASE;
+		*instr = LOADLIT_BASE;
 		uint32_t simm19; 
 
 		char *value = params[2]; //#imm or label offset 
@@ -98,13 +102,15 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 			//value is a label offset (label addr - curr addr)
 			simm19 = strtol(value, NULL, 10) / WORD_SIZE_32;
 		}
-		*toReturn |= place_bits(simm19, sdt_format.simm19.bits, sdt_format.simm19.index); //set bits 5-23 with simm19 value
+		//set bits 5-23 with simm19 value
+		*instr |= place_bits(simm19, sdt_format.simm19.bits, sdt_format.simm19.index); 
+
 	}else if(!strcmp(type, "ldr")){
 		//load instruction, no load literal
-		*toReturn = LDR_BASE; //L bit set
+		*instr = LDR_BASE; //L bit set
 	}else if(!strcmp(type, "str")){
 		//store instruction
-		*toReturn = STR_BASE; //L bit not set
+		*instr = STR_BASE; //L bit not set
 	}else{
 		fprintf(stderr, "Data transfer instruction is not ldr or str\n");
 		return EXIT_FAILURE;
@@ -115,11 +121,11 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		char *xn_name = removeBrackets(params[2]);
 		int amode = mode(params, numparams);
 		uint8_t xn = obtain_reg_num(xn_name);
-		*toReturn |= place_bits(xn, sdt_format.xn.bits, sdt_format.xn.index);
+		*instr |= place_bits(xn, sdt_format.xn.bits, sdt_format.xn.index);
 		uint32_t simm9; 
 		switch(amode){
 			case(MODE_UNSIGNED_OFFSET):
-				*toReturn |= place_bits(1, sdt_format.U.bits, sdt_format.U.index);
+				*instr |= place_bits(1, sdt_format.U.bits, sdt_format.U.index);
 				//set U bit
 				int imm12;
 				if(numparams == MIN_PARAMS){
@@ -127,26 +133,27 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 				}else{
 				   	if (getImm12(params[3], target, &imm12)) { return EXIT_FAILURE; }
 				}
-				*toReturn |= place_bits(imm12, sdt_format.offset.bits, sdt_format.offset.index);
+				assert(&imm12 != NULL);
+				*instr |= place_bits(imm12, sdt_format.offset.bits, sdt_format.offset.index);
 				break;
 
 			case(MODE_PRE_INDEX): 
-				*toReturn |= PRE_POST_BASE; 
-				*toReturn |= place_bits(1, sdt_format.I.bits, sdt_format.I.index); //set I bit
+				*instr |= PRE_POST_BASE; 
+				*instr |= place_bits(1, sdt_format.I.bits, sdt_format.I.index); //set I bit
 				simm9 = getSimm9(params[3]);
-				*toReturn |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
+				*instr |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
 			case(MODE_POST_INDEX): 
-				*toReturn |= PRE_POST_BASE; //set bit indicating post index
+				*instr |= PRE_POST_BASE; //set bit indicating post index
 				simm9 = getSimm9(params[3]);
-				*toReturn |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
+				*instr |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
 				break;
 
 			case(MODE_REG_OFFSET): 
-				*toReturn |= REG_OFFSET_BASE; //update the instruction base
+				*instr |= REG_OFFSET_BASE; //update the instruction base
 				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
-				*toReturn |= place_bits(xm, sdt_format.xm.bits, sdt_format.xm.index);
+				*instr |= place_bits(xm, sdt_format.xm.bits, sdt_format.xm.index);
 				break;
 
 			default: 
@@ -156,8 +163,8 @@ int dt(char **params, int numparams, uint32_t *toReturn) {
 		}
 	}
 
-	update_sf(toReturn, sdt_format.sf.index, target); //update register width based on target register
-	*toReturn |= place_bits(rt, sdt_format.rt.bits, sdt_format.rt.index); //replace last 5 bits with target reg number
-
+	update_sf(instr, sdt_format.sf.index, target); //update register width based on target register
+	*instr |= place_bits(rt, sdt_format.rt.bits, sdt_format.rt.index); //replace last 5 bits with target reg number
+	
 	return EXIT_SUCCESS; 
 }

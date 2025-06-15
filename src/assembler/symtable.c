@@ -15,9 +15,15 @@ symbol_table emptyST(void){
 		fprintf(stderr, "Can't allocate memory for new symbol table\n");
 		return NULL;
 	}
+	assert(st != NULL);
 	st->length = 0; //contains no elements
 	st->capacity = 1; //capacity > length
 	st->st_pairs = malloc(st->capacity * sizeof(symbol_pair));
+	if (st->st_pairs == NULL) {
+		fprintf(stderr, "Can't allocate memory for symbol pairs\n");
+		return NULL;
+	}
+	assert(st->st_pairs != NULL);
 	return st;
 }
 
@@ -39,12 +45,14 @@ int addPair(symbol_table st, char *label, uint32_t address){
 		fprintf(stderr, "Can't allocate memory for new symbol table pair\n");
 		return EXIT_FAILURE;
 	}
+	assert(np != NULL);
 	np->label = strdup(label);
 	if (np->label == NULL) { 
 		fprintf(stderr, "Cannot allocate memory for label\n");
 		free(np);
 		return EXIT_FAILURE; 
 	}
+	assert(np->label != NULL);
 
 	np->address = address;
 
@@ -61,9 +69,9 @@ int addPair(symbol_table st, char *label, uint32_t address){
 		st->st_pairs = tmp;
 		st->capacity = new_capacity;
 	}
+	assert(st->length < st->capacity);
 
 	st->st_pairs[st->length++] = np;
-	assert(st->capacity >= st->length);
 	qsort(st->st_pairs, st->length, sizeof(symbol_pair), sympair_qsort_cmp);
 	return EXIT_SUCCESS;
 }

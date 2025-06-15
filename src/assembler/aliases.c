@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "instr-formats.h"
 #include "int-directives.h"
 #include "data-processing.h"
@@ -59,6 +60,7 @@ parse_f lookup_alias(char *instr) {
 	alias_t *res = bsearch(instr, alias_table, NUM_ALIASES, sizeof(alias_table[0]), &cmp_alias);
 
 	if (res == NULL) { return NULL; }
+	assert(res != NULL);
 
 	return res->pf;
 }
