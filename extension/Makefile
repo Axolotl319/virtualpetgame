@@ -10,6 +10,9 @@ CFLAGS  ?= -std=c17 -g\
 
 OBJS = pet.o user-actions.o virtual-pet-exe.o
 
-all: pet
+all: virtual-pet-exe
 
-pet: $(OBJS) 
+virtual-pet-exe: $(OBJS)
+
+user-actions.o: user-actions.c
+pet.o: pet.c
