@@ -25,7 +25,11 @@ static bool is_label_start(char start) {
 
 //checks if rest of characters in label are fine
 static bool is_label_char(char label_char) {
-	return (isalpha(label_char) || isdigit(label_char) || label_char == '$' || label_char == '_' || label_char == '.');
+	return (isalpha(label_char) || 
+		isdigit(label_char) || 
+		label_char == '$'   || 
+		label_char == '_'   || 
+		label_char == '.');
 }
 
 
@@ -114,7 +118,12 @@ static void get_instr_params(char *instr, char **params, int *numparams) {
 
 //replaces labels with addresses from symtable
 //replaces labels with decimal address in the form of a string
-static int replace_labels(symbol_table symtable, char **params, int numparams, uint32_t current_addr) {
+static int replace_labels(
+		symbol_table symtable, 
+		char **params, 
+		int numparams, 
+		uint32_t current_addr) {
+
 	assert(params != NULL);
 	assert(numparams > 0);
 	assert(symtable != NULL);
@@ -152,7 +161,9 @@ static int write32bit(FILE *fileout, uint32_t tobin) {
 	}
 
 	//Writes word into file and checks for failure
-	if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) != WORD_SIZE_32) {
+	if (fwrite(bytes, sizeof(bytes[0]), WORD_SIZE_32, fileout) 
+	    != WORD_SIZE_32) {
+
 		fprintf(stderr, "Could not write to file\n");
 		return EXIT_FAILURE;
 	}
@@ -191,7 +202,10 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 					break;
 				}
 			}
-			if (addPair(symtable, linein, addr)) { return EXIT_FAILURE; }
+			if (addPair(symtable, linein, addr)) { 
+				return EXIT_FAILURE; 
+			}
+
 		} else {
 			if (addr > MEM_SIZE - WORD_SIZE_32) {
 				fprintf(stderr, "Instructions exceed memory\n");
@@ -290,7 +304,10 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 
         	//Write the 32-bit word
         	if (write32bit(fileout, tobin)) {
-            		fprintf(stderr, "error: failed to write 4 bytes for instruction at 0x%08x\n", addr);
+            		fprintf(stderr, 
+				"error: failed to write 4 bytes"
+				"for instruction at 0x%08x\n", addr);
+
             		return EXIT_FAILURE;
         	}
 

@@ -34,7 +34,9 @@
 
 // The following macro inserts the zero register in place 
 // of rm
-#define insert_zero_reg(numparams) params[numparams] = params[numparams-1]; params[numparams-1] = "xzr";
+#define insert_zero_reg(numparams) \
+	params[numparams] = params[numparams-1]; \
+	params[numparams-1] = "xzr";
 
 //shift codes
 static const code_map shift_codes[] = {
@@ -108,7 +110,11 @@ static int set_codes(char *instr, int *code, int *n, const code_map *codes) {
 
 //returns the parse function for single operand destination function
 //also replaces an operand with the zero register
-static parse_f redirect_func(char **params, int numparams, const func_map *funcs) {
+static parse_f redirect_func(
+		char **params, 
+		int numparams, 
+		const func_map *funcs) {
+
 	for (int i = 0; funcs[i].instr != NULL; i++) {
 		if (strcmp(params[0], funcs[i].instr)) { continue; }
 		
@@ -149,8 +155,14 @@ static int set_shift_info(uint32_t *instr, bool logic, char *param) {
 		return EXIT_FAILURE;
 	}
 
-	*instr |= place_bits(shift, regdp_format.shift.bits, regdp_format.shift.index);
-	*instr |= place_bits(oper, regdp_format.operand.bits, regdp_format.operand.index);
+	*instr |= place_bits(shift, 
+			     regdp_format.shift.bits, 
+			     regdp_format.shift.index);
+
+	*instr |= place_bits(oper, 
+			     regdp_format.operand.bits, 
+			     regdp_format.operand.index);
+
         return EXIT_SUCCESS; 	
 }
 
@@ -186,14 +198,22 @@ int arith(char **params, int numparams, uint32_t *instr) {
 		*instr |= IMM_BASE;
 
 		// Update opi (binary 010) 
-		*instr |= place_bits(OPI_ARITH, immdp_format.opi.bits, immdp_format.opi.index);
+		*instr |= place_bits(OPI_ARITH, 
+				     immdp_format.opi.bits, 
+				     immdp_format.opi.index);
 		
 		// Obtain imm12 value 
-		*instr |= place_bits(extract_imm(params[3]), immdp_format.imm12.bits, immdp_format.imm12.index);
+		*instr |= place_bits(extract_imm(params[3]), 
+				     immdp_format.imm12.bits, 
+				     immdp_format.imm12.index);
 
 		// Update shift bit if needed
-		if (numparams == MAX_AL_PARAMS && obtain_shift_amt(params[4]) == IMM12_LEN) {
-		   *instr |= place_bits(1, immdp_format.sh.bits, immdp_format.sh.index);
+		if (numparams == MAX_AL_PARAMS && 
+		    obtain_shift_amt(params[4]) == IMM12_LEN) {
+
+		   *instr |= place_bits(1, 
+				        immdp_format.sh.bits, 
+					immdp_format.sh.index);
 		}
 	} else {
 		// Else it is register arithmetic
@@ -201,10 +221,14 @@ int arith(char **params, int numparams, uint32_t *instr) {
 		*instr |= REG_BASE;
 		
 		uint8_t rm = obtain_reg_num(params[3]); 
-		*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
+		*instr |= place_bits(rm, 
+				     regdp_format.rm.bits, 
+				     regdp_format.rm.index); 
 
 		// Update opr (binary 1000)
-		*instr |= place_bits(ARITH_OPR_BASE, regdp_format.opr.bits, regdp_format.opr.index); 
+		*instr |= place_bits(ARITH_OPR_BASE, 
+				     regdp_format.opr.bits, 
+				     regdp_format.opr.index); 
 
 		// Update shift and operand if needed
 		if (numparams == MAX_AL_PARAMS) {
@@ -269,7 +293,9 @@ int wmove(char **params, int numparams, uint32_t *instr) {
 	update_sf(instr, immdp_format.sf.index, params[1]); 
 
 	// Update rd 
-	*instr |= place_bits(obtain_reg_num(params[1]), immdp_format.rd.bits, immdp_format.rd.index); 
+	*instr |= place_bits(obtain_reg_num(params[1]), 
+			     immdp_format.rd.bits, 
+			     immdp_format.rd.index); 
 
 	// Update opc
 	int opc;
@@ -280,12 +306,16 @@ int wmove(char **params, int numparams, uint32_t *instr) {
 	*instr |= place_bits(opc, immdp_format.opc.bits, immdp_format.opc.index);
 
 	// Extract imm16 and update instr 
-	*instr |= place_bits(extract_imm(params[2]), immdp_format.imm16.bits, immdp_format.imm16.index);
+	*instr |= place_bits(extract_imm(params[2]), 
+			     immdp_format.imm16.bits, 
+			     immdp_format.imm16.index);
 
 	// If a left shift exists, update the instruction 
 	if (numparams == MAX_MOV_PARAMS) {
 		uint8_t bit = obtain_shift_amt(params[3]) / IMM16_LEN; 
-		*instr |= place_bits(bit, immdp_format.hw.bits, immdp_format.hw.index);
+		*instr |= place_bits(bit, 
+				     immdp_format.hw.bits, 
+				     immdp_format.hw.index);
 	}
  
 	return EXIT_SUCCESS; 
@@ -326,7 +356,10 @@ int multiply(char **params, int numparams, uint32_t *instr) {
 
 	// Update x: 
 	if (!strcmp(params[0], "msub")) {
-		*instr |= place_bits(1, regdp_format.x.bits, regdp_format.x.index); 
+		*instr |= place_bits(1, 
+				     regdp_format.x.bits, 
+				     regdp_format.x.index);
+
 	} else if (!strcmp(params[0], "madd")) {
 		/* EMPTY BODY */
 	} else {
