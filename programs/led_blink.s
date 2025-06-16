@@ -42,7 +42,7 @@ low_addr:
 waittime:
 	.int #0x00050000
 gpio_config:
-        .int #0x240
+        .int #0x200
 gpout_config:
 	.int #0x8
 high_flag:
