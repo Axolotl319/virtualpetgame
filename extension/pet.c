@@ -65,6 +65,23 @@ void print_hearts(void) {
 	print_stat(2, vpet->hunger);
 }
 
+void print_warning(int category){
+	fprintf(stdout, "Warning! Only 1 heart remaining for ");
+	switch(category){
+		case 0: fprintf(stdout, "cleanliness. Press C to boost!");
+			return;
+
+		case 1: fprintf(stdout, "happiness. Press P to boost!");
+			return;
+
+		case 2: fprintf(stdout, "hunger. Press F to boost!");
+			return;
+
+		default: fprintf(stderr, "UNKNOWN CATEGORY");
+			 return;
+	}
+}
+
 pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
