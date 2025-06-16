@@ -57,7 +57,11 @@ static int cmp_alias(const void *key, const void *elem) {
 //lookup function
 //returns NULL if instruction not found
 parse_f lookup_alias(char *instr) {
-	alias_t *res = bsearch(instr, alias_table, NUM_ALIASES, sizeof(alias_table[0]), &cmp_alias);
+	alias_t *res = bsearch(instr, 
+			       alias_table, 
+			       NUM_ALIASES, 
+			       sizeof(alias_table[0]), 
+			       &cmp_alias);
 
 	if (res == NULL) { return NULL; }
 	assert(res != NULL);

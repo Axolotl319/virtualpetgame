@@ -59,7 +59,10 @@ uint8_t obtain_shift_amt(char *param) {
         return extract_imm(shiftamt);
 }
 
-// Takes a value to shift, the number of bits the value should be, and the shift amount. Shifts it to be an unsigned 32 bit value in the right position
+/*
+Takes a value to shift, the number of bits for the value, and the shift amount.
+Shifts it to be an unsigned 32 bit value in the right position and returns this
+*/
 uint32_t place_bits(uint32_t to_shift, int bits, int shift_amt) {
 	return (to_shift & ((1U << bits) - 1)) << shift_amt;
 }
