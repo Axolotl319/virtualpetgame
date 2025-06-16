@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "pet.h"
 
 //global variable - the pet the user will interact with
@@ -11,26 +12,26 @@ pet vpet;
 void check_bounds(void){
 	if(vpet->cleanliness > 5){
 		vpet->cleanliness = 5;
-		printf("debug: cleanliness set to > 5, reset to 5");
+		printf("debug: cleanliness set to > 5, reset to 5\n");
 	}else if(vpet->cleanliness < 0){
 		vpet->cleanliness = 0;
-		printf("debug: cleanliness set to < 0, reset to 0");
+		printf("debug: cleanliness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->happiness > 5){
 		vpet->happiness = 5;
-		printf("debug: happiness set to > 5, reset to 5");
+		printf("debug: happiness set to > 5, reset to 5\n");
 	}else if(vpet->happiness < 0){
 		vpet->happiness = 0;
-		printf("debug: happiness set to < 0, reset to 0");
+		printf("debug: happiness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->hunger > 5){
 		vpet->hunger = 5;
-		printf("debug: hunger set to > 5, reset to 5");
+		printf("debug: hunger set to > 5, reset to 5\n");
 	}else if(vpet->hunger < 0){
 		vpet->hunger = 0;
-		printf("debug: hunger set to < 0, reset to 0");
+		printf("debug: hunger set to < 0, reset to 0\n");
 	}
 }
 
@@ -47,7 +48,7 @@ static void print_stat(int category, int amt){
 		case 2: fprintf(stdout, "Hunger ");
 			break;
 
-		default: fprintf(stderr, "Unknown category");
+		default: fprintf(stderr, "Unknown category\n");
 			 return;
 			 break;
 	}
@@ -69,8 +70,9 @@ pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
 	new->cleanliness = 5;
-	new->happiness = 5;
-	new->hunger = 5;
+	new->happiness   = 5;
+	new->hunger      = 5;
+	new->alive       = 1;
 	return new;
 }
 
