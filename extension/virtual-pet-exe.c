@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "global-vars.h"
+#include "pet.h"
+#include "user-actions.h"
 
-extern pet vpet; 
+pet vpet; 
 
 static void init(void) {
 	printf("Welcome to your virtual pet!\n"); 
@@ -14,15 +15,15 @@ static void init(void) {
 		printf("Sorry, that name is too long! Please try again: "); 
 		scanf("%s", petname); 
 	}
-	vpet = new_pet(petname); 	
+	vpet = new_pet(petname);
 }
 
 int main(void) {
 
 	init(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
-
- 	/*
+ 	
+	/*
          * INFINITE LOOP TO BE IMPLEMENTED
          */
 
