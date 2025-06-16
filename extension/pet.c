@@ -71,6 +71,7 @@ pet new_pet(char *name) {
 	new->cleanliness = 5;
 	new->happiness = 5;
 	new->hunger = 5;
+	new->coins = 0;
 	return new;
 }
 

@@ -21,9 +21,15 @@ int play(void) {
 int clean(void) {
 	vpet->cleanliness++;
 	check_bounds();
-	return EXIT_FAILURE; 
+	return EXIT_SUCCESS; 
 }
 
+//returns 1 if not enough money, else 0
 int gift(void) {
-	return EXIT_FAILURE; 
+	if(vpet->coins <= 0){
+		fprintf(stdout, "%s is out of money!", vpet->name);
+		return 1;
+	}
+	//will work out gift design
+	return EXIT_SUCCESS; 
 }	
