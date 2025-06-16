@@ -3,7 +3,9 @@
 #include <string.h>
 #include "pet.h"
 
-extern pet vpet; 
+//global variable - the pet the user will interact with
+pet vpet;
+
 //#define MAX/MIN as 5/0, not sure if we want an overall too?
 
 void check_bounds(void){

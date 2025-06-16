@@ -4,8 +4,6 @@
 #include "pet.h"
 #include "user-actions.h"
 
-extern pet vpet; 
-
 static void init(void) {
 	printf("Welcome to your virtual pet!\n"); 
 	printf("Name your pet (100 characters max): ");
