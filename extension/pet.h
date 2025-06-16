@@ -7,8 +7,11 @@ struct pet {
 
 typedef struct pet *pet;
 
+#ifndef VPET_GLOBAL
+#define VPET_GLOBAL
 //global variable - the pet the user will interact with
-pet vpet;
+extern pet vpet;
+#endif
 
 //if any hearts are set to > 5 or < 0
 //check_bounds changes them to 0/5

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "pet.h"
 #include "user-actions.h"
 
 int feed(void) {
