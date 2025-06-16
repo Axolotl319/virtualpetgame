@@ -44,12 +44,15 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
-	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE_32); addr+=WORD_SIZE_32) {
+	for (int addr = 0; addr < (MEM_SIZE-WORD_SIZE_32); addr+=WORD_SIZE_32){
 		uint64_t word;
 		get_memory_data(armv8, addr, WORD_SIZE_32, &word);
 
 		if (word != 0) {
-			fprintf(outFile, "0x%08x: 0x%08x\n", addr, (uint32_t)word);
+			fprintf(outFile, 
+				"0x%08x: 0x%08x\n", 
+				addr, 
+				(uint32_t)word);
 		}
 	}
 
@@ -62,9 +65,12 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 // Returns -1 if decoding unsuccessful, returns 0 if successful.  
 static int decode(armv8_state *armv8) {
 	
-	// Combines four consecutive bytes to 32 bits, taking into account little endian  
+	// Combines four consecutive bytes to 32 bits
 	uint64_t temp;
-       	if (get_memory_data(armv8, armv8->PC, WORD_SIZE_32, &temp)) { return DCD_FAIL; }
+       	if (get_memory_data(armv8, armv8->PC, WORD_SIZE_32, &temp)) { 
+		return DCD_FAIL; 
+	}
+
 	uint32_t result = (uint32_t)(temp);
 
 	// Checks for halting instruction 
@@ -74,7 +80,9 @@ static int decode(armv8_state *armv8) {
 	unsigned int opzero = extract_bits(result, OP0_INDEX, OP0_BITS);	
 	
 	//Type for load/store and load literal
-	int type = extract_bits(result, sdt_format.type.index, sdt_format.type.index);
+	int type = extract_bits(result, 
+				sdt_format.type.index, 
+				sdt_format.type.index);
 
 	int branchStat; //branch status	
 
@@ -89,9 +97,11 @@ static int decode(armv8_state *armv8) {
 		  
 		case LDSTR_GROUP: //Load/Store
 			return type ? //Load/Store with offset
-				datatransfer( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS : 
+				datatransfer( result, armv8 ) 
+				? DCD_FAIL : DCD_SUCCESS : 
 			        //Load Literal 
-				loadliteral( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS;
+				loadliteral( result, armv8 ) 
+				? DCD_FAIL : DCD_SUCCESS;
 
 		case BR_GROUP: //Branch
 		        branchStat = branch( result, armv8 ); 	
@@ -126,14 +136,18 @@ static int fetch(armv8_state *armv8) {
 
 		status = decode(armv8); 
 
-		if ( status == DCD_HLT ) { 	//HALT
+		//HALT
+		if ( status == DCD_HLT ) { 	
 			break;
 		}
-		if ( status == DCD_FAIL ) {	//Decode failed
+
+		//Decode failed
+		if ( status == DCD_FAIL ) {	
 			return EXIT_FAILURE; 
 		}
 
-		if ( status == DCD_SUCCESS ) {	//Increment PC if decode success and not branch
+		//Increment PC if decode success and not branch
+		if ( status == DCD_SUCCESS ) {	
 			incrementPC(armv8); 
 		} 
 	}

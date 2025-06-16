@@ -68,9 +68,15 @@ int setPC(armv8_state *armv8, uint64_t addr) {
 //Pstate operations
 
 //updates pstate values depending on the operation and bit width
-//Takes arguments: pstate pointer, 1st operand, 2nd operand, result, operation type, bit width
-void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, operation op_type, int width) {
-
+//Takes arguments: pstate pointer, 1st operand, 2nd operand, 
+//		   result, operation type, bit width
+void update_pstate(pstate *PSTATE, 
+		   uint64_t op1, 
+		   uint64_t op2, 
+		   uint64_t result, 
+		   operation op_type, 
+		   int width) 
+{
 	//Negative and Zero flags
 	PSTATE->N = (result >> (width - 1)) & 1;
 	PSTATE->Z = (result == 0);
@@ -89,7 +95,8 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 			//signed overflow
 			//when the sign bit of the operands are same
 			//and the sign bit of the result is different
-			PSTATE->V = (sign_op1 == sign_op2) && (sign_result != sign_op1);
+			PSTATE->V = (sign_op1 == sign_op2) && 
+				    (sign_result != sign_op1);
 			break;
 				
 
@@ -100,7 +107,8 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 			//signed overflow
 			//when the sign bit of the operands are different
 			//and the sign bit of the result is different to op1
-			PSTATE->V = (sign_op1 != sign_op2) && (sign_result != sign_op1);
+			PSTATE->V = (sign_op1 != sign_op2) && 
+				    (sign_result != sign_op1);
 		        break;
 		
 		case OP_LOGIC: 
@@ -114,7 +122,11 @@ void update_pstate(pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, 
 
 
 //extract bits from memory
-int get_memory_data(armv8_state *armv8, uint64_t addr, int num_bytes, uint64_t *data) {
+int get_memory_data(armv8_state *armv8, 
+		    uint64_t addr, 
+		    int num_bytes, 
+		    uint64_t *data) 
+{
 	if (addr + WORD_SIZE_32 > MEM_SIZE) {
 		fprintf(stderr, "Invalid memory address\n");
 		return EXIT_FAILURE;
@@ -124,7 +136,8 @@ int get_memory_data(armv8_state *armv8, uint64_t addr, int num_bytes, uint64_t *
 	*data = 0;
 
 	for (int i = 0; i < num_bytes; i++) {
-		*data |= (uint64_t)(armv8->memory[addr + i]) << (WORD_SIZE_64 * i); 
+		*data |= (uint64_t)(armv8->memory[addr + i]) << 
+			 (WORD_SIZE_64 * i); 
 	}
 
 	return EXIT_SUCCESS;
