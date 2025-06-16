@@ -231,16 +231,11 @@ int logic(char **params, int numparams, uint32_t *instr) {
 	// Obtain and update all the registers 
 	uint8_t rd = obtain_reg_num(params[1]); 
 	uint8_t rn = obtain_reg_num(params[2]); 
-	uint8_t op2;
-	if (is_imm(params[3])) {
-		op2 = extract_imm(params[3]);
-	} else {
-        	op2 = obtain_reg_num(params[3]);
-	}
+	uint8_t rm = obtain_reg_num(params[3]);
 
-        *instr |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
+	*instr |= place_bits(rd, regdp_format.rd.bits, regdp_format.rd.index); 
 	*instr |= place_bits(rn, regdp_format.rd.bits, regdp_format.rn.index); 
-	*instr |= place_bits(op2, regdp_format.rm.bits, regdp_format.rm.index); 
+	*instr |= place_bits(rm, regdp_format.rm.bits, regdp_format.rm.index); 
 
 	// Set opc and N (negate flag) depending on the mnemonic 
 	int opc; 
