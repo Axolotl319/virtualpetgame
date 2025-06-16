@@ -24,6 +24,20 @@ int main(void) {
 	/*
          * INFINITE LOOP TO BE IMPLEMENTED
          */
+	while(vpet->alive){
+
+		//warn user if any category has 1 heart remaining
+		if(vpet->cleanliness == 1){
+			print_warning(0);
+		}
+		if(vpet->happiness == 1){
+			print_warning(1);
+		}
+		if(vpet->hunger == 1){
+			print_warning(2);
+		}
+
+	}
 
 	free_pet(); 
         return EXIT_SUCCESS;
