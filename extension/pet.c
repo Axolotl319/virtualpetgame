@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "pet.h"
-#include "global-vars.h"
 
 extern pet vpet; 
 //#define MAX/MIN as 5/0, not sure if we want an overall too?
@@ -58,7 +57,7 @@ static void print_stat(int category, int amt){
 
 void print_hearts(void) {
 	fprintf(stdout, "Stats:\n");
-	check_bounds(vpet); //ensure all stats between 0-5
+	check_bounds(); //ensure all stats between 0-5
 	print_stat(0, vpet->cleanliness);
 	print_stat(1, vpet->happiness);
 	print_stat(2, vpet->hunger);
