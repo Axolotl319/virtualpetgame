@@ -5,11 +5,10 @@
 #include <string.h>
 #include "constants.h"
 #include "armv8.h" 
-#include "modify-regs.h"
 #include "data-processing.h"
 #include "branch.h"
 #include "data-transfer.h"
-#include "extract-data.h"
+#include "emulator-utils.h"
 #include "instr-formats.h"
 #include "emulate.h"
 #include <assert.h>
@@ -45,12 +44,15 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
-	for (int addr = 0; addr < (MEM_SIZE - WORD_SIZE_32); addr+=WORD_SIZE_32) {
+	for (int addr = 0; addr < (MEM_SIZE-WORD_SIZE_32); addr+=WORD_SIZE_32){
 		uint64_t word;
 		get_memory_data(armv8, addr, WORD_SIZE_32, &word);
 
 		if (word != 0) {
-			fprintf(outFile, "0x%08x: 0x%08x\n", addr, (uint32_t)word);
+			fprintf(outFile, 
+				"0x%08x: 0x%08x\n", 
+				addr, 
+				(uint32_t)word);
 		}
 	}
 
@@ -63,9 +65,12 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 // Returns -1 if decoding unsuccessful, returns 0 if successful.  
 static int decode(armv8_state *armv8) {
 	
-	// Combines four consecutive bytes to 32 bits, taking into account little endian  
+	// Combines four consecutive bytes to 32 bits
 	uint64_t temp;
-       	if (get_memory_data(armv8, armv8->PC, WORD_SIZE_32, &temp)) { return DCD_FAIL; }
+       	if (get_memory_data(armv8, armv8->PC, WORD_SIZE_32, &temp)) { 
+		return DCD_FAIL; 
+	}
+
 	uint32_t result = (uint32_t)(temp);
 
 	// Checks for halting instruction 
@@ -75,7 +80,9 @@ static int decode(armv8_state *armv8) {
 	unsigned int opzero = extract_bits(result, OP0_INDEX, OP0_BITS);	
 	
 	//Type for load/store and load literal
-	int type = extract_bits(result, sdt_format.type.index, sdt_format.type.index);
+	int type = extract_bits(result, 
+				sdt_format.type.index, 
+				sdt_format.type.index);
 
 	int branchStat; //branch status	
 
@@ -90,9 +97,11 @@ static int decode(armv8_state *armv8) {
 		  
 		case LDSTR_GROUP: //Load/Store
 			return type ? //Load/Store with offset
-				datatransfer( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS : 
+				datatransfer( result, armv8 ) 
+				? DCD_FAIL : DCD_SUCCESS : 
 			        //Load Literal 
-				loadliteral( result, armv8 ) ? DCD_FAIL : DCD_SUCCESS;
+				loadliteral( result, armv8 ) 
+				? DCD_FAIL : DCD_SUCCESS;
 
 		case BR_GROUP: //Branch
 		        branchStat = branch( result, armv8 ); 	
@@ -121,26 +130,28 @@ static int fetch(armv8_state *armv8) {
 		//if PC is out of bounds
 		if (armv8->PC > MEM_SIZE - WORD_SIZE_32) {
 			fprintf(stderr, "PC out of bounds\n");
-			return 1;
+			return EXIT_FAILURE;
 		}	
 		assert(armv8->PC <= MEM_SIZE - WORD_SIZE_32);
 
-		status = decode(armv8);
-		
-		printf("Status code: %d\n", status); 
+		status = decode(armv8); 
 
-		if ( status == DCD_HLT ) { 	//HALT
+		//HALT
+		if ( status == DCD_HLT ) { 	
 			break;
 		}
-		if ( status == DCD_FAIL ) {	//Decode failed
-			return 1; 
+
+		//Decode failed
+		if ( status == DCD_FAIL ) {	
+			return EXIT_FAILURE; 
 		}
 
-		if ( status == DCD_SUCCESS ) {	//Increment PC if decode success and not branch
+		//Increment PC if decode success and not branch
+		if ( status == DCD_SUCCESS ) {	
 			incrementPC(armv8); 
 		} 
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv) 
@@ -150,9 +161,9 @@ int main(int argc, char **argv)
   	FILE *inFile = fopen(argv[ARG_INPUT], "rb");
 	FILE *outFile;
 	if(inFile == NULL){
-		perror("Couldn't open input file.");
+		perror("Couldn't open input file.\n");
 
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(inFile != NULL);
 
@@ -163,8 +174,8 @@ int main(int argc, char **argv)
 	}
 
 	if(outFile == NULL) {
-		perror("Couldn't open output file.");
-		return 1;
+		perror("Couldn't open output file.\n");
+		return EXIT_FAILURE;
 	}
 	assert(outFile != NULL);
 
@@ -174,9 +185,9 @@ int main(int argc, char **argv)
 	
 	armv8->memory = malloc(MEM_SIZE);
 	if(armv8->memory == NULL){
-		fprintf(stderr, "Couldn't allocate buffer memory");
+		fprintf(stderr, "Couldn't allocate buffer memory\n");
 		fclose(inFile);
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(armv8->memory != NULL);
 	
@@ -188,7 +199,7 @@ int main(int argc, char **argv)
 	int fetch_status = fetch(armv8);
 	if (fetch_status) {
 		fprintf(stderr, "Couldn't execute the instruction\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 	assert(!fetch_status);
 	

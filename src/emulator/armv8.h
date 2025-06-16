@@ -1,3 +1,5 @@
+#include "instr-formats.h"
+
 //PSTATE register
 typedef struct pstate {
 	bool N; //Negative flag
@@ -14,3 +16,9 @@ typedef struct armv8_state {
 	uint8_t *memory; //Memory
 } armv8_state;
 
+extern int write_reg( armv8_state * armv8, int reg_num, uint64_t data, int width );
+extern int read_reg( armv8_state * armv8, int reg_num, uint64_t * data, int width );
+extern void incrementPC( armv8_state * armv8 );
+extern int setPC( armv8_state * armv8, uint64_t addr );
+extern void update_pstate( pstate *PSTATE, uint64_t op1, uint64_t op2, uint64_t result, operation op_type, int width);
+extern int get_memory_data( armv8_state * armv8, uint64_t addr, int num_bytes, uint64_t * data );	

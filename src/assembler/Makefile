@@ -12,19 +12,23 @@ UTIL_OBJS = ../utils/instr-formats.o
 
 OBJS = symtable.o assemble.o aliases.o int-directives.o branch.o data-transfer.o data-processing.o assembly-utils.o $(UTIL_OBJS)
 
+UTIL_HEADERS = ../utils/instr-formats.h ../utils/constants.h assembly-utils.h symtable.h aliases.h
+INSTR_HEADERS = int-directives.h branch.h data-processing.h data-transfer.h
+
+
 all: assemble
 	cp assemble ~/armv8_testsuite/solution
 
 assemble: $(OBJS) 
 
-assemble.o: assemble.c symtable.h  
+assemble.o: assemble.c $(UTIL_HEADERS) $(INSTR_HEADERS)
 symtable.o: symtable.c
-aliases.o: aliases.c
-data-processing.o: data-processing.c assembly-utils.c
-data-transfer.o: data-transfer.c
-branch.o: branch.c
+aliases.o: aliases.c $(INSTR_HEADERS)
+data-processing.o: data-processing.c $(UTIL_HEADERS)
+data-transfer.o: data-transfer.c $(UTIL_HEADERS)
+branch.o: branch.c $(UTIL_HEADERS)
 assembly-utils.o: assembly-utils.c
-int-directives.o: int-directives.c
+int-directives.o: int-directives.c $(UTIL_HEADERS)
 
 clean:
 	$(RM) *.o assemble
