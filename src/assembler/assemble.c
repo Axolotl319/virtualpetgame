@@ -68,11 +68,23 @@ static void strip_end_newline(char *linein) {
         }
 }
 
-static void strip_end_whitespace(char *linein) {
+static void strip_whitespace(char *linein) {
 	assert(linein != NULL);
+
+	//strip end whitespace
 	int len = strlen(linein);
 	while (len > 0 && isspace(linein[len - 1])) {
 		linein[--len] = '\0';
+	}
+
+	//strip leading whitespace
+	int start = 0;
+	while (isspace(linein[start])) {
+		start++;
+	}
+
+	if (start > 0) {
+		memmove(linein, linein + start, len - start + 1);
 	}
 }
 
@@ -164,7 +176,7 @@ static int first_pass(symbol_table symtable, FILE* filein) {
 
 		//strip newline character from end of line
 		strip_end_newline(linein);
-		strip_end_whitespace(linein);
+		strip_whitespace(linein);
 
 		//should be null terminated somewhere
 		assert(memchr(linein, '\0', MAXLINELEN) != NULL);
@@ -216,7 +228,7 @@ static int second_pass(symbol_table symtable, FILE* filein, FILE* fileout) {
 
 		//strip newline character from end of line
 		strip_end_newline(line);
-		strip_end_whitespace(linein);
+		strip_whitespace(linein);
 
 		//line should be null terminated somewhere
 		assert(memchr(linein, '\0', MAXLINELEN) != NULL);
