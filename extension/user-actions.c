@@ -3,15 +3,24 @@
 #include "pet.h"
 #include "user-actions.h"
 
+extern pet vpet;
+
 int feed(void) {
-	return EXIT_FAILURE; 
+	vpet->hunger++;
+	check_bounds();
+	return EXIT_SUCCESS;
+       //I can't think of a failure situation - feel free to correct	
 }
 
 int play(void) {
-	return EXIT_FAILURE; 
+	vpet->happiness++;
+	check_bounds();
+	return EXIT_SUCCESS; 
 }
 
 int clean(void) {
+	vpet->cleanliness++;
+	check_bounds();
 	return EXIT_FAILURE; 
 }
 
