@@ -4,7 +4,7 @@
 #include "pet.h"
 #include "user-actions.h"
 
-pet vpet; 
+extern pet vpet; 
 
 static void init(void) {
 	printf("Welcome to your virtual pet!\n"); 
