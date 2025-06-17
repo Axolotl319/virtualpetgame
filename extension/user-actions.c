@@ -3,8 +3,11 @@
 #include <stdbool.h>
 #include "pet.h"
 #include "user-actions.h"
+#include "coins.h"
 
+//global variables included from other files
 extern pet vpet;
+extern int coins;
 
 int feed(void) {
 	vpet->hunger++;
@@ -27,8 +30,8 @@ int clean(void) {
 
 //returns 1 if not enough money, else 0
 int gift(void) {
-	if(vpet->coins <= 0){
-		fprintf(stdout, "%s is out of money!", vpet->name);
+	if(coins <= 0){
+		fprintf(stdout, "%s doesn't have enough money!", vpet->name);
 		return 1;
 	}
 	//will work out gift design
