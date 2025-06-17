@@ -34,9 +34,9 @@ static void *take_input( void *arg ) {
 	fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
 	while(*running) {
-		int c = getchar();
+		int c = toupper(getchar());
 		
-		switch(toupper(c)) {
+		switch(c) {
 			case 'S':
 				printf("Stats\n");
 				break;
