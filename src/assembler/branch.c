@@ -81,7 +81,9 @@ int uncond_branch(char **params, int numparams, uint32_t *instr) {
 	assert(simm26 >= -(MAX_26_BITS) && simm26 <= MAX_26_BITS - 1);
 
 	//form the instruction by masking + shifting simm26
-	*instr |= place_bits(simm26, br_format.simm26.bits, br_format.simm26.index);
+	*instr |= place_bits(simm26, 
+			     br_format.simm26.bits, 
+			     br_format.simm26.index);
 		
 	return EXIT_SUCCESS;
 }
@@ -104,7 +106,11 @@ int cond_branch(char **params, int numparams, uint32_t *instr) {
 		return EXIT_FAILURE;
 	}
 	
-	cond_pair *pair = bsearch(cond_str, branch_conds, NUM_CONDS, sizeof(cond_pair), cond_pair_cmp);
+	cond_pair *pair = bsearch(cond_str, 
+				  branch_conds, 
+				  NUM_CONDS, 
+				  sizeof(cond_pair), 
+				  cond_pair_cmp);
 
 	if (pair == NULL) { 
 		fprintf(stderr, "Invalid branch condition\n");
@@ -126,8 +132,13 @@ int cond_branch(char **params, int numparams, uint32_t *instr) {
 	assert(simm19 >= -(MAX_19_BITS) && simm19 <= MAX_19_BITS - 1);
 
 	//form the instruction by masking + shifting simm19 and cond
-	*instr |= place_bits(simm19, br_format.simm19.bits, br_format.simm19.index);
-	*instr |= place_bits(cond, br_format.cond.bits, br_format.cond.index); 
+	*instr |= place_bits(simm19, 
+			     br_format.simm19.bits, 
+			     br_format.simm19.index);
+
+	*instr |= place_bits(cond, 
+			     br_format.cond.bits, 
+			     br_format.cond.index); 
 
 	return EXIT_SUCCESS;
 }

@@ -3,7 +3,7 @@ struct pet {
 	unsigned int cleanliness;
 	unsigned int happiness;
 	unsigned int hunger;
-	unsigned int coins;
+	bool alive;
 };
 
 typedef struct pet *pet;

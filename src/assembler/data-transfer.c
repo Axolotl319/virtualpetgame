@@ -103,7 +103,10 @@ int dt(char **params, int numparams, uint32_t *instr) {
 			simm19 = strtol(value, NULL, 10) / WORD_SIZE_32;
 		}
 		//set bits 5-23 with simm19 value
-		*instr |= place_bits(simm19, sdt_format.simm19.bits, sdt_format.simm19.index); 
+		*instr |= place_bits(
+				simm19, 
+				sdt_format.simm19.bits, 
+				sdt_format.simm19.index); 
 
 	}else if(!strcmp(type, "ldr")){
 		//load instruction, no load literal
@@ -121,39 +124,67 @@ int dt(char **params, int numparams, uint32_t *instr) {
 		char *xn_name = removeBrackets(params[2]);
 		int amode = mode(params, numparams);
 		uint8_t xn = obtain_reg_num(xn_name);
-		*instr |= place_bits(xn, sdt_format.xn.bits, sdt_format.xn.index);
+		*instr |= place_bits(
+				xn, 
+				sdt_format.xn.bits, 
+				sdt_format.xn.index);
+
 		uint32_t simm9; 
 		switch(amode){
 			case(MODE_UNSIGNED_OFFSET):
-				*instr |= place_bits(1, sdt_format.U.bits, sdt_format.U.index);
+				*instr |= place_bits(
+						1, 
+						sdt_format.U.bits, 
+						sdt_format.U.index);
 				//set U bit
 				int imm12;
 				if(numparams == MIN_PARAMS){
 				   	imm12 = 0;
 				}else{
-				   	if (getImm12(params[3], target, &imm12)) { return EXIT_FAILURE; }
+				   	if(getImm12(params[3], target, &imm12)){ 
+						return EXIT_FAILURE; 
+					}
 				}
 				assert(&imm12 != NULL);
-				*instr |= place_bits(imm12, sdt_format.offset.bits, sdt_format.offset.index);
+				*instr |= place_bits(
+						imm12, 
+						sdt_format.offset.bits, 
+						sdt_format.offset.index);
 				break;
 
 			case(MODE_PRE_INDEX): 
 				*instr |= PRE_POST_BASE; 
-				*instr |= place_bits(1, sdt_format.I.bits, sdt_format.I.index); //set I bit
+				//set I bit
+				*instr |= place_bits(
+						1, 
+						sdt_format.I.bits, 
+						sdt_format.I.index); 
+				//set simm9
 				simm9 = getSimm9(params[3]);
-				*instr |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
+				*instr |= place_bits(
+						simm9, 
+						sdt_format.simm9.bits, 
+						sdt_format.simm9.index);
 				break;
 
 			case(MODE_POST_INDEX): 
 				*instr |= PRE_POST_BASE; //set bit indicating post index
 				simm9 = getSimm9(params[3]);
-				*instr |= place_bits(simm9, sdt_format.simm9.bits, sdt_format.simm9.index);
+				*instr |= place_bits(
+						simm9, 
+						sdt_format.simm9.bits, 
+						sdt_format.simm9.index);
 				break;
 
 			case(MODE_REG_OFFSET): 
 				*instr |= REG_OFFSET_BASE; //update the instruction base
-				uint8_t xm = obtain_reg_num(removeBrackets(params[3]));
-				*instr |= place_bits(xm, sdt_format.xm.bits, sdt_format.xm.index);
+				uint8_t xm = obtain_reg_num(
+						removeBrackets(params[3]));
+
+				*instr |= place_bits(
+						xm, 
+						sdt_format.xm.bits, 
+						sdt_format.xm.index);
 				break;
 
 			default: 
@@ -163,8 +194,10 @@ int dt(char **params, int numparams, uint32_t *instr) {
 		}
 	}
 
-	update_sf(instr, sdt_format.sf.index, target); //update register width based on target register
-	*instr |= place_bits(rt, sdt_format.rt.bits, sdt_format.rt.index); //replace last 5 bits with target reg number
+	//update register width based on target register
+	update_sf(instr, sdt_format.sf.index, target); 
+	//replace last 5 bits with target reg number
+	*instr |= place_bits(rt, sdt_format.rt.bits, sdt_format.rt.index); 
 	
 	return EXIT_SUCCESS; 
 }
