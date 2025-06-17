@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdbool.h>
 #include "pet.h"
+#include "coins.h"
+
+//external global variable
+extern int coins;
 
 //global variable - the pet the user will interact with
 pet vpet;
@@ -64,6 +68,7 @@ void print_hearts(void) {
 	print_stat(0, vpet->cleanliness);
 	print_stat(1, vpet->happiness);
 	print_stat(2, vpet->hunger);
+	fprintf(stdout, "Currency: %d coins\n", coins);
 }
 
 void print_warning(int category){
