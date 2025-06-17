@@ -55,13 +55,13 @@ int main(void) {
 
 		//warn user if any category has 1 heart remaining
 		if(vpet->cleanliness == 1){
-			print_warning(0);
+			print_warning(CLEANLINESS);
 		}
 		if(vpet->happiness == 1){
-			print_warning(1);
+			print_warning(HAPPINESS);
 		}
 		if(vpet->hunger == 1){
-			print_warning(2);
+			print_warning(HUNGER);
 		}
 	}
 
