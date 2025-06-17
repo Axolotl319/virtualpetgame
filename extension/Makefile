@@ -2,7 +2,9 @@ CC      ?= gcc
 CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
 	-Wall -Werror -pedantic -Wstrict-prototypes\
-	-I ../utils
+	-I ../utils\
+	`pkg-config --cflags gtk+-3.0`
+LDLIBS = `pkg-config --libs gtk+-3.0`
 
 .SUFFIXES: .c .o
 
