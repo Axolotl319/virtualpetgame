@@ -9,7 +9,6 @@
 #include <fcntl.h>
 #include "pet.h"
 #include "coins.h"
-#include "levels.h"
 #include "user-actions.h"
 
 #define MAX_NAME_LEN 100
@@ -106,7 +105,7 @@ int main(void) {
 
 		//check if level needs to be updated
 		if (vpet->num_actions >= vpet->curr_level.num_actions) {
-			increase_level();		
+			increase_level();
 		}	
 
 		//dies if any stat = 0 (or all, can change)

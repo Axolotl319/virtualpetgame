@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "levels.h"
 #include "pet.h"
 #include "coins.h"
 
@@ -11,6 +10,20 @@ extern int coins;
 
 //global variable - the pet the user will interact with
 pet vpet;
+
+//const array for level information
+const level levels[MAX_LEVEL - 1] = {
+	{ 1,  5},
+	{ 2,  15},
+	{ 3,  30},
+	{ 4,  50},
+	{ 5,  75},
+	{ 6,  105},
+	{ 7,  140},
+	{ 8,  180},
+	{ 9,  225},
+};
+
 
 void check_bounds(void){
 	if(vpet->cleanliness > vpet->max_hearts){
@@ -95,8 +108,10 @@ void print_warning(int category){
 
 void increase_level( void ) {
 	if (vpet->curr_level.level_num < MAX_LEVEL) {
-		vpet->curr_level.level_num++;
+		vpet->curr_level = levels[vpet->curr_level.level_num++];
 		vpet->max_hearts++;
+		vpet->num_actions = 0;
+		vpet->level_up = false;
 		fprintf(stdout, "%s has levelled up!\n", vpet->name);
 	}
 }
@@ -110,6 +125,7 @@ pet new_pet(char *name) {
 	new->max_hearts  = INIT_HEARTS;
 	new->curr_level  = levels[0];	
 	new->num_actions = 0;
+	new->level_up    = false;
 	new->alive       = true;
 	return new;
 }
