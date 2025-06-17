@@ -7,13 +7,32 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <gtk/gtk.h>
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
 
 #define MAX_NAME_LEN 100
 
-static void init(void) {
+static void activate(GtkApplication *app, gpointer user_data) {
+	// Setup the GUI window 
+	GtkWidget *window; 
+	window = gtk_application_window_new(app);
+        gtk_window_set_title(GTK_WINDOW(window), "Your Virtual Pet"); 
+	gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
+	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+
+	// Add the default pet image to GUI window 
+	GtkWidget *image; 
+	image = gtk_image_new_from_file("cat.jpg"); 
+	gtk_container_add(GTK_CONTAINER(window), image); 	
+
+	// Add the default pet to GUI window
+	gtk_widget_show_all(window); 
+}
+
+static int init(void) {
+	// Setup pet personalization 
 	printf("Welcome to your virtual pet!\n"); 
 	printf("Name your pet (100 characters max): ");
 	char petname[MAX_NAME_LEN]; 
@@ -23,6 +42,15 @@ static void init(void) {
 		scanf("%s", petname); 
 	}
 	vpet = new_pet(petname);
+
+	// Initialise and run the GUI application in a different thread
+	GtkApplication *app; 
+	int ret; 
+	app = gtk_application_new("in.virtualpet", G_APPLICATION_DEFAULT_FLAGS); 
+	g_signal_connect(app, "activate", G_CALLBACK(activate), NULL); 
+	ret = g_application_run(G_APPLICATION(app), 0, NULL); 
+	g_object_unref(app); 
+	return ret; 
 }
 
 static void *take_input( void *arg ) {
