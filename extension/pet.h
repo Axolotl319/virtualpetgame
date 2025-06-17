@@ -3,6 +3,7 @@ struct pet {
 	unsigned int cleanliness;
 	unsigned int happiness;
 	unsigned int hunger;
+	bool alive;
 };
 
 typedef struct pet *pet;
@@ -23,3 +24,4 @@ extern void free_pet(void);
 
 extern pet new_pet(char *name); 
 
+extern void print_warning(int category);

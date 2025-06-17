@@ -42,7 +42,9 @@ static int sympair_qsort_cmp(const void *a, const void *b) {
 int addPair(symbol_table st, char *label, uint32_t address){
 	symbol_pair np = malloc(sizeof(struct symbol_pair)); //np = new pair
 	if(np == NULL){
-		fprintf(stderr, "Can't allocate memory for new symbol table pair\n");
+		fprintf(stderr, 
+			"Can't allocate memory for new symbol table pair\n");
+		
 		return EXIT_FAILURE;
 	}
 	assert(np != NULL);
@@ -58,9 +60,13 @@ int addPair(symbol_table st, char *label, uint32_t address){
 
 	if(st->length >= st->capacity){ //current array too small to add pair
 		int new_capacity = st->capacity * 2; //double the array capacity
-		symbol_pair *tmp = realloc(st->st_pairs, new_capacity * sizeof(symbol_pair));
+		symbol_pair *tmp = realloc(
+					st->st_pairs, 
+					new_capacity * sizeof(symbol_pair));
 		if(tmp == NULL){
-			fprintf(stderr, "Can't reallocate memory for symbol table pairs\n");
+			fprintf(stderr, 
+			"Can't reallocate memory for symbol table pairs\n");
+			
 			free(np->label);
 			free(np);
 			return EXIT_FAILURE;
@@ -88,7 +94,13 @@ void freeST(symbol_table st){
 
 //get address. returns 1 on failure
 uint32_t getAddress(symbol_table st, char *label){
-	symbol_pair *result = bsearch(label, st->st_pairs, st->length, sizeof(symbol_pair), sympair_bsearch_cmp);
+	symbol_pair *result = bsearch(
+				label, 
+				st->st_pairs, 
+				st->length, 
+				sizeof(symbol_pair), 
+				sympair_bsearch_cmp);
+
 	if (result) { return (*result)->address; }
 	
 	return 1; //address has to be a multiple of 4 so can never be 1
