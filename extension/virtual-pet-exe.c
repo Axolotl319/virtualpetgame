@@ -38,19 +38,23 @@ static void *take_input( void *arg ) {
 		
 		switch(c) {
 			case 'S':
-				printf("Stats\n");
+				print_hearts();
 				break;
 			case 'F':
 				printf("Hunger\n");
+				feed();
 				break;
 			case 'C':
 				printf("Clean\n");
+				clean();
 				break;
 			case 'P':
-				printf("Pet\n");
+				printf("Play\n");
+				play();
 				break;
 			case 'G':
 				printf("Gift\n");
+				gift();
 				break;
 		}	
 	}

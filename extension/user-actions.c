@@ -10,10 +10,10 @@ extern pet vpet;
 extern int coins;
 
 int feed(void) {
-	if(vpet->hunger++ >= 5){
-		fprintf(stdout, "%s is full!", vpet->name);
+	if(vpet->hunger++ >= MAX_HEARTS){
+		fprintf(stdout, "%s is full!\n", vpet->name);
 	}else{
-		fprintf(stdout, "%s savours the delicious meal", vpet->name);
+		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
 	}
 	check_bounds();
 	return EXIT_SUCCESS;
@@ -21,20 +21,20 @@ int feed(void) {
 }
 
 int play(void) {
-	if(vpet->happiness++ >= 5){
-		fprintf(stdout, "%s is too tired to play", vpet->name);
+	if(vpet->happiness++ >= MAX_HEARTS){
+		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
-		fprintf(stdout, "%s is super excited to spend time with you!", vpet->name);
+		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
 	}
 	check_bounds();
 	return EXIT_SUCCESS; 
 }
 
 int clean(void) {
-	if(vpet->cleanliness++ >= 5){
-		fprintf(stdout, "%s is already squeaky clean!", vpet->name);
+	if(vpet->cleanliness++ >= MAX_HEARTS){
+		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
 	}else{
-		fprintf(stdout, "%s calmly enjoys the bubbles", vpet->name);
+		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
 	}
 	check_bounds();
 	return EXIT_SUCCESS; 
@@ -42,18 +42,14 @@ int clean(void) {
 
 //returns 1 if not enough money or error, else 0
 int gift(void) {
-	if(coins <= 0){
-		fprintf(stdout, "%s doesn't have enough money!", vpet->name);
-		return 1;
+
+	if(decrement_coins(5)){
+		fprintf(stdout, "%s doesn't have enough money!\n", vpet->name);
+		return EXIT_FAILURE;
 	}
-	if(coins >= 5){
-		vpet->happiness = 5;
-		fprintf(stdout, "%s is super happy! Thanks for the gift!", vpet->name);
-		if(decrement_coins(5)){
-			fprintf(stderr, "Can't decrement coins in gift function");
-			return EXIT_FAILURE;
-		}
-	}
+	
+	vpet->happiness = MAX_HEARTS;
+	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
 	//will work out gift design
 	return EXIT_SUCCESS; 
 }
