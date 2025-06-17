@@ -104,7 +104,8 @@ int main(void) {
 		}
 
 		//check if level needs to be updated
-		if (vpet->num_actions >= vpet->curr_level.num_actions) {
+		if (vpet->curr_level.level_num < MAX_LEVEL &&
+		    vpet->num_actions >= vpet->curr_level.num_actions) {
 			increase_level();
 		}	
 
