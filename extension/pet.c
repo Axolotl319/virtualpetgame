@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include "levels.h"
 #include "pet.h"
 #include "coins.h"
 
@@ -12,27 +13,27 @@ extern int coins;
 pet vpet;
 
 void check_bounds(void){
-	if(vpet->cleanliness > MAX_HEARTS){
-		vpet->cleanliness = MAX_HEARTS;
+	if(vpet->cleanliness > vpet->max_hearts){
+		vpet->cleanliness = vpet->max_hearts;
 		printf("debug: cleanliness set to > 5, reset to 5\n");
-	}else if(vpet->cleanliness < MIN_HEARTS){
-		vpet->cleanliness = MIN_HEARTS;
+	}else if(vpet->cleanliness < 0){
+		vpet->cleanliness = 0;
 		printf("debug: cleanliness set to < 0, reset to 0\n");
 	}
 
-	if(vpet->happiness > MAX_HEARTS){
-		vpet->happiness = MAX_HEARTS;
+	if(vpet->happiness > vpet->max_hearts){
+		vpet->happiness = vpet->max_hearts;
 		printf("debug: happiness set to > 5, reset to 5\n");
-	}else if(vpet->happiness < MIN_HEARTS){
-		vpet->happiness = MIN_HEARTS;
+	}else if(vpet->happiness < 0){
+		vpet->happiness = 0;
 		printf("debug: happiness set to < 0, reset to 0\n");
 	}
 
-	if(vpet->hunger > MAX_HEARTS){
-		vpet->hunger = MAX_HEARTS;
+	if(vpet->hunger > vpet->max_hearts){
+		vpet->hunger = vpet->max_hearts;
 		printf("debug: hunger set to > 5, reset to 5\n");
-	}else if(vpet->hunger < MIN_HEARTS){
-		vpet->hunger = MIN_HEARTS;
+	}else if(vpet->hunger < 0){
+		vpet->hunger = 0;
 		printf("debug: hunger set to < 0, reset to 0\n");
 	}
 }
@@ -50,10 +51,11 @@ static void print_stat(int category, int amt){
 		case HUNGER: 
 			fprintf(stdout, "Hunger ");
 			break;
-
-		default: fprintf(stderr, "Unknown category\n");
-			 return;
-			 break;
+	
+		default: 
+			fprintf(stderr, "Unknown category\n");
+			return;
+			break;
 	}
 	for(int i = 0; i < amt; i++){
 		fprintf(stdout, "+");
@@ -67,7 +69,8 @@ void print_hearts(void) {
 	print_stat(CLEANLINESS, vpet->cleanliness);
 	print_stat(HAPPINESS, vpet->happiness);
 	print_stat(HUNGER, vpet->hunger);
-	fprintf(stdout, "Currency: %d coins\n", coins);
+	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
+	fprintf(stdout, "%d coins\n", coins);
 }
 
 void print_warning(int category){
@@ -90,12 +93,23 @@ void print_warning(int category){
 	}
 }
 
+void increase_level( void ) {
+	if (vpet->curr_level.level_num < MAX_LEVEL) {
+		vpet->curr_level.level_num++;
+		vpet->max_hearts++;
+		fprintf(stdout, "%s has levelled up!\n", vpet->name);
+	}
+}
+
 pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
-	new->cleanliness = MAX_HEARTS;
-	new->happiness   = MAX_HEARTS;
-	new->hunger      = MAX_HEARTS;
+	new->cleanliness = INIT_HEARTS;
+	new->happiness   = INIT_HEARTS;
+	new->hunger      = INIT_HEARTS;
+	new->max_hearts  = INIT_HEARTS;
+	new->curr_level  = levels[0];	
+	new->num_actions = 0;
 	new->alive       = true;
 	return new;
 }

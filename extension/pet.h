@@ -1,11 +1,15 @@
-#define MAX_HEARTS 5
-#define MIN_HEARTS 0
+#define INIT_HEARTS 5
+
+#include "levels.h"
 
 struct pet {
 	char *name; 
 	unsigned int cleanliness;
 	unsigned int happiness;
 	unsigned int hunger;
+	unsigned int max_hearts;
+	unsigned int num_actions;
+	level curr_level;
 	bool alive;
 };
 
@@ -21,6 +25,7 @@ typedef enum {
 	CLEANLINESS,
 	HAPPINESS,
 	HUNGER,
+	LEVEL,
 } stats;
 
 //if any hearts are set to > 5 or < 0
@@ -34,3 +39,6 @@ extern void free_pet(void);
 extern pet new_pet(char *name); 
 
 extern void print_warning(int category);
+
+extern void increase_level( void );
+

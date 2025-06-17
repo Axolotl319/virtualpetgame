@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include "pet.h"
 #include "coins.h"
+#include "levels.h"
 #include "user-actions.h"
 
 #define MAX_NAME_LEN 100
@@ -41,19 +42,15 @@ static void *take_input( void *arg ) {
 				print_hearts();
 				break;
 			case 'F':
-				printf("Hunger\n");
 				feed();
 				break;
 			case 'C':
-				printf("Clean\n");
 				clean();
 				break;
 			case 'P':
-				printf("Play\n");
 				play();
 				break;
 			case 'G':
-				printf("Gift\n");
 				gift();
 				break;
 		}	
@@ -107,9 +104,16 @@ int main(void) {
 			print_warning(HUNGER);
 		}
 
+		//check if level needs to be updated
+		if (vpet->num_actions >= vpet->curr_level.num_actions) {
+			increase_level();		
+		}	
+
 		//dies if any stat = 0 (or all, can change)
 		check_bounds();
-		vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));
+		vpet->alive = ((vpet->cleanliness > 0) && 
+			       (vpet->happiness > 0)   && 
+			       (vpet->hunger > 0));
 	}
 
 	//join the coin thread if infinite loop exited
