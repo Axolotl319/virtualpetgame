@@ -1,3 +1,6 @@
+#define MAX_HEARTS 5
+#define MIN_HEARTS 0
+
 struct pet {
 	char *name; 
 	unsigned int cleanliness;
@@ -14,6 +17,12 @@ typedef struct pet *pet;
 extern pet vpet;
 #endif
 
+typedef enum {
+	CLEANLINESS,
+	HAPPINESS,
+	HUNGER,
+} stats;
+
 //if any hearts are set to > 5 or < 0
 //check_bounds changes them to 0/5
 extern void check_bounds(void);
@@ -24,3 +33,4 @@ extern void free_pet(void);
 
 extern pet new_pet(char *name); 
 
+extern void print_warning(int category);

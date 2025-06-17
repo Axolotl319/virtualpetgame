@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <ctype.h>
+#include <fcntl.h>
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
@@ -23,11 +25,51 @@ static void init(void) {
 	vpet = new_pet(petname);
 }
 
+static void *take_input( void *arg ) {
+	bool *running = (bool *)arg;
+	
+	//set input flags to be non-blocking
+	//need this so that the program can terminate (doesn't hang on getchar)
+	int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
+	fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+	while(*running) {
+		int c = toupper(getchar());
+		
+		switch(c) {
+			case 'S':
+				print_hearts();
+				break;
+			case 'F':
+				printf("Hunger\n");
+				feed();
+				break;
+			case 'C':
+				printf("Clean\n");
+				clean();
+				break;
+			case 'P':
+				printf("Play\n");
+				play();
+				break;
+			case 'G':
+				printf("Gift\n");
+				gift();
+				break;
+		}	
+	}
+
+	//restore the original flags
+	fcntl(STDIN_FILENO, F_SETFL, flags);
+
+	return NULL;
+}
+
 
 int main(void) {
 
 	init(); 
-	printf("%s is happy to meet you!\n", vpet->name);
+	printf("%s is happy to meet you!\n", vpet->name); 
 
 	bool running = 1;
 
@@ -37,22 +79,44 @@ int main(void) {
  	//thread for incrementing coins
 	pthread_t coin_thread;
 	pthread_create(&coin_thread, NULL, increment_coins, (void*)&running);
+
+	//thread for checking user input
+	pthread_t input_thread;
+	pthread_create(&input_thread, NULL, take_input, (void*)&running);
 	
 	while(1) {
 		//temporary code here
-		printf("Sleeping....\n");
-		sleep(2);
+		//printf("Sleeping....\n");
+		//sleep(15);
+		//vpet->alive = false;
 
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
 			break;
 		}
+
+		//warn user if any category has 1 heart remaining
+		if(vpet->cleanliness == 1){
+			print_warning(CLEANLINESS);
+		}
+		if(vpet->happiness == 1){
+			print_warning(HAPPINESS);
+		}
+		if(vpet->hunger == 1){
+			print_warning(HUNGER);
+		}
+
+		//dies if any stat = 0 (or all, can change)
+		check_bounds();
+		vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));
 	}
 
 	//join the coin thread if infinite loop exited
 	running = 0;
 	pthread_join(coin_thread, NULL);
+	pthread_join(input_thread, NULL);
+	
 	
 	free_pet(); 
         return EXIT_SUCCESS;
