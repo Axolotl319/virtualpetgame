@@ -49,11 +49,11 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 // This is called by GTK's main function, as set up in activate()
 // Returns FALSE if pet dies, TRUE otherwise 
 // When FALSE is returned, the function is never called again 
-static int check_dec_health(void *in) {
+static int check_dec_health(void *app) {
 	//quit application if pet dies
 	if (!vpet->alive) {
 		printf("Your virtual pet is dead :(\n");
-		return FALSE; 
+		g_application_quit(G_APPLICATION(app)); 
 	}
 
 	//warn user if any category has 1 heart remaining
@@ -92,7 +92,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), NULL); 
 
 	// add function to call to decrement health and check for death 
-	g_timeout_add(1000, check_dec_health, image); 
+	g_timeout_add(1000, check_dec_health, app); 
 
 	// Show the window and default pet 
 	gtk_widget_show_all(window); 
@@ -128,7 +128,7 @@ static int init(void) {
 	ret = g_application_run(G_APPLICATION(app), 0, NULL); 
 	g_object_unref(app); 
 	
-	//join the coin thread if infinite loop exited
+	//join the coin thread if application exited
 	running = 0;
 	pthread_join(coin_thread, NULL);
 
@@ -136,7 +136,10 @@ static int init(void) {
 }
 
 int main(void) {
+	// initialize and start application 
 	init(); 
+
+	// cleanup 
 	free_pet(); 
         return EXIT_SUCCESS;
 }
