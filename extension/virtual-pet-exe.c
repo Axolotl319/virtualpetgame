@@ -27,7 +27,11 @@ static void init(void) {
 int main(void) {
 
 	init(); 
-	printf("%s is happy to meet you!\n", vpet->name);
+	printf("%s is happy to meet you!\n", vpet->name); 
+ 	
+	/*
+         * INFINITE LOOP TO BE IMPLEMENTED
+         */
 
 	bool running = 1;
 
@@ -47,6 +51,17 @@ int main(void) {
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
 			break;
+		}
+
+		//warn user if any category has 1 heart remaining
+		if(vpet->cleanliness == 1){
+			print_warning(0);
+		}
+		if(vpet->happiness == 1){
+			print_warning(1);
+		}
+		if(vpet->hunger == 1){
+			print_warning(2);
 		}
 	}
 

@@ -24,3 +24,4 @@ extern void free_pet(void);
 
 extern pet new_pet(char *name); 
 
+extern void print_warning(int category);
