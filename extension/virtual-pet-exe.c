@@ -102,6 +102,10 @@ int main(void) {
 		if(vpet->hunger == 1){
 			print_warning(HUNGER);
 		}
+
+		//dies if any stat = 0 (or all, can change)
+		check_bounds();
+		vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));
 	}
 
 	//join the coin thread if infinite loop exited
