@@ -11,7 +11,7 @@ extern int coins;
 
 int feed(void) {
 	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->hunger++ >= vpet->max_hearts){
+	if(vpet->hunger >= vpet->max_hearts){
 		fprintf(stdout, "%s is full!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
@@ -26,7 +26,7 @@ int feed(void) {
 
 int play(void) {
 	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->happiness++ >= vpet->max_hearts){
+	if(vpet->happiness >= vpet->max_hearts){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
@@ -40,7 +40,7 @@ int play(void) {
 
 int clean(void) {
 	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->cleanliness++ >= vpet->max_hearts){
+	if(vpet->cleanliness >= vpet->max_hearts){
 		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
