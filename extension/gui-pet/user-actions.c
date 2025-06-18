@@ -10,62 +10,52 @@ extern pet vpet;
 extern int coins;
 
 int feed(void) {
-	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->hunger >= vpet->max_hearts){
+	if(vpet->hunger >= MAX_HEARTS){
 		fprintf(stdout, "%s is full!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
 		vpet->hunger++; 
-		vpet->num_actions++;
+		// vpet->num_actions++;
 	}
 	check_bounds();
-	pthread_mutex_unlock(&vpet_mutex);
-	return EXIT_SUCCESS;
-       //I can't think of a failure situation - feel free to correct	
+	return EXIT_SUCCESS;	
 }
 
 int play(void) {
-	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->happiness >= vpet->max_hearts){
+	if(vpet->happiness >= MAX_HEARTS){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
 		vpet->happiness++;
-		vpet->num_actions++;
+		// vpet->num_actions++;
 	}
 	check_bounds();
-	pthread_mutex_unlock(&vpet_mutex);
 	return EXIT_SUCCESS; 
 }
 
 int clean(void) {
-	pthread_mutex_lock(&vpet_mutex);
-	if(vpet->cleanliness >= vpet->max_hearts){
+	if(vpet->cleanliness >= MAX_HEARTS){
 		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
 		vpet->cleanliness++;
-		vpet->num_actions++;
+		// vpet->num_actions++;
 	}
 	check_bounds();
-	pthread_mutex_unlock(&vpet_mutex);
 	return EXIT_SUCCESS; 
 }
 
-//returns 1 if not enough money or error, else 0
+//returns FAILURE if not enough money or error, else SUCCESS
 int gift(void) {
-	pthread_mutex_lock(&vpet_mutex);
 	if(decrement_coins(5)){
-		pthread_mutex_unlock(&vpet_mutex);
 		fprintf(stdout, "%s doesn't have enough money!\n", vpet->name);
 		return EXIT_FAILURE;
 	}
 	
-	vpet->happiness = vpet->max_hearts;
+	vpet->happiness = MAX_HEARTS;
 	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
-	vpet->num_actions++;
+	// vpet->num_actions++;
 	//will work out gift design
 
-	pthread_mutex_unlock(&vpet_mutex);
 	return EXIT_SUCCESS; 
 }
