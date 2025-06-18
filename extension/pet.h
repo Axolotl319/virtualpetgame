@@ -1,5 +1,8 @@
 #define INIT_HEARTS 5
 #define MAX_LEVEL 10
+#define CLEANLINESS_DECAY_HOURS 12  
+#define HUNGER_DECAY_HOURS 5  
+#define HAPPINESS_DECAY_HOURS 8
 
 //struct for level info
 typedef struct {
@@ -50,3 +53,8 @@ extern void print_warning(int category);
 
 extern void increase_level( void );
 
+extern void *decrease_cleanliness(void *arg);
+
+extern void *decrease_hunger(void *arg);
+
+extern void *decrease_happiness(void *arg);

@@ -2,8 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
 #include "pet.h"
 #include "coins.h"
+
+//Helper macro to convert hours to seconds
+#define HOURS(x) ((x) * 3600)
+
 
 //external global variable
 extern int coins;
@@ -132,4 +138,37 @@ pet new_pet(char *name) {
 
 void free_pet(void) {
 	free(vpet);
+}
+
+//Cleanliness droppine one bar every 12 hours
+void *decrease_cleanliness(void *arg) {
+    bool *running = (bool *)arg;
+    while (*running && vpet->alive) {
+        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+        vpet->cleanliness--;
+        check_bounds();
+    }
+    return NULL;
+}
+
+//Hunger dropping one bar every 5 hours
+void *decrease_hunger(void *arg) {
+    bool *running = (bool *)arg;
+    while (*running && vpet->alive) {
+        sleep(HOURS(HUNGER_DECAY_HOURS));
+        vpet->hunger--;
+        check_bounds();
+    }
+    return NULL;
+}
+
+//Happiness dropping one bar every 8 hours
+void *decrease_happiness(void *arg) {
+    bool *running = (bool *)arg;
+    while (*running && vpet->alive) {
+        sleep(HOURS(HAPPINESS_DECAY_HOURS));
+        vpet->happiness--;
+        check_bounds();
+    }
+    return NULL;
 }
