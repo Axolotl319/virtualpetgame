@@ -79,10 +79,10 @@ static void print_stat(int category, int amt){
 void print_hearts(void) {
 	fprintf(stdout, "Stats:\n");
 	check_bounds(); //ensure all stats between 0-5
+	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
 	print_stat(CLEANLINESS, vpet->cleanliness);
 	print_stat(HAPPINESS, vpet->happiness);
 	print_stat(HUNGER, vpet->hunger);
-	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
 	fprintf(stdout, "%d coins\n", coins);
 }
 

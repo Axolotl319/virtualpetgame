@@ -81,10 +81,20 @@ on their pet. This concept can then be generalized to any aspect of life, includ
 studies, self-care, hobbies, and more. 
 
 \subsection{Virtual Pet Design}
+The virtual pet has three main categories that the user can interact with: cleanliness, happiness, and hunger. Each category decrements by one bar over a fixed amount of time, but can be improved by the user through keyboard inputs. If any category reaches zero, the current virtual pet cannot continue and the user would need to leave the game or restart with a new virtual pet. 
+
+We allowed the user to display their current category scores at any point, so they can check if any categories need particular attention. The program automatically warns the user if any category has only one heart remaining. Furthermore, we designed in-game coins that are regularly rewarded to the user if they keep their pet alive; these coins can be used to purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way of encouraging user interaction; the longer a player plays for, the higher the level they can reach.
 
 \subsection{Challenges} 
+Initially, we ran into some problems implementing the pet as a global structure pointer. Eventually, we realised the main issue was how the files were linked, which led to multiple declarations of the same variable. We fixed it by ensuring the virtual pet would only be created once, at the start of the program. This proved particularly helpful when we implemented in-game coins as a separate global variable, which involved some similar C syntax.
+
 
 \subsection{Testing}
+When we started designing our extension, we made a list of desirable functionalities which we wanted the program to achieve by the end of the project. These included the user being able to interact with the virtual pet through the keyboard, the various category stats (such as happiness) to decrease at regular time intervals, and each category being limited to a number of hearts between zero and five. Later, we referred back to this checklist to thoroughly test the program. 
+
+Firstly, we confirmed that the stats would decrease at the expected regular intervals (every 12 seconds for cleanliness, 8 seconds for happiness, and 5 seconds for hunger) by starting the game, then not interacting with the category currently being tested. We printed the stats at the expected time intervals, to test if the stat for the current category was decrementing each time, and observed the final output that the virtual pet had died when the category had reached zero hearts. To test the user inputs (for example, typing ‘f’ or ‘F’ should increase the hunger score), we waited for a particular category to have fewer than five hearts (outputting the stats first, to confirm this was the case), then input the appropriate character to test that we got an output message stating this category had increased as expected.
+
+We performed many more manual tests, to determine whether the program worked as expected. In future we would test more rigorously by creating a test suite, as was used for the emulator and assembler, so that we could test many possible states of our program and ensure that it always operates in a predictable and desirable way. Due to time restrictions in this project, we decided it would be better to test the program in some of the most likely scenarios, and confirm if the main modules (such as user input) worked rather than risk running out of time building a test suite and being unable to test anything at all.
 
 \section{Group Reflection}
 
@@ -93,6 +103,7 @@ studies, self-care, hobbies, and more.
 \subsection{Tangina Kader}
 
 \subsection{Amy Showell}
+I tried to communicate often with the others both online and in real life, which helped with group discussions and moving the project forward effectively. Through this project, I’ve realised that I have a tendency to rush and overlook details which can lead to code that is difficult to read or doesn’t pass all the tests. Thankfully Shriya and Yao pay more attention to detail than me, and notice minor mistakes in my code which I missed; these could have easily become larger problems if they hadn’t been caught until much later. In future, I will slow down and focus more on the quality of my work as well as the quantity. Overall, I think I fit in well with this group. I engaged in group/pair programming and debugging several times, particularly for Part III. I clearly communicated which tasks I was working on and attempted to understand what everyone else was doing by asking questions and using other resources, such as Scientia.
 
 \subsection{Shriya Sistla}
 
