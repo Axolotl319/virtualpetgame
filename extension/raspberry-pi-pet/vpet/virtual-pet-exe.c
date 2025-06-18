@@ -10,6 +10,7 @@
 #include <signal.h>
 #include "DEV_Config.h"
 #include "GUI_Paint.h"
+#include "GUI_BMP.h"
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
@@ -28,6 +29,42 @@ static void init(void) {
 	vpet = new_pet(petname);
 }
 
+static void display( void ) {
+	// Exception handling:ctrl + c
+    	signal(SIGINT, Handler_1IN3_LCD);
+    
+   	 /* Module Init */
+        	if(DEV_ModuleInit() != 0){
+        	DEV_ModuleExit();
+        	exit(0);
+    	}
+
+	LCD_1IN3_Init(HORIZONTAL);
+        LCD_1IN3_Clear(WHITE);
+    	LCD_SetBacklight(1023);
+
+	UWORD *CatImage;
+   	UDOUBLE Imagesize = LCD_1IN3_HEIGHT*LCD_1IN3_WIDTH*2;
+    	printf("Imagesize = %d\r\n", Imagesize);
+    	if((CatImage = (UWORD *)malloc(Imagesize)) == NULL) {
+        	printf("Failed to apply for memory...\r\n");
+        	exit(0);
+    	}
+	Paint_NewImage(CatImage, LCD_1IN3_WIDTH, LCD_1IN3_HEIGHT, 0, WHITE, 16);
+    	Paint_Clear(WHITE);
+        Paint_SetRotate(ROTATE_90);
+
+	GUI_ReadBmp("vpet/cat3.bmp");
+    	LCD_1IN3_Display(CatImage);
+    	DEV_Delay_ms(2000);
+
+   	/* Module Exit */
+    	free(CatImage);
+    	CatImage = NULL;
+
+}
+
+
 static void *take_input( void *arg ) {
 	bool *running = (bool *)arg;
 	
@@ -42,6 +79,7 @@ static void *take_input( void *arg ) {
 		switch(c) {
 			case 'S':
 				print_hearts();
+				print_hearts_pi();
 				break;
 			case 'F':
 				feed();
@@ -67,7 +105,8 @@ static void *take_input( void *arg ) {
 
 int main(void) {
 
-	init(); 
+	init();
+	display(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
 
 	bool running = 1;

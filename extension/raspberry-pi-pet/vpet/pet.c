@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <pthread.h>
+#include "DEV_Config.h"
+#include "LCD_1in3.h"
+#include "GUI_Paint.h"
+#include "GUI_BMP.h"
 #include "pet.h"
 #include "coins.h"
 
@@ -90,6 +94,34 @@ void print_hearts(void) {
 	print_stat(HAPPINESS, vpet->happiness);
 	print_stat(HUNGER, vpet->hunger);
 	fprintf(stdout, "%d coins\n", coins);
+}
+
+void print_hearts_pi(void) {
+	signal(SIGINT, Handler_1IN3_LCD);
+    
+   	 /* Module Init */
+        if(DEV_ModuleInit() != 0){
+        	DEV_ModuleExit();
+        	exit(0);
+    	}
+	UWORD *BlackImage;
+    	UDOUBLE Imagesize = LCD_1IN3_HEIGHT*LCD_1IN3_WIDTH*2;
+    	printf("Imagesize = %d\r\n", Imagesize);
+    	if((BlackImage = (UWORD *)malloc(Imagesize)) == NULL) {
+        	printf("Failed to apply for black memory...\r\n");
+        	exit(0);
+    	}
+    	// /*1.Create a new image cache named IMAGE_RGB and fill it with white*/
+    	Paint_NewImage(BlackImage, LCD_1IN3_WIDTH, LCD_1IN3_HEIGHT, 0, WHITE, 16);
+    	Paint_Clear(WHITE);
+        Paint_SetRotate(ROTATE_90);
+
+	Paint_DrawString_EN(5, 30, "Stats:", &Font24, WHITE, BLACK);
+    	Paint_DrawString_EN(5, 60, "Level:", &Font24, WHITE, BLACK);
+	LCD_1IN3_Display(BlackImage);
+    	DEV_Delay_ms(2000);
+	free(BlackImage);
+    	BlackImage = NULL;
 }
 
 void print_warning(int category){

@@ -45,6 +45,8 @@ extern void check_bounds(void);
 
 extern void print_hearts(void);
 
+extern void print_hearts_pi(void);
+
 extern void free_pet(void); 
 
 extern pet new_pet(char *name); 
