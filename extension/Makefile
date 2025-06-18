@@ -2,7 +2,12 @@ CC      ?= gcc
 CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
 	-Wall -Werror -pedantic -Wstrict-prototypes\
-	-I ../utils
+	-I ./lib/GUI\
+	-I ./lib/Config\
+	-I ./lib/LCD\
+	-I ./lib/Fonts
+
+LDFLAGS = -pthread -lpthread
 
 .SUFFIXES: .c .o
 

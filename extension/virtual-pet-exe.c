@@ -7,6 +7,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <signal.h>
+#include "DEV_Config.h"
+#include "GUI_Paint.h"
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
