@@ -80,6 +80,7 @@ int main(void) {
 	pthread_t input_thread;
 	pthread_create(&input_thread, NULL, take_input, (void*)&running);
 	
+	//threads to decrease levels
 	pthread_t cleanliness_thread, hunger_thread, happiness_thread;
 	pthread_create(&cleanliness_thread, NULL, decrease_cleanliness, (void*)&running);
 	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
