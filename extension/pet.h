@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #define INIT_HEARTS 5
 #define MAX_LEVEL 10
 #define CLEANLINESS_DECAY_HOURS 12  
@@ -36,6 +38,8 @@ typedef enum {
 	HAPPINESS,
 	HUNGER,
 } stats;
+
+extern pthread_mutex_t vpet_mutex;
 
 extern const level levels[MAX_LEVEL - 1];
 

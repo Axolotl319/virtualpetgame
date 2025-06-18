@@ -80,6 +80,7 @@ int main(void) {
 	pthread_t input_thread;
 	pthread_create(&input_thread, NULL, take_input, (void*)&running);
 	
+	//threads to decrease levels
 	pthread_t cleanliness_thread, hunger_thread, happiness_thread;
 	pthread_create(&cleanliness_thread, NULL, decrease_cleanliness, (void*)&running);
 	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
@@ -91,6 +92,7 @@ int main(void) {
 		//sleep(15);
 		//vpet->alive = false;
 
+		pthread_mutex_lock(&vpet_mutex);
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
@@ -119,6 +121,8 @@ int main(void) {
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
+		
+		pthread_mutex_unlock(&vpet_mutex);
 	}
 
 	//join the coin thread if infinite loop exited

@@ -7,9 +7,11 @@
 #include "pet.h"
 #include "coins.h"
 
-//Helper macro to convert hours to seconds
+//helper macro to convert hours to seconds
 #define HOURS(x) ((x) * 3600)
 
+//lock
+pthread_mutex_t vpet_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //external global variable
 extern int coins;
@@ -83,12 +85,14 @@ static void print_stat(int category, int amt){
 }
 
 void print_hearts(void) {
+	pthread_mutex_lock(&vpet_mutex);
 	fprintf(stdout, "Stats:\n");
 	check_bounds(); //ensure all stats between 0-5
 	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
 	print_stat(CLEANLINESS, vpet->cleanliness);
 	print_stat(HAPPINESS, vpet->happiness);
 	print_stat(HUNGER, vpet->hunger);
+	pthread_mutex_unlock(&vpet_mutex);
 	fprintf(stdout, "%d coins\n", coins);
 }
 
@@ -145,8 +149,12 @@ void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
         sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+		//Lock shared state
+		pthread_mutex_lock(&vpet_mutex);
         vpet->cleanliness--;
         check_bounds();
+		//Unlock shared state
+		pthread_mutex_unlock(&vpet_mutex);  
     }
     return NULL;
 }
@@ -156,8 +164,12 @@ void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
         sleep(HOURS(HUNGER_DECAY_HOURS));
+		//Lock shared state
+		pthread_mutex_lock(&vpet_mutex);
         vpet->hunger--;
         check_bounds();
+		//Unlock shared state
+		pthread_mutex_unlock(&vpet_mutex);
     }
     return NULL;
 }
@@ -167,8 +179,12 @@ void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
         sleep(HOURS(HAPPINESS_DECAY_HOURS));
+		//Lock shared state
+		pthread_mutex_lock(&vpet_mutex);
         vpet->happiness--;
         check_bounds();
+		//Unlock shared state
+		pthread_mutex_unlock(&vpet_mutex);
     }
     return NULL;
 }
