@@ -15,27 +15,33 @@
 #define MAX_NAME_LEN 100
 
 // In case of a key press event, carries out the action associated with the key. 
+// Updates the image of cat for each key press as well 
 bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	switch (event->keyval) {
 		case (GDK_KEY_s): 
 			printf("S key pressed!\n"); 
 			print_hearts(); 
+			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/default.jpg"); 
 			break; 
 		case (GDK_KEY_f): 
 			printf("F key pressed!\n");
-		        feed(); 	
+		        feed();
+			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/feed.png"); 
 			break;  
 		case (GDK_KEY_c): 
 			printf("C key pressed!\n"); 
-			clean(); 
+			clean();
+		       	gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/clean.png"); 	
 			break;  
 		case (GDK_KEY_p): 
 			printf("P key pressed!\n"); 
 			play(); 
+			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/happy.png"); 
 			break;  
 		case (GDK_KEY_g): 
 			printf("G key pressed!\n"); 
-			gift(); 
+			gift();
+		        gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/gift.png"); 	
 			break;  
 		default: 
 			printf("Not recognized\n");
@@ -112,12 +118,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
 	// Add the default pet image to GUI window 
 	GtkWidget *image; 
-	image = gtk_image_new_from_file("cat.jpg"); 
+	image = gtk_image_new_from_file("cat_images/default.jpg"); 
 	gtk_container_add(GTK_CONTAINER(window), image); 	
 
 	// connect a keyboard press event to the window 
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); 
-	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), NULL); 
+	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), image); 
 
 	// add functions to decrement health and check for death
 	g_timeout_add_seconds(5, dec_hunger, NULL); 
