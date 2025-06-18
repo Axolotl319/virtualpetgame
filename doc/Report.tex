@@ -53,11 +53,11 @@ As a result, many of our tasks were simplified, and we enjoyed more efficient de
 
 \section{Blinking LED Implementation}
 
-To implement Part III, we began by building a simple circuit with one red LED, 
-one 220\(\Omega\) resistor, one wire to ground, and one wire to the output at GPIO pin 3. 
-Then, we made a file, \texttt{led\_blink.s}, in which we wrote our assembly code. Our 
-assembly code has five main sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, 
-\texttt{wait}, and a section for integer directives.
+To implement Part III, we first built a circuit with one red LED, 
+one 220\(\Omega\) resistor, one wire to ground, and one wire GPIO pin 3. 
+We then wrote our assembly code in a file called \texttt{led\_blink.s}. Our 
+program has five sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, 
+\texttt{wait}, and an \texttt{.int} directives section.
 
 In the first section, \texttt{setout}, we select pin 3 as the output by setting FSEL3 
 to binary 001 and storing this value in the given GPIO function selection address. The 
@@ -67,46 +67,47 @@ register address, which sets the bit corresponding to pin 3. Additionally, we se
 branching to the \texttt{wait} section of the code. Similarly, the \texttt{setlow} 
 section turns the LED off by storing \texttt{0x8}  in the GPCLR0 register address, 
 setting the bit corresponding to pin 3 of the CLEAR register. This time, we set the 
-“LED state” flag register to 0 to signal that the current state is low before 
+“LED state” flag register to zero to signal that the current state is low before 
 branching to \texttt{wait}.
 
 In the \texttt{wait} section of our code, we use a loop to wait for a fixed amount 
 of time before updating the output signal. First, we reset the loop by setting register 
-\texttt{w3} to 0. Within the loop, we add 1 to register \texttt{w3} until it is greater 
+\texttt{w3} to zero. Within the loop, we add one to register \texttt{w3} until it is greater 
 than or equal to a set wait time of 0x50000. Once the wait time is reached, we check 
 the “LED state” flag register to see if the current state is high or low, branching to 
 the next state depending on the outcome of the comparison.
 
-The final section of our code includes a set of seven integer directives that are loaded 
+The final section of our code includes seven integer directives that are loaded 
 into registers at the start of the program. The integer directives include the GPIO 
 function select address, the GPSET0 address, the GPCLR0 address, the wait time, the 
-GPIO configuration for function selection, the GP output configuration for sending 
-high/low signals, and the “LED state” flag.
+GPIO configuration to select pin 3, the GP output configuration for sending 
+high or low signals to pin 3, and the “LED state” flag.
 
 One issue we faced while writing assembly was misunderstanding the instruction format. 
 For example, our attempts to use the \texttt{mov} instruction to load an immediate 
-value into a register yielded incorrect results, which confused us greatly. When we
+value into a register yielded incorrect results, confusing us greatly. When we
 realised that our emulator and assembler do not support the functionality for immediate 
-operands in \texttt{mov} instructions, we changed the structure of the code to use 
-the \texttt{ldr} instruction combined with integer directives to store the set and 
-clear flags in the corresponding GPIO output registers. 
-When using a \texttt{mov} instruction, we used register operands rather than immediate values.
+operands in \texttt{mov} instructions, we changed the code to use 
+\texttt{ldr} instructions with integer directive operands to store the set and 
+clear flags in the corresponding local GPIO output registers. 
+Whenever a flag needed to be loaded into a register, we then used the local register as 
+an operand to \texttt{mov} rather than immediate values.
 
-Another challenge we faced was understanding the assembly we had written. Since our assembler 
-does not support comments, descriptive variable names and labels were essential to code clarity. 
-However, when we began writing the code, our variable names were extremely generic, 
-causing confusion and many delays in debugging. As a result, we spent time adding clear labels 
-for different sections and comprehensible names for integer directive, resulting in a 
-more productive debugging process. 
+Another challenge we faced was efficiently debugging our assembly code. Since our assembler 
+does not support comments, descriptive integer directive names and section labels are 
+essential to code clarity. However, our integer directive names were extremely generic 
+in the beginning, causing confusion and debugging delays. As a result, we spent 
+time adding clear labels for different sections and comprehensible names for integer 
+directive, resulting in a more productive debugging process. 
 
 \section{Text-Based Virtual Pet}
 
 A “virtual pet” is a digital toy that often requires care and attention. The most popular 
-example is Bandai Namco’s Tamagotchi, a physical toy with a few interaction buttons 
-and a digital screen where the “pet” is displayed. Similar to a Tamagotchi, our text-based 
+example is Bandai Namco’s Tamagotchi, a physical toy with interaction buttons 
+and a digital screen where the “pet” is displayed. Similar to a Tamagotchi, our  
 virtual pet extension requires players to feed, clean, and play with their pet to keep their 
 pet happy and alive. However, our implementation also includes an ``interaction limit'' 
-to prevent users from becoming addicted or dependent on their virtual pets. Hence, our 
+to prevent users from becoming dependent on their virtual pets. Hence, our 
 virtual pet extension can be used as a fun way to help children and teens practice 
 responsibility and balance; although users should check on and care for their virtual 
 pet every once in a while, they are not allowed to spend the entire day focusing only 
