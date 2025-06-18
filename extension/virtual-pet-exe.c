@@ -49,7 +49,11 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 // This is called by GTK's main function, as set up in activate()
 // Returns FALSE if pet dies, TRUE otherwise 
 // When FALSE is returned, the function is never called again 
-static int check_dec_health(void *app) {
+static int check_health(void *app) {
+	//dies if any stat = 0 (or all, can change)
+	check_bounds();
+	vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));	
+	
 	//quit application if pet dies
 	if (!vpet->alive) {
 		printf("Your virtual pet is dead :(\n");
@@ -67,10 +71,34 @@ static int check_dec_health(void *app) {
 		print_warning(HUNGER);
 	}
 
-	//dies if any stat = 0 (or all, can change)
-	check_bounds();
-	vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));
 	return TRUE; 	
+}
+
+// If hunger ever reaches zero, the function is never called again. 
+static int dec_hunger(void *app) {
+	vpet->hunger--;
+        if (vpet->hunger <= 0) {
+		return FALSE; 
+	}
+	return TRUE; 
+}
+
+// If cleanliness ever reaches zero, the function is never called again 
+static int dec_cleanliness(void *app) {
+	vpet->cleanliness--;
+       	if (vpet->cleanliness <= 0) {
+		return FALSE; 
+	}	
+	return TRUE; 
+}
+
+// If happiness ever reaches zero, the function is never called again 
+static int dec_happiness(void *app) {
+	vpet->happiness--;
+        if (vpet->happiness <= 0) {
+		return FALSE; 
+	}	
+	return TRUE; 
 }
 
 // Sets up and starts the GUI application window 
@@ -91,8 +119,11 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); 
 	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), NULL); 
 
-	// add function to call to decrement health and check for death 
-	g_timeout_add(1000, check_dec_health, app); 
+	// add functions to decrement health and check for death
+	g_timeout_add_seconds(5, dec_hunger, NULL); 
+	g_timeout_add_seconds(12, dec_cleanliness, NULL); 
+	g_timeout_add_seconds(8, dec_happiness, NULL); 
+	g_timeout_add_seconds(2, check_health, app); 
 
 	// Show the window and default pet 
 	gtk_widget_show_all(window); 

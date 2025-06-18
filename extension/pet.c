@@ -74,18 +74,18 @@ void print_warning(int category){
 	fprintf(stdout, "Warning! Only 1 heart remaining for ");
 	switch(category){
 		case CLEANLINESS: 
-			fprintf(stdout, "cleanliness. Press C to boost!");
+			fprintf(stdout, "cleanliness. Press C to boost!\n");
 			return;
 
 		case HAPPINESS: 
-			fprintf(stdout, "happiness. Press P to boost!");
+			fprintf(stdout, "happiness. Press P to boost!\n");
 			return;
 
 		case HUNGER: 
-			fprintf(stdout, "hunger. Press F to boost!");
+			fprintf(stdout, "hunger. Press F to boost!\n");
 			return;
 
-		default: fprintf(stderr, "UNKNOWN CATEGORY");
+		default: fprintf(stderr, "UNKNOWN CATEGORY\n");
 			 return;
 	}
 }
