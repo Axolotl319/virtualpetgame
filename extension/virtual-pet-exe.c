@@ -92,6 +92,7 @@ int main(void) {
 		//sleep(15);
 		//vpet->alive = false;
 
+		pthread_mutex_lock(&vpet_mutex);
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
@@ -120,6 +121,8 @@ int main(void) {
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
+		
+		pthread_mutex_unlock(&vpet_mutex);
 	}
 
 	//join the coin thread if infinite loop exited
