@@ -80,6 +80,11 @@ int main(void) {
 	pthread_t input_thread;
 	pthread_create(&input_thread, NULL, take_input, (void*)&running);
 	
+	pthread_t cleanliness_thread, hunger_thread, happiness_thread;
+	pthread_create(&cleanliness_thread, NULL, decrease_cleanliness, (void*)&running);
+	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
+	pthread_create(&happiness_thread, NULL, decrease_happiness, (void*)&running);
+
 	while(1) {
 		//temporary code here
 		//printf("Sleeping....\n");
@@ -120,7 +125,9 @@ int main(void) {
 	running = 0;
 	pthread_join(coin_thread, NULL);
 	pthread_join(input_thread, NULL);
-	
+	pthread_join(cleanliness_thread, NULL);
+	pthread_join(hunger_thread, NULL);
+	pthread_join(happiness_thread, NULL);
 	
 	free_pet(); 
         return EXIT_SUCCESS;
