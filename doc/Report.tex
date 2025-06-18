@@ -49,22 +49,55 @@ any function that seemed usable in multiple modules -- like extracting immediate
 values and register numbers -- were written in a file called \texttt{assembly-utils.c}. 
 As a result, many of our tasks were simplified, and we enjoyed more efficient development. 
 
+\pagebreak
+
 \section{Blinking LED Implementation}
 
-To implement Part III, we began by building a simple circuit with one red LED, one 220\(\Omega\) resistor, one wire to ground, and one wire to the output at GPIO pin 3. Then, we made a file, \texttt{led\_blink.s}, in which we started to write our assembly code. Our assembly code has five main sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, \texttt{wait}, and a section for integer directives.
+To implement Part III, we began by building a simple circuit with one red LED, 
+one 220\(\Omega\) resistor, one wire to ground, and one wire to the output at GPIO pin 3. 
+Then, we made a file, \texttt{led\_blink.s}, in which we wrote our assembly code. Our 
+assembly code has five main sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, 
+\texttt{wait}, and a section for integer directives.
 
-In the first section, \texttt{setout}, we select pin 3 as the output by setting FSEL3 to binary 001 and storing this value in the given GPIO function selection address.
+In the first section, \texttt{setout}, we select pin 3 as the output by setting FSEL3 
+to binary 001 and storing this value in the given GPIO function selection address. The 
+next section, \texttt{sethigh}, turns the LED on by storing \texttt{0x8} in the GPSET0 
+register address, which sets the bit corresponding to pin 3. Additionally, we set an 
+“LED state” flag in register \texttt{w9} to signal that the current state is high before 
+branching to the \texttt{wait} section of the code. Similarly, the \texttt{setlow} 
+section turns the LED off by storing \texttt{0x8}  in the GPCLR0 register address, 
+setting the bit corresponding to pin 3 of the CLEAR register. This time, we set the 
+“LED state” flag register to 0 to signal that the current state is low before 
+branching to \texttt{wait}.
 
-The next section, \texttt{sethigh}, turns the LED on by storing \texttt{0x8} in the GPSET0 register address, which sets the bit corresponding to pin 3. Additionally, we set an “LED state” flag in register \texttt{w9} to signal that the current state is high before branching to the \texttt{wait} section of the code. Similarly, the \texttt{setlow} section turns the LED off by storing \texttt{0x8}  in the GPCLR0 register address, setting the bit corresponding to pin 3 of the CLEAR register. This time, we set the “LED state” flag register to 0 to signal that the current state is low before branching to \texttt{wait}.
+In the \texttt{wait} section of our code, we use a loop to wait for a fixed amount 
+of time before updating the output signal. First, we reset the loop by setting register 
+\texttt{w3} to 0. Within the loop, we add 1 to register \texttt{w3} until it is greater 
+than or equal to a set wait time of 0x50000. Once the wait time is reached, we check 
+the “LED state” flag register to see if the current state is high or low, branching to 
+the next state depending on the outcome of the comparison.
 
-In the \texttt{wait} section of our code, we use a loop to wait for a fixed amount of time before updating the output signal. First, we reset the loop by setting register texttt{w3} to 0. Within the loop, we add 1 to register \texttt{w3} until it is greater than or equal to a set wait time of 0x50000. Once the wait time is reached, we check the “LED state” flag register to see if the current state is high or low, branching to the next state depending on the outcome of the comparison.
+The final section of our code includes a set of seven integer directives that are loaded 
+into registers at the start of the program. The integer directives include the GPIO 
+function select address, the GPSET0 address, the GPCLR0 address, the wait time, the 
+GPIO configuration for function selection, the GP output configuration for sending 
+high/low signals, and the “LED state” flag.
 
-The final section of our code includes a set of seven integer directives that are loaded into registers at the start of the program. The integer directives include the GPIO function select address, the GPSET0 address, the GPCLR0 address, the wait time, the GPIO configuration for function selection, the GP output configuration for sending high/low signals, and the “LED state” flag.
+One issue we faced while writing assembly was misunderstanding the instruction format. 
+For example, our attempts to use the \texttt{mov} instruction to load an immediate 
+value into a register yielded incorrect results, which confused us greatly. When we
+realised that our emulator and assembler do not support the functionality for immediate 
+operands in \texttt{mov} instructions, we changed the structure of the code to use 
+the \texttt{ldr} instruction combined with integer directives to store the set and 
+clear flags in the corresponding GPIO output registers. 
+When using a \texttt{mov} instruction, we used register operands rather than immediate values.
 
-We faced many challenges while writing our assembly code. For example, our attempts to use the \texttt{mov} instruction to load an immediate value into a register yielded incorrect results, which confused us greatly. When we finally realised that our emulator and assembler do not support the functionality for immediate operands in \texttt{mov} instructions, we changed the structure of the code to use the \texttt{ldr} instruction combined with integer directives to store the set and clear flags in the corresponding GPIO output registers. When using a \texttt{mov} instruction, we used register operands rather than immediate values.
-
-Another challenge we faced was understanding the assembly we had written. Since our assembler does not support comments, descriptive variable names and labels were essential to code clarity. However, when we began writing the code, our variable names were extremely generic, causing confusion and many delays in debugging. Therefore, we altered our code to have clear labels for different sections and comprehensible integer directive names, resulting in a more productive debugging process. 
-
+Another challenge we faced was understanding the assembly we had written. Since our assembler 
+does not support comments, descriptive variable names and labels were essential to code clarity. 
+However, when we began writing the code, our variable names were extremely generic, 
+causing confusion and many delays in debugging. As a result, we spent time adding clear labels 
+for different sections and comprehensible names for integer directive, resulting in a 
+more productive debugging process. 
 
 \section{Text-Based Virtual Pet}
 
@@ -81,20 +114,58 @@ on their pet. This concept can then be generalized to any aspect of life, includ
 studies, self-care, hobbies, and more. 
 
 \subsection{Virtual Pet Design}
-The virtual pet has three main categories that the user can interact with: cleanliness, happiness, and hunger. Each category decrements by one bar over a fixed amount of time, but can be improved by the user through keyboard inputs. If any category reaches zero, the current virtual pet cannot continue and the user would need to leave the game or restart with a new virtual pet. 
 
-We allowed the user to display their current category scores at any point, so they can check if any categories need particular attention. The program automatically warns the user if any category has only one heart remaining. Furthermore, we designed in-game coins that are regularly rewarded to the user if they keep their pet alive; these coins can be used to purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way of encouraging user interaction; the longer a player plays for, the higher the level they can reach.
+Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
+display of the pet in a separate window, and one with the pet displayed on a screen in a Raspberry
+Pi. This creates three layers of accessibility: one for those who cannot load the GUI, one for those
+without a Raspberry Pi, and one for those who prefer a tiny, physical companion.
+
+The virtual pet has three main categories that the user can interact with: cleanliness, 
+happiness, and hunger. Each category decrements by one bar over a fixed amount of time, but 
+can be improved by the user through keyboard inputs. If any category reaches zero, the 
+current virtual pet cannot continue and the user would need to leave the game or restart 
+with a new virtual pet. 
+
+We allowed the user to display their current category scores at any point, so they can check 
+if any categories need particular attention. The program automatically warns the user if any 
+category has only one heart remaining. Furthermore, we designed in-game coins that are 
+regularly rewarded to the user if they keep their pet alive; these coins can be used to 
+purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way 
+of encouraging user interaction; the longer a player plays for, the higher the level they can reach.
 
 \subsection{Challenges} 
-Initially, we ran into some problems implementing the pet as a global structure pointer. Eventually, we realised the main issue was how the files were linked, which led to multiple declarations of the same variable. We fixed it by ensuring the virtual pet would only be created once, at the start of the program. This proved particularly helpful when we implemented in-game coins as a separate global variable, which involved some similar C syntax.
 
+Initially, we ran into some problems implementing the pet as a global structure pointer. Eventually,
+we realised the main issue was how the files were linked, which led to multiple declarations of the
+same variable. We fixed the linking issue by ensuring the virtual pet is only created once at the
+start of the program. This proved particularly helpful when we implemented in-game coins as a
+separate global variable, which involved some similar C syntax.
 
 \subsection{Testing}
-When we started designing our extension, we made a list of desirable functionalities which we wanted the program to achieve by the end of the project. These included the user being able to interact with the virtual pet through the keyboard, the various category stats (such as happiness) to decrease at regular time intervals, and each category being limited to a number of hearts between zero and five. Later, we referred back to this checklist to thoroughly test the program. 
 
-Firstly, we confirmed that the stats would decrease at the expected regular intervals (every 12 seconds for cleanliness, 8 seconds for happiness, and 5 seconds for hunger) by starting the game, then not interacting with the category currently being tested. We printed the stats at the expected time intervals, to test if the stat for the current category was decrementing each time, and observed the final output that the virtual pet had died when the category had reached zero hearts. To test the user inputs (for example, typing ‘f’ or ‘F’ should increase the hunger score), we waited for a particular category to have fewer than five hearts (outputting the stats first, to confirm this was the case), then input the appropriate character to test that we got an output message stating this category had increased as expected.
+When we started designing our extension, we listed desirable functionalities we hoped to achieve.
+These included the user interacting with the virtual pet through keyboard inputs, decreasing the
+various category stats (such as happiness) at regular time intervals, and ensuring the number of
+hearts in each category is between zero and five. We referred back to this checklist to thoroughly
+test the program.
 
-We performed many more manual tests, to determine whether the program worked as expected. In future we would test more rigorously by creating a test suite, as was used for the emulator and assembler, so that we could test many possible states of our program and ensure that it always operates in a predictable and desirable way. Due to time restrictions in this project, we decided it would be better to test the program in some of the most likely scenarios, and confirm if the main modules (such as user input) worked rather than risk running out of time building a test suite and being unable to test anything at all.
+First, we confirmed that the stats would decrease at the expected regular intervals: every twelve
+seconds for cleanliness, eight seconds for happiness, and five seconds for hunger. To do so, we ran
+the game without interacting with the category being tested. We printed the stats at the expected
+time intervals to test if the stat for the current category was decrementing each time, and observed
+the successful outcome of the virtual pet dying when the category reached zero hearts. To test the
+user inputs, we waited for a particular category to have fewer than five hearts, then inputted the
+appropriate character. This test succeeds if we obtain an output message stating this category has
+increased by one heart as expected. For example, typing ‘f’ or ‘F’ for “feed” should print an output
+message confirming an increment in the hunger score.
+
+We performed many more manual tests to determine whether the program worked as expected.
+In the future, we hope to test more rigorously by creating a test suite, as was used for the emulator
+and assembler, to test many possible states of our program and ensure it always operates in a
+predictable and desirable way. Due to time restrictions in this project, we decided it would be
+better to test the program in some of the most likely scenarios, and confirm if the main functionality
+works rather than risk running out of time building a test suite and being unable to test anything
+at all.
 
 \section{Group Reflection}
 
@@ -103,7 +174,17 @@ We performed many more manual tests, to determine whether the program worked as 
 \subsection{Tangina Kader}
 
 \subsection{Amy Showell}
-I tried to communicate often with the others both online and in real life, which helped with group discussions and moving the project forward effectively. Through this project, I’ve realised that I have a tendency to rush and overlook details which can lead to code that is difficult to read or doesn’t pass all the tests. Thankfully Shriya and Yao pay more attention to detail than me, and notice minor mistakes in my code which I missed; these could have easily become larger problems if they hadn’t been caught until much later. In future, I will slow down and focus more on the quality of my work as well as the quantity. Overall, I think I fit in well with this group. I engaged in group/pair programming and debugging several times, particularly for Part III. I clearly communicated which tasks I was working on and attempted to understand what everyone else was doing by asking questions and using other resources, such as Scientia.
+
+I tried to communicate often with the others both online and in real life, which helped with group
+discussions and moving the project forward effectively. Through this project, I’ve realised that I
+have a tendency to rush and overlook details which can lead to code that is difficult to read or
+doesn’t pass all the tests. Thankfully, Shriya and Yao pay more attention to detail than me, and
+noticed minor mistakes in my code which I missed; these could have easily become larger problems
+if they hadn’t been caught until much later. In the future, I will slow down and focus more on
+the quality of my work as well as the quantity. Overall, I think I fit in well with this group. I
+engaged in group/pair programming and debugging several times, particularly for Part III. I clearly
+communicated the tasks I was working on and attempted to understand what everyone else was
+doing by asking questions and using other resources, such as Scientia.
 
 \subsection{Shriya Sistla}
 
