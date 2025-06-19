@@ -135,7 +135,12 @@ Initially, we ran into some problems implementing the pet as a global structure 
 Eventually, we realised the main issue was how the files were linked, which led to multiple 
 declarations of the same variable. We fixed it by ensuring the virtual pet would only be 
 created once, at the start of the program. This proved particularly helpful when we implemented 
-in-game coins as a separate global variable, which involved some similar C syntax.
+in-game coins as a separate global variable, which involved some similar C syntax. Another 
+challenge we faced was working out how to perform the background tasks of incrementing coins 
+at a set interval, and decrementing pet statistics at set intervals while also allowing 
+the user to play the game simultaneously. To solve this problem, we decided to launch 
+separate threads for each background task we wanted to perform, ensuring that the execution 
+of the threads did not interfere with the execution of the main program.
 
 When creating the GUI version of our virtual pet, the primary challenge was setting up the 
 packages and dependencies of our chosen graphical user interface toolkit, GTK. During setup, 
