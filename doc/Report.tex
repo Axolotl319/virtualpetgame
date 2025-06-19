@@ -117,15 +117,22 @@ studies, self-care, hobbies, and more.
 \subsection{Virtual Pet Design}
 
 Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
-display of the pet in a separate window, and one with the pet displayed on a LED HAT in a Raspberry
-Pi. This creates three layers of accessibility: one for those who cannot load the GUI, one for those
-without a Raspberry Pi, and one for those who prefer a tiny, physical companion.
+display of the pet in a separate window, and one with the pet displayed on an LED HAT on a Raspberry
+Pi. The three iterations create three layers of accessibility: one for those who cannot load the GUI, 
+one for those without a Raspberry Pi, and one for those who prefer a tiny, physical companion. 
+All three versions share similar functionality, but each design also had its own
+additional features. The GUI displays images of the virtual pet which changes depending on the 
+interaction. For example, at the beginning, a default 8-bit cat is displayed. If the 
+user feeds their virtual pet by pressing `f', the image changes to the same cat holding a fish. 
+The Raspberry Pi version is similar, but is implemented differently because it involves hardware. 
 
 The virtual pet has three main categories that the user can interact with: cleanliness, 
-happiness, and hunger. Each category decrements by one bar over a fixed amount of time, but 
-can be improved by the user through keyboard inputs. If any category reaches zero, the 
-current virtual pet cannot continue and the user would need to leave the game or restart 
-with a new virtual pet. 
+happiness, and hunger. Each category decrements by one bar over a fixed amount of time: every twelve 
+hours for cleanliness, eight hours for happiness, and five hours for hunger. Every category  
+can be improved by the user through keyboard inputs: `C' for ``clean'' to improve cleanliness, 
+`P' for ``play'' to improve happiness, and `F' for ``feed'' to improve hunger. If any category 
+reaches zero, the current virtual pet cannot continue and the user would need to leave the game 
+or restart with a new virtual pet. 
 
 We allowed the user to display their current category scores at any point, so they can check 
 if any categories need particular attention. The program automatically warns the user if any 
@@ -134,16 +141,8 @@ regularly rewarded to the user if they keep their pet alive; these coins can be 
 purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way 
 of encouraging user interaction; the longer a player plays for, the higher the level they can reach.
 
-Our initial design was a text-based computer game, but we later decided to be more ambitious
-and create two further versions: one using a GUI and another using a LED HAT on a Raspberry
-Pi. All three versions shared similar functionality and each new design also had its own
-additional features. The GUI displays images of the virtual pet which are visible and can
-change throughout the game. For example, at the start a cartoon cat is displayed and if the 
-user feeds their virtual pet, the image changes to the same cat holding a fish. The Raspberry
-Pi design is similar but is implemented differently because it involves hardware. This version
-could be more appealing to users because it uses a smaller screen.
-
 \subsection{Challenges} 
+
 Initially, we ran into some problems implementing the pet as a global structure pointer. 
 Eventually, we realised the main issue was how the files were linked, which led to multiple 
 declarations of the same variable. We fixed it by ensuring the virtual pet would only be 
@@ -161,7 +160,7 @@ most online tutorials recommended using \texttt{sudo} commands. However, these c
 blocked on the lab computers. As a result, we needed to find a workaround, which involved 
 pulling multiple GitHub repositories that GTK depended on. The next challenge was setting up 
 the makefile to compile C source code that used GTK. This involved much trial and error, and 
-a deeper understanding of makefile flags and macros. In addition, we learned the importance 
+a deeper understanding of Makefile flags and macros. In addition, we learned the importance 
 of verifying the existence of vital libraries after setup; when we tried to compile the C 
 source code using version \texttt{gtk4}, as suggested by the GTK documentation, the compilation 
 failed. After checking the GTK version, we discovered that the GitHub repository only 
@@ -182,24 +181,35 @@ find the perfect wait time between recognising a user input and calling a user a
 so that the statistics were only modified once.
 
 \subsection{Testing}
+
 When we started designing our extension, we listed desirable functionalities we hoped to 
 achieve. These included the user interacting with the virtual pet through the keyboard inputs, 
 decreasing the various category statistics (such as happiness) at regular time intervals, 
 and limiting the number of hearts in each category to be between zero and five. Later, we referred 
 back to this checklist to thoroughly test the program. 
 
-First, we confirmed that the stats would decrease at the expected regular intervals: every twelve 
-seconds for cleanliness, eight seconds for happiness, and five seconds for hunger. To do so, we started 
+First, we confirmed that the stats would decrease at regular intervals. Since it would take too 
+long to check if the stats decreased every five, eight, and twelve hours, we chose to decrease the stats
+every twelve seconds for cleanliness, eight seconds for happiness, and five seconds for hunger for 
+testing and demonstration purposes. To check whether the stats decremented as expected, we started 
 the game without interacting with the category being tested. We printed the stats at the expected 
 time intervals to test if the stat for the current category was decrementing each time, and 
-observed the final outcome of  the virtual pet dying when the category reached zero hearts. 
+observed the final outcome of the virtual pet dying when the category reached zero hearts. Although 
+the stats do decrease at regular intervals, this test is not a good enough substitute for testing 
+decrements every five, eight, and twelve hours; the countdown or program may behave 
+differently or unexpectedly for much longer periods. In the future when there is more time, a 
+more effective test is to check regular decrements over multiple days. 
 
 To test the user inputs, we waited for a particular category to have fewer than five hearts, 
 then input the appropriate character. This test succeeds if we obtain an output message stating 
 this category had increased as expected. For example, typing ‘f’ or ‘F’ should print an output 
-message incrementing the hunger score. Similar tests were carried out across the GUI and 
+message incrementing the hunger score. However, the score should not increase if it is already 
+at its maximum of five. Similar tests were carried out across the GUI and 
 Raspberry Pi versions, as well as additional implementation-specific checks such as testing 
-that the image displayed on the GUI changed as expected for particular keyboard inputs.
+that the image displayed on the GUI changed as expected for particular keyboard inputs. The test 
+for changing images is effective, as it is easy to see if an image changes upon a key press. 
+However, it would serve the program well to test more edge cases, such as refusing to increase 
+stats after a pet has already died. 
 
 We performed many more manual tests to determine whether the program worked as expected. 
 In the future, we hope to test more rigorously by creating a test suite, as was used for the 
@@ -216,6 +226,7 @@ being unable to test anything at all.
 \subsection{Tangina Kader}
 
 \subsection{Amy Showell}
+
 I tried to communicate often with the others both online and in real life, which helped with group
 discussions and moving the project forward effectively. Through this project, I’ve realised that I
 have a tendency to rush and overlook details which can lead to code that is difficult to read or
@@ -230,6 +241,7 @@ doing by asking questions and using other resources, such as Scientia.
 \subsection{Shriya Sistla}
 
 \subsection{Yao Tong}
+
 Based on the Peer Assessment feedback, I fit into the group as an organizer who keeps the group 
 on track through meetings, checklists, and deadlines. For example, I like to create Google 
 Document task checklists for each section of the project, and a master checklist with key 
