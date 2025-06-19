@@ -55,60 +55,33 @@ static int check_level(void *data) {
 	return TRUE; 
 }
 
-// Function that checks the pet's health and issues warnings 
-// This is called by GTK's main function, as set up in activate()
-// Returns FALSE if pet dies, TRUE otherwise 
-// When FALSE is returned, the function is never called again 
-static int check_health(void *app) {
-	//dies if any stat = 0
-	check_bounds();
-	vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));	
-	
-	//quit application if pet dies
-	if (!vpet->alive) {
-		printf("Your virtual pet is dead :(\n");
-		g_application_quit(G_APPLICATION(app)); 
-	}
-
-	//warn user if any category has 1 heart remaining
-	if(vpet->cleanliness == 1){
-		print_warning(CLEANLINESS);
-	}
-	if(vpet->happiness == 1){
-		print_warning(HAPPINESS);
-	}
-	if(vpet->hunger == 1){
-		print_warning(HUNGER);
-	}
-
-	return TRUE; 	
-}
-
-// If hunger ever reaches zero, the function is never called again. 
-static int dec_hunger(void *app) {
-	vpet->hunger--;
-        if (vpet->hunger <= 0) {
-		return FALSE; 
-	}
-	return TRUE; 
-}
-
-// If cleanliness ever reaches zero, the function is never called again 
-static int dec_cleanliness(void *app) {
-	vpet->cleanliness--;
-       	if (vpet->cleanliness <= 0) {
-		return FALSE; 
-	}	
-	return TRUE; 
-}
-
-// If happiness ever reaches zero, the function is never called again 
-static int dec_happiness(void *app) {
-	vpet->happiness--;
-        if (vpet->happiness <= 0) {
-		return FALSE; 
-	}	
-	return TRUE; 
+// Function that checks the pet's health and issues warnings  
+// This is called by GTK's main function, as set up in activate() 
+// Returns FALSE if pet dies, TRUE otherwise  
+// When FALSE is returned, the function is never called again  
+int check_health(void *app) { 
+        //dies if any stat = 0 
+        check_bounds(); 
+        vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0)); 
+ 
+        //quit application if pet dies 
+        if (!vpet->alive) { 
+                printf("Your virtual pet is dead :(\n"); 
+                g_application_quit(G_APPLICATION(app)); 
+        } 
+ 
+        //warn user if any category has 1 heart remaining 
+        if(vpet->cleanliness == 1){ 
+                print_warning(CLEANLINESS); 
+        } 
+        if(vpet->happiness == 1){ 
+                print_warning(HAPPINESS); 
+        } 
+        if(vpet->hunger == 1){ 
+                print_warning(HUNGER); 
+        } 
+ 
+        return TRUE; 
 }
 
 // Sets up and starts the GUI application window 

@@ -50,4 +50,12 @@ extern pet new_pet(char *name);
 
 extern void print_warning(int category);
 
-extern void increase_level(void); 
+extern void increase_level(void);
+
+extern int check_health(void *app); 
+
+extern int dec_cleanliness(void *app); 
+
+extern int dec_happiness(void *app); 
+
+extern int dec_hunger(void *app); 

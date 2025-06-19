@@ -115,6 +115,34 @@ void increase_level( void ) {
 	}
 }
 
+
+// If hunger ever reaches zero, the function is never called again. 
+int dec_hunger(void *app) {
+        vpet->hunger--;
+        if (vpet->hunger <= 0) {
+                return false;
+        }
+        return true;
+}
+
+// If cleanliness ever reaches zero, the function is never called again 
+int dec_cleanliness(void *app) {
+        vpet->cleanliness--;
+        if (vpet->cleanliness <= 0) {
+                return false;
+        }
+        return true;
+}
+
+// If happiness ever reaches zero, the function is never called again 
+int dec_happiness(void *app) {
+        vpet->happiness--;
+        if (vpet->happiness <= 0) {
+                return false;
+        }
+        return true;
+}
+
 pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
