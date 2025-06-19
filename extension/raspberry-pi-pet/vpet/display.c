@@ -47,6 +47,7 @@ void display_action_cat(char *filename) {
 	GUI_ReadBmp(filename);
 	LCD_1IN3_Display(CatImage);
 	DEV_Delay_ms(2000);
+	display_cat();
 }
 
 void display_hearts(void) {

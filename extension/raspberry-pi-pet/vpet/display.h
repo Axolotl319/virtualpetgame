@@ -1,4 +1,9 @@
-#define DEFAULT_CAT_PATH "vpet/cat.bmp"
+#define DEFAULT_CAT_PATH "cat_images/default.bmp"
+#define FEED_CAT_PATH    "cat_images/feed.bmp"
+#define HAPPY_CAT_PATH   "cat_images/happy.bmp"
+#define CLEAN_CAT_PATH   "cat_images/clean.bmp"
+#define GIFT_CAT_PATH    "cat_images/gift.bmp"
+#define SLEEP_CAT_PATH   "cat_images/sleep.bmp"
 
 extern UWORD *CatImage;
 
