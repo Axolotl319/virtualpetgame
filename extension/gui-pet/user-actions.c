@@ -2,19 +2,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include "GUI_BMP.h"
-#include "GUI_Paint.h"
-#include "DEV_Config.h"
 #include "pet.h"
 #include "user-actions.h"
 #include "coins.h"
-#include "display.h"
 
 //global variables included from other files
 extern pet vpet;
 extern int coins;
 
-<<<<<<< HEAD:extension/raspberry-pi-pet/vpet/user-actions.c
 void feed(void) {
 	pthread_mutex_lock(&hunger_mutex);
 	if(vpet->hunger++ >= vpet->max_hearts){

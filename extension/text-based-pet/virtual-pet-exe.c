@@ -7,17 +7,11 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <fcntl.h>
-#include <signal.h>
-#include "DEV_Config.h"
-#include "GUI_Paint.h"
-#include "GUI_BMP.h"
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
-#include "display.h"
 
 #define MAX_NAME_LEN 100
-#define WAIT_TIME_MICROS 200000
 
 static void init(void) {
 	printf("Welcome to your virtual pet!\n"); 
@@ -157,13 +151,8 @@ int main(void) {
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
-<<<<<<< HEAD:extension/raspberry-pi-pet/vpet/virtual-pet-exe.c
 
-		usleep(50000);
-=======
-		
 		pthread_mutex_unlock(&vpet_mutex);
->>>>>>> master:extension/text-based-pet/virtual-pet-exe.c
 	}
 
 	//join the coin thread if infinite loop exited
