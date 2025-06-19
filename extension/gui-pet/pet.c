@@ -75,6 +75,7 @@ static void print_stat(int category, int amt){
 }
 
 void print_hearts(void) {
+	// fprintf(stdout, "\n"); 
 	fprintf(stdout, "Stats:\n");
 	check_bounds(); //ensure all stats between 0-5
 	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
@@ -119,7 +120,7 @@ void increase_level( void ) {
 // If hunger ever reaches zero, the function is never called again. 
 int dec_hunger(void *app) {
         vpet->hunger--;
-        if (vpet->hunger <= 0) {
+        if (vpet->hunger <= MIN_HEARTS) {
                 return false;
         }
         return true;
@@ -128,7 +129,7 @@ int dec_hunger(void *app) {
 // If cleanliness ever reaches zero, the function is never called again 
 int dec_cleanliness(void *app) {
         vpet->cleanliness--;
-        if (vpet->cleanliness <= 0) {
+        if (vpet->cleanliness <= MIN_HEARTS) {
                 return false;
         }
         return true;
@@ -137,7 +138,7 @@ int dec_cleanliness(void *app) {
 // If happiness ever reaches zero, the function is never called again 
 int dec_happiness(void *app) {
         vpet->happiness--;
-        if (vpet->happiness <= 0) {
+        if (vpet->happiness <= MIN_HEARTS) {
                 return false;
         }
         return true;

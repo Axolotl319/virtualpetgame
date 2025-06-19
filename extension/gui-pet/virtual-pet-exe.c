@@ -47,6 +47,7 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 		       	/* NO OP */ 
 			break;  	
 	}
+	printf("\n"); 
 	return true; 
 }
 
@@ -63,7 +64,7 @@ static int check_level(void *data) {
 // Returns FALSE if pet dies, TRUE otherwise  
 // When FALSE is returned, the function is never called again  
 int check_health(void *app) { 
-        //dies if any stat = 0 
+        //dies if any stat falls beneath the minimum  
         check_bounds(); 
         vpet->alive = ((vpet->cleanliness > MIN_HEARTS) && 
 			(vpet->happiness > MIN_HEARTS) && 
@@ -130,7 +131,8 @@ static int init(void) {
 		scanf("%s", petname); 
 	}
 	vpet = new_pet(petname);
-	printf("%s is happy to meet you!\n", vpet->name); 
+	printf("%s is happy to meet you!\n", vpet->name);
+        printf("\n"); 	
 
 	//initialise money
 	coins = 0;
