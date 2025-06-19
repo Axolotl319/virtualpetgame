@@ -7,9 +7,6 @@
 #include "pet.h"
 #include "coins.h"
 
-//helper macro to convert hours to seconds
-//#define HOURS(x) ((x) * 3600)
-
 //lock
 pthread_mutex_t vpet_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -36,26 +33,20 @@ const level levels[MAX_LEVEL - 1] = {
 void check_bounds(void){
 	if(vpet->cleanliness > vpet->max_hearts){
 		vpet->cleanliness = vpet->max_hearts;
-		printf("debug: cleanliness set to > 5, reset to 5\n");
 	}else if(vpet->cleanliness < 0){
 		vpet->cleanliness = 0;
-		printf("debug: cleanliness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->happiness > vpet->max_hearts){
 		vpet->happiness = vpet->max_hearts;
-		printf("debug: happiness set to > 5, reset to 5\n");
 	}else if(vpet->happiness < 0){
 		vpet->happiness = 0;
-		printf("debug: happiness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->hunger > vpet->max_hearts){
 		vpet->hunger = vpet->max_hearts;
-		printf("debug: hunger set to > 5, reset to 5\n");
 	}else if(vpet->hunger < 0){
 		vpet->hunger = 0;
-		printf("debug: hunger set to < 0, reset to 0\n");
 	}
 }
 

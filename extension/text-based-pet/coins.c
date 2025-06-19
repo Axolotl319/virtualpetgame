@@ -22,7 +22,6 @@ void *increment_coins( void *arg ) {
 		//unlock
 		pthread_mutex_unlock(&coins_mutex);
 
-		printf("DEBUG: Coins: %d\n", coins);
 		fflush(stdout);
 	}
 	return NULL;
@@ -39,7 +38,6 @@ int decrement_coins( int amount ) {
 	if (coins >= amount) {
 		coins -= amount;
 		success = EXIT_SUCCESS;
-		printf("DEBUG: Successfully decremented coins\n");
 	}
 	//unlock
 	pthread_mutex_unlock(&coins_mutex);
