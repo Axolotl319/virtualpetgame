@@ -1,0 +1,13 @@
+There are three versions of our virtual pet. Each version has approximately 
+the same functionality, but there are minor differences in their source code 
+and Makefiles, so we placed each version in their own folder.   
+
+Text-only: no GUI, can only interact with the pet through the terminal.
+	   More explicit multi-threading than the other versions.  
+
+GUI: an image of the pet is displayed in a separate window. The images 
+     change depending on how the user interacts with the pet. For 
+     example, cleaning the pet will show an image of the pet with 
+     bubbles in the background. 
+
+Raspberry Pi: 
