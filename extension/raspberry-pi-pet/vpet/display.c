@@ -8,6 +8,9 @@
 #include "coins.h"
 #include "display.h"
 
+//the gap between each line when displaying text
+#define NEWLINE_GAP 25
+
 UWORD *CatImage;
 
 void init_display( void ) {
@@ -43,7 +46,7 @@ void display_cat(void) {
         LCD_1IN3_Display(CatImage);
 }
 
-void display_action_cat(char *filename) {
+void display_temp_img(char *filename) {
 	Paint_Clear(WHITE);
 	LCD_1IN3_Clear(WHITE);
 	GUI_ReadBmp(filename);

@@ -29,6 +29,7 @@ static void init(void) {
 		scanf("%s", petname); 
 	}
 	vpet = new_pet(petname);
+	init_display();
 }
 
 
@@ -82,8 +83,7 @@ static void *take_input( void *arg ) {
 
 int main(void) {
 
-	init();
-	init_display(); 
+	init(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
 
 	bool running = 1;
@@ -123,6 +123,7 @@ int main(void) {
 			if(!cleanliness_warning) {
 				cleanliness_warning = true;
 				print_warning(CLEANLINESS);
+				display_temp_img(CLEANLINESS_WARNING_PATH);
 			}
 		} else {
 			cleanliness_warning = false;
@@ -132,6 +133,7 @@ int main(void) {
 			if(!happiness_warning) {
 				happiness_warning = true;
 				print_warning(HAPPINESS);
+				display_temp_img(HAPPINESS_WARNING_PATH);
 			}
 		} else {
 			happiness_warning = false;
@@ -141,6 +143,7 @@ int main(void) {
 			if(!hunger_warning) {
 				hunger_warning = true;
 				print_warning(HUNGER);
+				display_temp_img(HUNGER_WARNING_PATH);
 			}
 		} else {
 			hunger_warning = false;
@@ -150,7 +153,7 @@ int main(void) {
 		if (vpet->curr_level.level_num < MAX_LEVEL &&
 		    vpet->num_actions >= vpet->curr_level.num_actions) {
 			increase_level();
-		}	
+		}
 
 		//dies if any stat = 0 (or all, can change)
 		vpet->alive = ((vpet->cleanliness > 0) && 
