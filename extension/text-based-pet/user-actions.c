@@ -21,7 +21,6 @@ int feed(void) {
 	check_bounds();
 	pthread_mutex_unlock(&vpet_mutex);
 	return EXIT_SUCCESS;
-       //I can't think of a failure situation - feel free to correct	
 }
 
 int play(void) {
@@ -52,7 +51,7 @@ int clean(void) {
 	return EXIT_SUCCESS; 
 }
 
-//returns 1 if not enough money or error, else 0
+//returns EXIT_FAILURE if not enough money or error, else EXIT_SUCCESS
 int gift(void) {
 	pthread_mutex_lock(&vpet_mutex);
 	if(decrement_coins(5)){
@@ -64,7 +63,6 @@ int gift(void) {
 	vpet->happiness = vpet->max_hearts;
 	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
 	vpet->num_actions++;
-	//will work out gift design
 
 	pthread_mutex_unlock(&vpet_mutex);
 	return EXIT_SUCCESS; 
