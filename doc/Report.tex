@@ -118,24 +118,30 @@ studies, self-care, hobbies, and more.
 
 Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
 display of the pet in a separate window, and one with the pet displayed on an LED HAT on a Raspberry
-Pi. The three iterations create three layers of accessibility: one for those who cannot load the GUI, 
-one for those without a Raspberry Pi, and one for those who prefer a tiny, physical companion. 
-All three versions share similar functionality, but each design also had its own
+Pi. The three iterations create three layers of accessibility: one for those who cannot load the GUI or 
+download external libraries, one for those without a Raspberry Pi, and one for those who prefer a tiny, 
+physical companion. All three versions share similar functionality, but each design also had its own
 additional features. The GUI displays images of the virtual pet which changes depending on the 
 interaction. For example, at the beginning, a default 8-bit cat is displayed. If the 
-user feeds their virtual pet by pressing `f', the image changes to the same cat holding a fish. 
+user feeds their virtual pet by pressing `F', the image changes to the same cat holding a fish. 
 The Raspberry Pi version is similar, but is implemented differently because it involves hardware. 
 
 The virtual pet has three main categories that the user can interact with: cleanliness, 
 happiness, and hunger. Each category decrements by one bar over a fixed amount of time: every twelve 
-hours for cleanliness, eight hours for happiness, and five hours for hunger. Every category  
-can be improved by the user through keyboard inputs: `C' for ``clean'' to improve cleanliness, 
-`P' for ``play'' to improve happiness, and `F' for ``feed'' to improve hunger. If any category 
-reaches zero, the current virtual pet cannot continue and the user would need to leave the game 
-or restart with a new virtual pet. 
+hours for cleanliness, eight hours for happiness, and five hours for hunger. To decrement health 
+at different intervals, the text-based version of our extension uses one thread for each category, 
+which run and count down independently of each other. The GUI version uses an imported GLib library 
+function that repeatedly calls a given function every user-specified number of seconds. 
 
-We allowed the user to display their current category scores at any point, so they can check 
-if any categories need particular attention. The program automatically warns the user if any 
+Every category can be improved by the user through keyboard inputs: `C' for ``clean'' to 
+improve cleanliness, `P' for ``play'' to improve happiness, and `F' for ``feed'' to improve hunger.
+The text-based version looks for each input using \texttt{getchar}, but the GUI and Raspberry Pi 
+versions both use key press event detectors from imported libraries. If any category reaches zero, 
+the current virtual pet cannot continue, and the user would need to leave the game and restart 
+with a new virtual pet. 
+
+We allowed the user to display their current category scores by typing `S' at any point, so they 
+can check if any categories need particular attention. The program automatically warns the user if any 
 category has only one heart remaining. Furthermore, we designed in-game coins that are 
 regularly rewarded to the user if they keep their pet alive; these coins can be used to 
 purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way 
@@ -202,19 +208,21 @@ more effective test is to check regular decrements over multiple days.
 
 To test the user inputs, we waited for a particular category to have fewer than five hearts, 
 then input the appropriate character. This test succeeds if we obtain an output message stating 
-this category had increased as expected. For example, typing ‘f’ or ‘F’ should print an output 
+this category had increased as expected. For example, typing ‘F’ should print an output 
 message incrementing the hunger score. However, the score should not increase if it is already 
 at its maximum of five. Similar tests were carried out across the GUI and 
 Raspberry Pi versions, as well as additional implementation-specific checks such as testing 
 that the image displayed on the GUI changed as expected for particular keyboard inputs. The test 
 for changing images is effective, as it is easy to see if an image changes upon a key press. 
 However, it would serve the program well to test more edge cases, such as refusing to increase 
-stats after a pet has already died. 
+stats after a pet has already died, or if there are any deadlock situations due to our use of threads. 
 
 We performed many more manual tests to determine whether the program worked as expected. 
 In the future, we hope to test more rigorously by creating a test suite, as was used for the 
 emulator and assembler, to test many possible states of our program and ensure it always 
-operates in a predictable and desirable way. Due to time restrictions in this project, we 
+operates in a predictable and desirable way. Since our extension is made as a type of game for 
+the general public, it would also be effective to have a pool of beta testers to inform us about 
+the game's design, accessibility, and engagement. Due to time restrictions in this project, we 
 decided it would be better to test the program in some of the most likely scenarios, and confirm 
 if the main functionality works rather than risk running out of time building a test suite and 
 being unable to test anything at all.
