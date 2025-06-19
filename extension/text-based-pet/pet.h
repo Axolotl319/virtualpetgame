@@ -2,9 +2,9 @@
 
 #define INIT_HEARTS 5
 #define MAX_LEVEL 10
-#define CLEANLINESS_DECAY_TIME 12  
-#define HUNGER_DECAY_TIME 5  
-#define HAPPINESS_DECAY_TIME 8
+#define CLEANLINESS_DECAY_HOURS 12  
+#define HUNGER_DECAY_HOURS 5  
+#define HAPPINESS_DECAY_HOURS 8
 
 //struct for level info
 typedef struct {
