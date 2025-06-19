@@ -12,6 +12,7 @@ extern int coins;
 int feed(void) {
 	if(vpet->hunger >= MAX_HEARTS){
 		fprintf(stdout, "%s is full!\n", vpet->name);
+		return EXIT_FAILURE; 
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
 		vpet->hunger++; 
@@ -24,6 +25,7 @@ int feed(void) {
 int play(void) {
 	if(vpet->happiness >= MAX_HEARTS){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
+		return EXIT_FAILURE; 
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
 		vpet->happiness++;

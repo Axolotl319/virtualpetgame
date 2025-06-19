@@ -31,13 +31,17 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 			break;  
 		case (GDK_KEY_p): 
 			printf("P key pressed!\n"); 
-			play(); 
-			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/happy.png"); 
+			if (play()) {
+				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/sleep.png"); 
+			} else {
+				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/happy.png"); 
+			}	
 			break;  
 		case (GDK_KEY_g): 
 			printf("G key pressed!\n"); 
-			gift();
-		        gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/gift.png"); 	
+			if (!gift()) {
+				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/gift.png"); 
+			}	
 			break;  
 		default: 
 			printf("Not recognized\n");
