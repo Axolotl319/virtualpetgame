@@ -117,7 +117,7 @@ studies, self-care, hobbies, and more.
 \subsection{Virtual Pet Design}
 
 Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
-display of the pet in a separate window, and one with the pet displayed on a screen in a Raspberry
+display of the pet in a separate window, and one with the pet displayed on a LED HAT in a Raspberry
 Pi. This creates three layers of accessibility: one for those who cannot load the GUI, one for those
 without a Raspberry Pi, and one for those who prefer a tiny, physical companion.
 
@@ -134,39 +134,80 @@ regularly rewarded to the user if they keep their pet alive; these coins can be 
 purchase gifts for and boost the happiness of their virtual pet. We later added levels as a way 
 of encouraging user interaction; the longer a player plays for, the higher the level they can reach.
 
-\subsection{Challenges} 
+Our initial design was a text-based computer game, but we later decided to be more ambitious
+and create two further versions: one using a GUI and another using a LED HAT on a Raspberry
+Pi. All three versions shared similar functionality and each new design also had its own
+additional features. The GUI displays images of the virtual pet which are visible and can
+change throughout the game. For example, at the start a cartoon cat is displayed and if the 
+user feeds their virtual pet, the image changes to the same cat holding a fish. The Raspberry
+Pi design is similar but is implemented differently because it involves hardware. This version
+could be more appealing to users because it uses a smaller screen.
 
-Initially, we ran into some problems implementing the pet as a global structure pointer. Eventually,
-we realised the main issue was how the files were linked, which led to multiple declarations of the
-same variable. We fixed the linking issue by ensuring the virtual pet is only created once at the
-start of the program. This proved particularly helpful when we implemented in-game coins as a
-separate global variable, which involved some similar C syntax.
+\subsection{Challenges} 
+Initially, we ran into some problems implementing the pet as a global structure pointer. 
+Eventually, we realised the main issue was how the files were linked, which led to multiple 
+declarations of the same variable. We fixed it by ensuring the virtual pet would only be 
+created once, at the start of the program. This proved particularly helpful when we implemented 
+in-game coins as a separate global variable, which involved some similar C syntax. Another 
+challenge we faced was working out how to perform the background tasks of incrementing coins 
+at a set interval, and decrementing pet statistics at set intervals while also allowing 
+the user to play the game simultaneously. To solve this problem, we decided to launch 
+separate threads for each background task we wanted to perform, ensuring that the execution 
+of the threads did not interfere with the execution of the main program.
+
+When creating the GUI version of our virtual pet, the primary challenge was setting up the 
+packages and dependencies of our chosen graphical user interface toolkit, GTK. During setup, 
+most online tutorials recommended using \texttt{sudo} commands. However, these commands are 
+blocked on the lab computers. As a result, we needed to find a workaround, which involved 
+pulling multiple GitHub repositories that GTK depended on. The next challenge was setting up 
+the makefile to compile C source code that used GTK. This involved much trial and error, and 
+a deeper understanding of makefile flags and macros. In addition, we learned the importance 
+of verifying the existence of vital libraries after setup; when we tried to compile the C 
+source code using version \texttt{gtk4}, as suggested by the GTK documentation, the compilation 
+failed. After checking the GTK version, we discovered that the GitHub repository only 
+contained \texttt{gtk+-3.0}. If we had checked the version at the very beginning, we could 
+have saved valuable time. Lastly, overcoming the initial GTK learning curve required watching 
+a few YouTube tutorials, but we were able to implement our basic required functionality 
+using just the GTK documentation afterwards.
+
+The Raspberry Pi implementation was difficult at first, since it required a thorough reading 
+of the LED HAT manual, as well as an understanding of the libraries provided with it. The 
+use of these libraries also involved modifying our Makefile to link them, and this was a 
+challenging task. To overcome this, we examined the Makefile provided in the demonstration 
+code for the LED HAT, understanding the purpose of each line to craft our own program’s Makefile. 
+Furthermore, after writing code to take user input from the buttons on the LED HAT, a button 
+press triggered too many calls to the user actions functions, causing the statistics of the 
+pet to maximise with only a single press of the button. To solve this problem, we had to 
+find the perfect wait time between recognising a user input and calling a user actions function 
+so that the statistics were only modified once.
 
 \subsection{Testing}
+When we started designing our extension, we listed desirable functionalities we hoped to 
+achieve. These included the user interacting with the virtual pet through the keyboard inputs, 
+decreasing the various category statistics (such as happiness) at regular time intervals, 
+and limiting the number of hearts in each category to be between zero and five. Later, we referred 
+back to this checklist to thoroughly test the program. 
 
-When we started designing our extension, we listed desirable functionalities we hoped to achieve.
-These included the user interacting with the virtual pet through keyboard inputs, decreasing the
-various category stats (such as happiness) at regular time intervals, and ensuring the number of
-hearts in each category is between zero and five. We referred back to this checklist to thoroughly
-test the program.
+First, we confirmed that the stats would decrease at the expected regular intervals: every twelve 
+seconds for cleanliness, eight seconds for happiness, and five seconds for hunger. To do so, we started 
+the game without interacting with the category being tested. We printed the stats at the expected 
+time intervals to test if the stat for the current category was decrementing each time, and 
+observed the final outcome of  the virtual pet dying when the category reached zero hearts. 
 
-First, we confirmed that the stats would decrease at the expected regular intervals: every twelve
-seconds for cleanliness, eight seconds for happiness, and five seconds for hunger. To do so, we ran
-the game without interacting with the category being tested. We printed the stats at the expected
-time intervals to test if the stat for the current category was decrementing each time, and observed
-the successful outcome of the virtual pet dying when the category reached zero hearts. To test the
-user inputs, we waited for a particular category to have fewer than five hearts, then inputted the
-appropriate character. This test succeeds if we obtain an output message stating this category has
-increased by one heart as expected. For example, typing ‘f’ or ‘F’ for “feed” should print an output
-message confirming an increment in the hunger score.
+To test the user inputs, we waited for a particular category to have fewer than five hearts, 
+then input the appropriate character. This test succeeds if we obtain an output message stating 
+this category had increased as expected. For example, typing ‘f’ or ‘F’ should print an output 
+message incrementing the hunger score. Similar tests were carried out across the GUI and 
+Raspberry Pi versions, as well as additional implementation-specific checks such as testing 
+that the image displayed on the GUI changed as expected for particular keyboard inputs.
 
-We performed many more manual tests to determine whether the program worked as expected.
-In the future, we hope to test more rigorously by creating a test suite, as was used for the emulator
-and assembler, to test many possible states of our program and ensure it always operates in a
-predictable and desirable way. Due to time restrictions in this project, we decided it would be
-better to test the program in some of the most likely scenarios, and confirm if the main functionality
-works rather than risk running out of time building a test suite and being unable to test anything
-at all.
+We performed many more manual tests to determine whether the program worked as expected. 
+In the future, we hope to test more rigorously by creating a test suite, as was used for the 
+emulator and assembler, to test many possible states of our program and ensure it always 
+operates in a predictable and desirable way. Due to time restrictions in this project, we 
+decided it would be better to test the program in some of the most likely scenarios, and confirm 
+if the main functionality works rather than risk running out of time building a test suite and 
+being unable to test anything at all.
 
 \section{Group Reflection}
 
@@ -175,7 +216,6 @@ at all.
 \subsection{Tangina Kader}
 
 \subsection{Amy Showell}
-
 I tried to communicate often with the others both online and in real life, which helped with group
 discussions and moving the project forward effectively. Through this project, I’ve realised that I
 have a tendency to rush and overlook details which can lead to code that is difficult to read or
@@ -190,7 +230,6 @@ doing by asking questions and using other resources, such as Scientia.
 \subsection{Shriya Sistla}
 
 \subsection{Yao Tong}
-
 Based on the Peer Assessment feedback, I fit into the group as an organizer who keeps the group 
 on track through meetings, checklists, and deadlines. For example, I like to create Google 
 Document task checklists for each section of the project, and a master checklist with key 
