@@ -18,7 +18,9 @@ int increment_coins( void *arg ) {
 // returns EXIT_FAILURE if fail, EXIT_SUCCESS if success
 int decrement_coins( int amount ) {
 	if (coins >= amount) {
-		coins -= amount; 
+		coins -= amount;
+	        printf("You bought a gift for five coins. "); 
+		printf("You have %d coins remaining.\n", coins); 	
 		return EXIT_SUCCESS; 
 	}
 	return EXIT_FAILURE;

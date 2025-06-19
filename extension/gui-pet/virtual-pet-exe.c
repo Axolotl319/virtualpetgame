@@ -9,28 +9,29 @@
 #include "user-actions.h"
 
 #define MAX_NAME_LEN 100
+#define CHECK_STAT_INTERVAL 2
+
+// GTK window dimensions
+#define WINDOW_WIDTH 500
+#define WINDOW_HEIGHT 400
 
 // In case of a key press event, carries out the action associated with the key. 
 // Updates the image of cat for each key press as well 
 bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	switch (event->keyval) {
-		case (GDK_KEY_s): 
-			printf("S key pressed!\n"); 
+		case (GDK_KEY_s):  
 			print_hearts(); 
 			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/default.jpg"); 
 			break; 
 		case (GDK_KEY_f): 
-			printf("F key pressed!\n");
 		        feed();
 			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/feed.png"); 
 			break;  
-		case (GDK_KEY_c): 
-			printf("C key pressed!\n"); 
+		case (GDK_KEY_c):  
 			clean();
 		       	gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/clean.png"); 	
 			break;  
-		case (GDK_KEY_p): 
-			printf("P key pressed!\n"); 
+		case (GDK_KEY_p):  
 			if (play()) {
 				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/sleep.png"); 
 			} else {
@@ -38,13 +39,11 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 			}	
 			break;  
 		case (GDK_KEY_g): 
-			printf("G key pressed!\n"); 
 			if (!gift()) {
 				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/gift.png"); 
 			}	
 			break;  
 		default: 
-			printf("Not recognized\n");
 		       	/* NO OP */ 
 			break;  	
 	}
@@ -66,7 +65,9 @@ static int check_level(void *data) {
 int check_health(void *app) { 
         //dies if any stat = 0 
         check_bounds(); 
-        vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0)); 
+        vpet->alive = ((vpet->cleanliness > MIN_HEARTS) && 
+			(vpet->happiness > MIN_HEARTS) && 
+			(vpet->hunger > MIN_HEARTS)); 
  
         //quit application if pet dies 
         if (!vpet->alive) { 
@@ -94,7 +95,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	GtkWidget *window; 
 	window = gtk_application_window_new(app);
         gtk_window_set_title(GTK_WINDOW(window), "Your Virtual Pet"); 
-	gtk_window_set_default_size(GTK_WINDOW(window), 500, 400);
+	gtk_window_set_default_size(GTK_WINDOW(window), WINDOW_WIDTH, WINDOW_HEIGHT);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 
 	// Add the default pet image to GUI window 
@@ -107,12 +108,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), image); 
 
 	// add functions to decrement health, check for death, increment coins, and level up 
-	g_timeout_add_seconds(5, dec_hunger, NULL); 
-	g_timeout_add_seconds(12, dec_cleanliness, NULL); 
-	g_timeout_add_seconds(8, dec_happiness, NULL); 
-	g_timeout_add_seconds(2, check_health, app); 
-	g_timeout_add_seconds(8, increment_coins, NULL); 
-	g_timeout_add_seconds(2, check_level, NULL); 
+	g_timeout_add_seconds(HUNGER_DECAY_HOURS, dec_hunger, NULL); 
+	g_timeout_add_seconds(CLEANLINESS_DECAY_HOURS, dec_cleanliness, NULL); 
+	g_timeout_add_seconds(HAPPINESS_DECAY_HOURS, dec_happiness, NULL); 
+	g_timeout_add_seconds(CHECK_STAT_INTERVAL, check_health, app); 
+	g_timeout_add_seconds(COIN_TIME, increment_coins, NULL); 
+	g_timeout_add_seconds(CHECK_STAT_INTERVAL, check_level, NULL); 
 
 	// Show the window and default pet 
 	gtk_widget_show_all(window); 

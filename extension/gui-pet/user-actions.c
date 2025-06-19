@@ -5,6 +5,8 @@
 #include "user-actions.h"
 #include "coins.h"
 
+#define GIFT_COST 5
+
 //global variables included from other files
 extern pet vpet;
 extern int coins;
@@ -49,7 +51,7 @@ int clean(void) {
 
 //returns FAILURE if not enough money or error, else SUCCESS
 int gift(void) {
-	if(decrement_coins(5)){
+	if(decrement_coins(GIFT_COST)){
 		fprintf(stdout, "%s doesn't have enough money!\n", vpet->name);
 		return EXIT_FAILURE;
 	}
