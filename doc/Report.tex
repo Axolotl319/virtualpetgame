@@ -122,7 +122,7 @@ We later added levels as a way of encouraging user interaction; the longer a pla
 plays for, the higher the level they can reach.
 
 Our initial design was a text-based computer game, but we later decided to be more ambitious
-and create two further versions: one using a GUI and another using a mini screen on a Raspberry
+and create two further versions: one using a GUI and another using a LED HAT on a Raspberry
 Pi. All three versions shared similar functionality and each new design also had its own
 additional features. The GUI displays images of the virtual pet which are visible and can
 change throughout the game. For example, at the start a cartoon cat is displayed and if the 
@@ -137,9 +137,20 @@ declarations of the same variable. We fixed it by ensuring the virtual pet would
 created once, at the start of the program. This proved particularly helpful when we implemented 
 in-game coins as a separate global variable, which involved some similar C syntax.
 
-When creating the GUI, there were some issues with displaying the image and playing the game
-simultaneously.
-\texttt{YAO - GUI}
+When creating the GUI version of our virtual pet, the primary challenge was setting up the 
+packages and dependencies of our chosen graphical user interface toolkit, GTK. During setup, 
+most online tutorials recommended using \texttt{sudo} commands. However, these commands are 
+blocked on the lab computers. As a result, we needed to find a workaround, which involved 
+pulling multiple GitHub repositories that GTK depended on. The next challenge was setting up 
+the makefile to compile C source code that used GTK. This involved much trial and error, and 
+a deeper understanding of makefile flags and macros. In addition, we learned the importance 
+of verifying the existence of vital libraries after setup; when we tried to compile the C 
+source code using version \texttt{gtk4}, as suggested by the GTK documentation, the compilation 
+failed. After checking the GTK version, we discovered that the GitHub repository only 
+contained \texttt{gtk+-3.0}. If we had checked the version at the very beginning, we could 
+have saved valuable time. Lastly, overcoming the initial GTK learning curve required watching 
+a few YouTube tutorials, but we were able to implement our basic required functionality 
+using just the GTK documentation afterwards.
 
 The Raspberry Pi implementation was difficult at first, since more complex C code was required
 to display images on its hardware.
