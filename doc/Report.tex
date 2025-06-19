@@ -51,67 +51,73 @@ As a result, many of our tasks were simplified, and we enjoyed more efficient de
 
 \section{Blinking LED Implementation}
 
-To implement Part III, we began by building a simple circuit with one red LED, one 
-220\(\Omega\) resistor, one wire to ground, and one wire to the output at GPIO pin 3. 
-Then, we made a file, \texttt{led\_blink.s}, in which we started to write our assembly code. 
-Our assembly code has five main sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, 
-\texttt{wait}, and a section for integer directives.
+To implement Part III, we first built a circuit with one red LED, 
+one 220\(\Omega\) resistor, one wire to ground, and one wire GPIO pin 3. 
+We then wrote our assembly code in a file called \texttt{led\_blink.s}. Our 
+program has five sections: \texttt{setout}, \texttt{sethigh}, \texttt{setlow}, 
+\texttt{wait}, and an \texttt{.int} directives section.
 
-In the first section, \texttt{setout}, we select pin 3 as the output by setting FSEL3 to 
-binary 001 and storing this value in the given GPIO function selection address.
+In the first section, \texttt{setout}, we select pin 3 as the output by setting FSEL3 
+to binary 001 and storing this value in the given GPIO function selection address. The 
+next section, \texttt{sethigh}, turns the LED on by storing \texttt{0x8} in the GPSET0 
+register address, which sets the bit corresponding to pin 3. Additionally, we set an 
+“LED state” flag in register \texttt{w9} to signal that the current state is high before 
+branching to the \texttt{wait} section of the code. Similarly, the \texttt{setlow} 
+section turns the LED off by storing \texttt{0x8}  in the GPCLR0 register address, 
+setting the bit corresponding to pin 3 of the CLEAR register. This time, we set the 
+“LED state” flag register to zero to signal that the current state is low before 
+branching to \texttt{wait}.
 
-The next section, \texttt{sethigh}, turns the LED on by storing \texttt{0x8} in the GPSET0 
-register address, which sets the bit corresponding to pin 3. Additionally, we set an “LED state” 
-flag in register \texttt{w9} to signal that the current state is high before branching to the 
-\texttt{wait} section of the code. Similarly, the \texttt{setlow} section turns the LED off by 
-storing \texttt{0x8}  in the GPCLR0 register address, setting the bit corresponding to pin 3 of 
-the CLEAR register. This time, we set the “LED state” flag register to 0 to signal that the 
-current state is low before branching to \texttt{wait}.
+In the \texttt{wait} section of our code, we use a loop to wait for a fixed amount 
+of time before updating the output signal. First, we reset the loop by setting register 
+\texttt{w3} to zero. Within the loop, we add one to register \texttt{w3} until it is greater 
+than or equal to a set wait time of 0x50000. Once the wait time is reached, we check 
+the “LED state” flag register to see if the current state is high or low, branching to 
+the next state depending on the outcome of the comparison.
 
-In the \texttt{wait} section of our code, we use a loop to wait for a fixed amount of time 
-before updating the output signal. First, we reset the loop by setting register texttt{w3} to 0. 
-Within the loop, we add 1 to register \texttt{w3} until it is greater than or equal to a set wait 
-time of 0x50000. Once the wait time is reached, we check the “LED state” flag register to see if the 
-current state is high or low, branching to the next state depending on the outcome of the comparison.
+The final section of our code includes seven integer directives that are loaded 
+into registers at the start of the program. The integer directives include the GPIO 
+function select address, the GPSET0 address, the GPCLR0 address, the wait time, the 
+GPIO configuration to select pin 3, the GP output configuration for sending 
+high or low signals to pin 3, and the “LED state” flag.
 
-The final section of our code includes a set of seven integer directives that are loaded into registers 
-at the start of the program. The integer directives include the GPIO function select address, the GPSET0 
-address, the GPCLR0 address, the wait time, the GPIO configuration for function selection, the GP 
-output configuration for sending high/low signals, and the “LED state” flag.
+One issue we faced while writing assembly was misunderstanding the instruction format. 
+For example, our attempts to use the \texttt{mov} instruction to load an immediate 
+value into a register yielded incorrect results, confusing us greatly. When we
+realised that our emulator and assembler do not support the functionality for immediate 
+operands in \texttt{mov} instructions, we changed the code to use 
+\texttt{ldr} instructions with integer directive operands to store the set and 
+clear flags in the corresponding local GPIO output registers. 
+Whenever a flag needed to be loaded into a register, we then used the local register as 
+an operand to \texttt{mov} rather than immediate values.
 
-We faced many challenges while writing our assembly code. For example, our attempts to use the \texttt{mov} 
-instruction to load an immediate value into a register yielded incorrect results, which confused us greatly. 
-When we finally realised that our emulator and assembler do not support the functionality for immediate operands 
-in \texttt{mov} instructions, we changed the structure of the code to use the \texttt{ldr} instruction combined 
-with integer directives to store the set and clear flags in the corresponding GPIO output registers. 
-When using a \texttt{mov} instruction, we used register operands rather than immediate values.
+Another challenge we faced was efficiently debugging our assembly code. Since our assembler 
+does not support comments, descriptive integer directive names and section labels are 
+essential to code clarity. However, our integer directive names were extremely generic 
+in the beginning, causing confusion and debugging delays. As a result, we spent 
+time adding clear labels for different sections and comprehensible names for integer 
+directive, resulting in a more productive debugging process. 
 
-Another challenge we faced was understanding the assembly we had written. Since our assembler does not 
-support comments, descriptive variable names and labels were essential to code clarity. However, 
-when we began writing the code, our variable names were extremely generic, causing confusion and 
-many delays in debugging. Therefore, we altered our code to have clear labels for different sections 
-and comprehensible integer directive names, resulting in a more productive debugging process. 
+\section{Virtual Pet Extension}
 
-\section{Text-Based Virtual Pet}
-
-A “virtual pet” is a digital toy that often requires care and attention. The most popular 
-example is Bandai Namco’s Tamagotchi, a physical toy with a few interaction buttons 
-and a digital screen where the “pet” is displayed. Similar to a Tamagotchi, our text-based 
-virtual pet extension requires players to feed, clean, and play with their pet to keep their 
-pet happy and alive. However, our implementation also includes an ``interaction limit'' 
-to prevent users from becoming addicted or dependent on their virtual pets. Hence, our 
-virtual pet extension can be used as a fun way to help children and teens practice 
-responsibility and balance; although users should check on and care for their virtual 
-pet every once in a while, they are not allowed to spend the entire day focusing only 
+A “virtual pet” is a digital toy that often requires care and attention. One 
+example is Bandai's Tamagotchi, a small toy with interaction buttons 
+and a digital screen where the “pet” is displayed. Similar to a Tamagotchi, our  
+virtual pet extension requires players to feed, clean, and play with their pet to keep the 
+pet happy and alive. However, our extension also includes an ``interaction limit'' 
+to prevent users from developing an addiction to their virtual pets. As a result, our 
+extension can be a fun way to help children and teens practice 
+responsibility and balance; while players must care for their virtual 
+pet every so often, they cannot spend all day focusing only  
 on their pet. This concept can then be generalized to any aspect of life, including 
 studies, self-care, hobbies, and more. 
 
 \subsection{Virtual Pet Design}
-The virtual pet has three main categories that the user can interact with: cleanliness, 
-happiness, and hunger. Each category decrements by one bar over a fixed amount of time, 
-but can be improved by the user through keyboard inputs. If any category reaches zero, the 
-current virtual pet cannot continue and the user would need to leave the game or restart 
-with a new virtual pet. 
+
+Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
+display of the pet in a separate window, and one with the pet displayed on a LED HAT in a Raspberry
+Pi. This creates three layers of accessibility: one for those who cannot load the GUI, one for those
+without a Raspberry Pi, and one for those who prefer a tiny, physical companion.
 
 We allowed the user to display their current category scores at any point, so they 
 can check if any categories need particular attention. The program automatically warns 
@@ -203,10 +209,39 @@ being unable to test anything at all.
 \subsection{Tangina Kader}
 
 \subsection{Amy Showell}
-I tried to communicate often with the others both online and in real life, which helped with group discussions and moving the project forward effectively. Through this project, I’ve realised that I have a tendency to rush and overlook details which can lead to code that is difficult to read or doesn’t pass all the tests. Thankfully Shriya and Yao pay more attention to detail than me, and notice minor mistakes in my code which I missed; these could have easily become larger problems if they hadn’t been caught until much later. In future, I will slow down and focus more on the quality of my work as well as the quantity. Overall, I think I fit in well with this group. I engaged in group/pair programming and debugging several times, particularly for Part III. I clearly communicated which tasks I was working on and attempted to understand what everyone else was doing by asking questions and using other resources, such as Scientia.
+I tried to communicate often with the others both online and in real life, which helped with 
+group discussions and moving the project forward effectively. Through this project, I’ve 
+realised that I have a tendency to rush and overlook details which can lead to code that is 
+difficult to read or doesn’t pass all the tests. Thankfully Shriya and Yao pay more attention 
+to detail than me, and notice minor mistakes in my code which I missed; these could have easily 
+become larger problems if they hadn’t been caught until much later. In future, I will slow down 
+and focus more on the quality of my work as well as the quantity. Overall, I think I fit in 
+well with this group. I engaged in group/pair programming and debugging several times, 
+particularly for Part III. I clearly communicated which tasks I was working on and attempted 
+to understand what everyone else was doing by asking questions and using other resources, 
+such as Scientia.
 
 \subsection{Shriya Sistla}
 
 \subsection{Yao Tong}
+Based on the Peer Assessment feedback, I fit into the group as an organizer who keeps the group 
+on track through meetings, checklists, and deadlines. For example, I like to create Google 
+Document task checklists for each section of the project, and a master checklist with key 
+dates and deadlines. I also planned and scheduled a few group meetings where tasks are split 
+and issues can be brought up. Planning meetings is not a strength I expected to have, and I 
+am still developing my confidence in carrying out meetings. In addition to maintaining 
+organization, another strength identified from the Peer Assessment feedback is writing and 
+editing the content of reports for clarity. Unexpectedly, I also find it quite fun to 
+structure the Latex document and edit for formatting. In terms of weaknesses, I often 
+struggle with GitLab and forget to pull before pushing, sometimes leading to diverging 
+branches that required more time to resolve. Since I have used GitHub before, I didn’t 
+expect this to be one of my weaknesses. Over the past three weeks, I have become exceedingly 
+careful in checking that no new commits were made to the remote branch before I pushed my 
+changes, and will continue to be vigilant in future group projects. Another thing I would 
+do differently is to decide on and inform groupmates of reasonable ``work hours''. Currently, 
+I think about the project during all hours, which is quite draining for me. Having a set 
+time to relax will help with burnout and improve my wellbeing, allowing me to be more 
+productive when I do work on the project. In the future, I hope to continue using my 
+strengths to facilitate group organization through meetings, frequent updates, and checklists.
 
 \end{document}
