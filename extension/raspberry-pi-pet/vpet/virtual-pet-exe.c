@@ -50,7 +50,6 @@ static void *take_input( void *arg ) {
 			while(*running && GET_KEY_PRESS == 0) {
 				usleep(WAIT_TIME_MICROS);
 				gift();
-				display_action_cat(GIFT_CAT_PATH);
 			}
 		}
 
@@ -58,7 +57,6 @@ static void *take_input( void *arg ) {
 			while(*running && GET_KEY1 == 0) {
 				usleep(WAIT_TIME_MICROS);
 				clean();
-				display_action_cat(CLEAN_CAT_PATH);
 			}
 		}
 
@@ -66,7 +64,6 @@ static void *take_input( void *arg ) {
 			while(*running && GET_KEY2 == 0) {
 				usleep(WAIT_TIME_MICROS);
 				play();
-				display_action_cat(HAPPY_CAT_PATH);
 			}
 		}
 
@@ -74,7 +71,6 @@ static void *take_input( void *arg ) {
 			while(*running && GET_KEY3 == 0) {
 				usleep(WAIT_TIME_MICROS);
 				feed();
-				display_action_cat(FEED_CAT_PATH);
 			}
 		}
 	}

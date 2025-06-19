@@ -31,19 +31,21 @@ void init_display( void ) {
                 exit(0);
         }
         Paint_NewImage(CatImage, LCD_1IN3_WIDTH, LCD_1IN3_HEIGHT, 0, WHITE, 16);
-        Paint_SetRotate(ROTATE_90);
+	Paint_SetRotate(ROTATE_90);
 
         display_cat();
 }
 
 void display_cat(void) {
 	Paint_Clear(WHITE);
+	LCD_1IN3_Clear(WHITE);
 	GUI_ReadBmp(DEFAULT_CAT_PATH);
         LCD_1IN3_Display(CatImage);
 }
 
 void display_action_cat(char *filename) {
 	Paint_Clear(WHITE);
+	LCD_1IN3_Clear(WHITE);
 	GUI_ReadBmp(filename);
 	LCD_1IN3_Display(CatImage);
 	DEV_Delay_ms(2000);

@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include "GUI_BMP.h"
+#include "GUI_Paint.h"
+#include "DEV_Config.h"
 #include "pet.h"
 #include "user-actions.h"
 #include "coins.h"
+#include "display.h"
 
 //global variables included from other files
 extern pet vpet;
@@ -16,6 +20,7 @@ void feed(void) {
 		fprintf(stdout, "%s is full!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
+		display_action_cat(FEED_CAT_PATH);
 		vpet->num_actions++;
 	}
 	check_bounds(HUNGER);	
@@ -28,6 +33,7 @@ void play(void) {
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
+		display_action_cat(HAPPY_CAT_PATH);
 		vpet->num_actions++;
 	}
 	check_bounds(HAPPINESS); 
@@ -40,6 +46,7 @@ void clean(void) {
 		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
+		display_action_cat(CLEAN_CAT_PATH);
 		vpet->num_actions++;
 	}
 	check_bounds(CLEANLINESS); 
@@ -58,5 +65,6 @@ void gift(void) {
 	pthread_mutex_unlock(&happiness_mutex);
 
 	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
+	display_action_cat(GIFT_CAT_PATH);
 	vpet->num_actions++; 
 }
