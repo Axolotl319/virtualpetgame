@@ -1,12 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <fcntl.h>
 #include <gtk/gtk.h>
 #include "pet.h"
 #include "coins.h"
@@ -51,12 +47,20 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	return true; 
 }
 
+static int check_level(void *data) {
+	if (vpet->curr_level.level_num < MAX_LEVEL &&
+	    vpet->num_actions >= vpet->curr_level.num_actions) {
+		increase_level(); 
+	}
+	return TRUE; 
+}
+
 // Function that checks the pet's health and issues warnings 
 // This is called by GTK's main function, as set up in activate()
 // Returns FALSE if pet dies, TRUE otherwise 
 // When FALSE is returned, the function is never called again 
 static int check_health(void *app) {
-	//dies if any stat = 0 (or all, can change)
+	//dies if any stat = 0
 	check_bounds();
 	vpet->alive = ((vpet->cleanliness > 0) && (vpet->happiness > 0) && (vpet->hunger > 0));	
 	
@@ -125,11 +129,13 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); 
 	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), image); 
 
-	// add functions to decrement health and check for death
+	// add functions to decrement health, check for death, increment coins, and level up 
 	g_timeout_add_seconds(5, dec_hunger, NULL); 
 	g_timeout_add_seconds(12, dec_cleanliness, NULL); 
 	g_timeout_add_seconds(8, dec_happiness, NULL); 
 	g_timeout_add_seconds(2, check_health, app); 
+	g_timeout_add_seconds(8, increment_coins, NULL); 
+	g_timeout_add_seconds(2, check_level, NULL); 
 
 	// Show the window and default pet 
 	gtk_widget_show_all(window); 
@@ -148,15 +154,9 @@ static int init(void) {
 	vpet = new_pet(petname);
 	printf("%s is happy to meet you!\n", vpet->name); 
 
-	bool running = 1;
-
 	//initialise money
 	coins = 0;
 		
- 	//thread for incrementing coins
-	pthread_t coin_thread;
-	pthread_create(&coin_thread, NULL, increment_coins, (void*)&running);
-
 	// Initialise and run the GUI application 
 	GtkApplication *app; 
 	int ret; 
@@ -165,10 +165,6 @@ static int init(void) {
 	ret = g_application_run(G_APPLICATION(app), 0, NULL); 
 	g_object_unref(app); 
 	
-	//join the coin thread if application exited
-	running = 0;
-	pthread_join(coin_thread, NULL);
-
 	return ret; 
 }
 

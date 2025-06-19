@@ -15,7 +15,7 @@ int feed(void) {
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
 		vpet->hunger++; 
-		// vpet->num_actions++;
+		vpet->num_actions++;
 	}
 	check_bounds();
 	return EXIT_SUCCESS;	
@@ -27,7 +27,7 @@ int play(void) {
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
 		vpet->happiness++;
-		// vpet->num_actions++;
+		vpet->num_actions++;
 	}
 	check_bounds();
 	return EXIT_SUCCESS; 
@@ -39,7 +39,7 @@ int clean(void) {
 	}else{
 		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
 		vpet->cleanliness++;
-		// vpet->num_actions++;
+		vpet->num_actions++;
 	}
 	check_bounds();
 	return EXIT_SUCCESS; 
@@ -54,8 +54,7 @@ int gift(void) {
 	
 	vpet->happiness = MAX_HEARTS;
 	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
-	// vpet->num_actions++;
-	//will work out gift design
+	vpet->num_actions++;
 
 	return EXIT_SUCCESS; 
 }

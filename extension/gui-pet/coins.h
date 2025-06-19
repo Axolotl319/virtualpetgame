@@ -6,5 +6,5 @@
 extern int coins;
 #endif
 
-extern void * increment_coins( void * arg );
+extern int increment_coins( void * arg );
 extern int decrement_coins( int amount );

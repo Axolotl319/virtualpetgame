@@ -11,6 +11,19 @@ extern int coins;
 //global variable - the pet the user will interact with
 pet vpet;
 
+// const array for level information 
+const level levels[MAX_LEVEL - 1] = {
+	{ 1,  5},
+	{ 2,  15},
+	{ 3,  30},
+	{ 4,  50},
+	{ 5,  75},
+	{ 6,  105},
+	{ 7,  140},
+	{ 8,  180},
+	{ 9,  225},
+};
+
 void check_bounds(void){
 	if(vpet->cleanliness > MAX_HEARTS){
 		vpet->cleanliness = MAX_HEARTS;
@@ -64,6 +77,7 @@ static void print_stat(int category, int amt){
 void print_hearts(void) {
 	fprintf(stdout, "Stats:\n");
 	check_bounds(); //ensure all stats between 0-5
+	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
 	print_stat(CLEANLINESS, vpet->cleanliness);
 	print_stat(HAPPINESS, vpet->happiness);
 	print_stat(HUNGER, vpet->hunger);
@@ -85,8 +99,19 @@ void print_warning(int category){
 			fprintf(stdout, "hunger. Press F to boost!\n");
 			return;
 
-		default: fprintf(stderr, "UNKNOWN CATEGORY\n");
-			 return;
+		default: 
+			fprintf(stderr, "UNKNOWN CATEGORY\n");
+			return;
+	}
+}
+
+void increase_level( void ) {
+	if (vpet->curr_level.level_num < MAX_LEVEL) {
+		vpet->curr_level = levels[vpet->curr_level.level_num++];
+		vpet->max_hearts++;
+		vpet->num_actions = 0;
+		vpet->level_up = false;
+		fprintf(stdout, "%s has levelled up!\n", vpet->name);
 	}
 }
 
@@ -96,6 +121,10 @@ pet new_pet(char *name) {
 	new->cleanliness = MAX_HEARTS;
 	new->happiness   = MAX_HEARTS;
 	new->hunger      = MAX_HEARTS;
+	new->max_hearts  = MAX_HEARTS;
+        new->curr_level  = levels[0]; 
+	new->num_actions = 0; 
+	new->level_up    = false; 	
 	new->alive       = true;
 	return new;
 }
