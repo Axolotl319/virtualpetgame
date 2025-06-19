@@ -7,9 +7,6 @@
 #include "pet.h"
 #include "coins.h"
 
-//helper macro to convert hours to seconds
-#define HOURS(x) ((x) * 3600)
-
 //lock
 pthread_mutex_t vpet_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -36,26 +33,20 @@ const level levels[MAX_LEVEL - 1] = {
 void check_bounds(void){
 	if(vpet->cleanliness > vpet->max_hearts){
 		vpet->cleanliness = vpet->max_hearts;
-		printf("debug: cleanliness set to > 5, reset to 5\n");
 	}else if(vpet->cleanliness < 0){
 		vpet->cleanliness = 0;
-		printf("debug: cleanliness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->happiness > vpet->max_hearts){
 		vpet->happiness = vpet->max_hearts;
-		printf("debug: happiness set to > 5, reset to 5\n");
 	}else if(vpet->happiness < 0){
 		vpet->happiness = 0;
-		printf("debug: happiness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->hunger > vpet->max_hearts){
 		vpet->hunger = vpet->max_hearts;
-		printf("debug: hunger set to > 5, reset to 5\n");
 	}else if(vpet->hunger < 0){
 		vpet->hunger = 0;
-		printf("debug: hunger set to < 0, reset to 0\n");
 	}
 }
 
@@ -100,15 +91,15 @@ void print_warning(int category){
 	fprintf(stdout, "Warning! Only 1 heart remaining for ");
 	switch(category){
 		case CLEANLINESS: 
-			fprintf(stdout, "cleanliness. Press C to boost!");
+			fprintf(stdout, "cleanliness. Press C to boost!\n");
 			return;
 
 		case HAPPINESS: 
-			fprintf(stdout, "happiness. Press P to boost!");
+			fprintf(stdout, "happiness. Press P to boost!\n");
 			return;
 
 		case HUNGER: 
-			fprintf(stdout, "hunger. Press F to boost!");
+			fprintf(stdout, "hunger. Press F to boost!\n");
 			return;
 
 		default: fprintf(stderr, "UNKNOWN CATEGORY");
@@ -144,11 +135,11 @@ void free_pet(void) {
 	free(vpet);
 }
 
-//Cleanliness droppine one bar every 12 hours
+//Cleanliness droppine one bar every 12 seconds
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+        sleep(CLEANLINESS_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->cleanliness--;
@@ -159,11 +150,11 @@ void *decrease_cleanliness(void *arg) {
     return NULL;
 }
 
-//Hunger dropping one bar every 5 hours
+//Hunger dropping one bar every 5 seconds
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HUNGER_DECAY_HOURS));
+        sleep(HUNGER_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->hunger--;
@@ -174,11 +165,11 @@ void *decrease_hunger(void *arg) {
     return NULL;
 }
 
-//Happiness dropping one bar every 8 hours
+//Happiness dropping one bar every 8 seconds
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HAPPINESS_DECAY_HOURS));
+        sleep(HAPPINESS_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->happiness--;

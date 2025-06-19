@@ -86,12 +86,12 @@ int main(void) {
 	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
 	pthread_create(&happiness_thread, NULL, decrease_happiness, (void*)&running);
 
-	while(1) {
-		//temporary code here
-		//printf("Sleeping....\n");
-		//sleep(15);
-		//vpet->alive = false;
+	bool clean_warning_reported = false;
+	bool happy_warning_reported = false;
+	bool hunger_warning_reported = false;
 
+	while(1) {
+	
 		pthread_mutex_lock(&vpet_mutex);
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
@@ -100,14 +100,27 @@ int main(void) {
 		}
 
 		//warn user if any category has 1 heart remaining
-		if(vpet->cleanliness == 1){
+		if(vpet->cleanliness == 1 && !clean_warning_reported){
 			print_warning(CLEANLINESS);
+			
+			//prevents warning being printed repeatedly while
+			//vpet->cleanliness == 1
+			clean_warning_reported = true;
+		}else if(vpet->cleanliness > 1){
+			//reset if user increases cleanliness
+			clean_warning_reported = false;
 		}
-		if(vpet->happiness == 1){
+		if(vpet->happiness == 1 && !happy_warning_reported){
 			print_warning(HAPPINESS);
+			happy_warning_reported = true;
+		}else if(vpet->happiness > 1){
+			happy_warning_reported = false;
 		}
-		if(vpet->hunger == 1){
+		if(vpet->hunger == 1 && !hunger_warning_reported){
 			print_warning(HUNGER);
+			hunger_warning_reported = true;
+		}else if(vpet->hunger > 1){
+			hunger_warning_reported = false;
 		}
 
 		//check if level needs to be updated
