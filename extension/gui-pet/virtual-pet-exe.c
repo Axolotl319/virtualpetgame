@@ -15,6 +15,9 @@
 #define WINDOW_WIDTH 500
 #define WINDOW_HEIGHT 400
 
+//helper macro to convert hours to seconds
+#define HOURS(x) ((x) * 3600)
+
 // In case of a key press event, carries out the action associated with the key. 
 // Updates the image of cat for each key press as well 
 bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
@@ -109,12 +112,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), image); 
 
 	// add functions to decrement health, check for death, increment coins, and level up 
-	g_timeout_add_seconds(HUNGER_DECAY_HOURS, dec_hunger, NULL); 
-	g_timeout_add_seconds(CLEANLINESS_DECAY_HOURS, dec_cleanliness, NULL); 
-	g_timeout_add_seconds(HAPPINESS_DECAY_HOURS, dec_happiness, NULL); 
-	g_timeout_add_seconds(CHECK_STAT_INTERVAL, check_health, app); 
-	g_timeout_add_seconds(COIN_TIME, increment_coins, NULL); 
-	g_timeout_add_seconds(CHECK_STAT_INTERVAL, check_level, NULL); 
+	g_timeout_add_seconds(HOURS(HUNGER_DECAY_HOURS), dec_hunger, NULL); 
+	g_timeout_add_seconds(HOURS(CLEANLINESS_DECAY_HOURS), dec_cleanliness, NULL); 
+	g_timeout_add_seconds(HOURS(HAPPINESS_DECAY_HOURS), dec_happiness, NULL); 
+	g_timeout_add_seconds(HOURS(CHECK_STAT_INTERVAL)/2, check_health, app); 
+	g_timeout_add_seconds(HOURS(COIN_TIME), increment_coins, NULL); 
+	g_timeout_add_seconds(HOURS(CHECK_STAT_INTERVAL)/2, check_level, NULL); 
 
 	// Show the window and default pet 
 	gtk_widget_show_all(window); 
