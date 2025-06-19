@@ -14,6 +14,10 @@
 //Helper macro to convert hours to seconds
 #define HOURS(x) ((x) * 3600)
 
+//locks for incrementing/decrementing stats
+pthread_mutex_t cleanliness_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t happiness_mutex   = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t hunger_mutex      = PTHREAD_MUTEX_INITIALIZER;
 
 //external global variable
 extern int coins;
@@ -34,116 +38,78 @@ const level levels[MAX_LEVEL - 1] = {
 	{ 9,  225},
 };
 
+//checks whether the hearts are within range
+void check_bounds(int category){
+	switch(category) {
+		case CLEANLINESS:
+			if(vpet->cleanliness > vpet->max_hearts){
+				vpet->cleanliness = vpet->max_hearts;
+				printf("debug: cleanliness set to > 5, reset to 5\n");
+			}else if(vpet->cleanliness < 0){
+				vpet->cleanliness = 0;
+				printf("debug: cleanliness set to < 0, reset to 0\n");
+			}
 
-void check_bounds(void){
-	if(vpet->cleanliness > vpet->max_hearts){
-		vpet->cleanliness = vpet->max_hearts;
-		printf("debug: cleanliness set to > 5, reset to 5\n");
-	}else if(vpet->cleanliness < 0){
-		vpet->cleanliness = 0;
-		printf("debug: cleanliness set to < 0, reset to 0\n");
-	}
+		case HAPPINESS:
+			if(vpet->happiness > vpet->max_hearts){
+				vpet->happiness = vpet->max_hearts;
+				printf("debug: happiness set to > 5, reset to 5\n");
+			}else if(vpet->happiness < 0){
+				vpet->happiness = 0;
+				printf("debug: happiness set to < 0, reset to 0\n");
+			}
 
-	if(vpet->happiness > vpet->max_hearts){
-		vpet->happiness = vpet->max_hearts;
-		printf("debug: happiness set to > 5, reset to 5\n");
-	}else if(vpet->happiness < 0){
-		vpet->happiness = 0;
-		printf("debug: happiness set to < 0, reset to 0\n");
-	}
-
-	if(vpet->hunger > vpet->max_hearts){
-		vpet->hunger = vpet->max_hearts;
-		printf("debug: hunger set to > 5, reset to 5\n");
-	}else if(vpet->hunger < 0){
-		vpet->hunger = 0;
-		printf("debug: hunger set to < 0, reset to 0\n");
+		case HUNGER:
+			if(vpet->hunger > vpet->max_hearts){
+				vpet->hunger = vpet->max_hearts;
+				printf("debug: hunger set to > 5, reset to 5\n");
+			}else if(vpet->hunger < 0){
+				vpet->hunger = 0;
+				printf("debug: hunger set to < 0, reset to 0\n");
+			}
 	}
 }
 
-static void print_stat(int category, int amt){
-	switch(category){
-		case CLEANLINESS: 
-			fprintf(stdout, "Cleaniness ");
-			break;
+//returns a string with the number of hearts in a stat
+//takes in the stat category, the number of hearts,
+//and a pointer to a string, which stores the final string
+void get_stat_string(int category, int amt, char *stat_str) {
 
-		case HAPPINESS: 
-			fprintf(stdout, "Happiness ");
-			break;
+	snprintf(stat_str, MAX_STAT_LEN, "%s", "");
+	size_t len = strlen(stat_str);
+	size_t amt_to_append = (MAX_STAT_LEN - len - 1) < amt ?
+			       (MAX_STAT_LEN - len - 1) : amt;
 
-		case HUNGER: 
-			fprintf(stdout, "Hunger ");
-			break;
-	
-		default: 
-			fprintf(stderr, "Unknown category\n");
-			return;
-			break;
-	}
-	for(int i = 0; i < amt; i++){
-		fprintf(stdout, "+");
-	}
-	fprintf(stdout, "\n");
+        for(int i = 0; i < amt_to_append; i++){
+                stat_str[len + i] = '+';
+        }
+        
+	stat_str[len + amt_to_append] = '\0';
+
 }
 
-void print_hearts(void) {
-	fprintf(stdout, "Stats:\n");
-	check_bounds(); //ensure all stats between 0-5
-	fprintf(stdout, "Level %d\n", vpet->curr_level.level_num);
-	print_stat(CLEANLINESS, vpet->cleanliness);
-	print_stat(HAPPINESS, vpet->happiness);
-	print_stat(HUNGER, vpet->hunger);
-	fprintf(stdout, "%d coins\n", coins);
-}
-
-void print_hearts_pi(void) {
-	signal(SIGINT, Handler_1IN3_LCD);
-    
-   	 /* Module Init */
-        if(DEV_ModuleInit() != 0){
-        	DEV_ModuleExit();
-        	exit(0);
-    	}
-	UWORD *BlackImage;
-    	UDOUBLE Imagesize = LCD_1IN3_HEIGHT*LCD_1IN3_WIDTH*2;
-    	printf("Imagesize = %d\r\n", Imagesize);
-    	if((BlackImage = (UWORD *)malloc(Imagesize)) == NULL) {
-        	printf("Failed to apply for black memory...\r\n");
-        	exit(0);
-    	}
-    	// /*1.Create a new image cache named IMAGE_RGB and fill it with white*/
-    	Paint_NewImage(BlackImage, LCD_1IN3_WIDTH, LCD_1IN3_HEIGHT, 0, WHITE, 16);
-    	Paint_Clear(WHITE);
-        Paint_SetRotate(ROTATE_90);
-
-	Paint_DrawString_EN(5, 30, "Stats:", &Font24, WHITE, BLACK);
-    	Paint_DrawString_EN(5, 60, "Level:", &Font24, WHITE, BLACK);
-	LCD_1IN3_Display(BlackImage);
-    	DEV_Delay_ms(2000);
-	free(BlackImage);
-    	BlackImage = NULL;
-}
-
+//prints warnings if there is only 1 heart in any stat
 void print_warning(int category){
 	fprintf(stdout, "Warning! Only 1 heart remaining for ");
 	switch(category){
 		case CLEANLINESS: 
-			fprintf(stdout, "cleanliness. Press C to boost!");
+			fprintf(stdout, "cleanliness. Press C to boost!\n");
 			return;
 
 		case HAPPINESS: 
-			fprintf(stdout, "happiness. Press P to boost!");
+			fprintf(stdout, "happiness. Press P to boost!\n");
 			return;
 
 		case HUNGER: 
-			fprintf(stdout, "hunger. Press F to boost!");
+			fprintf(stdout, "hunger. Press F to boost!\n");
 			return;
 
-		default: fprintf(stderr, "UNKNOWN CATEGORY");
+		default: fprintf(stderr, "UNKNOWN CATEGORY\n");
 			 return;
 	}
 }
 
+//levels up the pet
 void increase_level( void ) {
 	if (vpet->curr_level.level_num < MAX_LEVEL) {
 		vpet->curr_level = levels[vpet->curr_level.level_num++];
@@ -154,6 +120,7 @@ void increase_level( void ) {
 	}
 }
 
+//initialiser
 pet new_pet(char *name) {
 	pet new = malloc(sizeof(struct pet));
 	new->name = strdup(name);
@@ -176,9 +143,13 @@ void free_pet(void) {
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
-        vpet->cleanliness--;
-        check_bounds();
+        //sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+        sleep(10);
+	//lock before decrementing
+	pthread_mutex_lock(&cleanliness_mutex);
+	vpet->cleanliness--;
+        check_bounds(CLEANLINESS);
+	pthread_mutex_unlock(&cleanliness_mutex);
     }
     return NULL;
 }
@@ -187,9 +158,13 @@ void *decrease_cleanliness(void *arg) {
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HUNGER_DECAY_HOURS));
-        vpet->hunger--;
-        check_bounds();
+        //sleep(HOURS(HUNGER_DECAY_HOURS));
+        sleep(10);
+	//lock before decrementing
+	pthread_mutex_lock(&hunger_mutex);
+	vpet->hunger--;
+        check_bounds(HUNGER);
+	pthread_mutex_unlock(&hunger_mutex);
     }
     return NULL;
 }
@@ -198,9 +173,12 @@ void *decrease_hunger(void *arg) {
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HAPPINESS_DECAY_HOURS));
-        vpet->happiness--;
-        check_bounds();
+        //sleep(HOURS(HAPPINESS_DECAY_HOURS));
+        sleep(10);
+	pthread_mutex_lock(&happiness_mutex);
+	vpet->happiness--;
+        check_bounds(HAPPINESS);
+	pthread_mutex_unlock(&happiness_mutex);
     }
     return NULL;
 }

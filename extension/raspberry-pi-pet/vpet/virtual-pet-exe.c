@@ -14,8 +14,10 @@
 #include "pet.h"
 #include "coins.h"
 #include "user-actions.h"
+#include "display.h"
 
 #define MAX_NAME_LEN 100
+#define WAIT_TIME_MICROS 200000
 
 static void init(void) {
 	printf("Welcome to your virtual pet!\n"); 
@@ -29,75 +31,50 @@ static void init(void) {
 	vpet = new_pet(petname);
 }
 
-static void display( void ) {
-	// Exception handling:ctrl + c
-    	signal(SIGINT, Handler_1IN3_LCD);
-    
-   	 /* Module Init */
-        	if(DEV_ModuleInit() != 0){
-        	DEV_ModuleExit();
-        	exit(0);
-    	}
-
-	LCD_1IN3_Init(HORIZONTAL);
-        LCD_1IN3_Clear(WHITE);
-    	LCD_SetBacklight(1023);
-
-	UWORD *CatImage;
-   	UDOUBLE Imagesize = LCD_1IN3_HEIGHT*LCD_1IN3_WIDTH*2;
-    	printf("Imagesize = %d\r\n", Imagesize);
-    	if((CatImage = (UWORD *)malloc(Imagesize)) == NULL) {
-        	printf("Failed to apply for memory...\r\n");
-        	exit(0);
-    	}
-	Paint_NewImage(CatImage, LCD_1IN3_WIDTH, LCD_1IN3_HEIGHT, 0, WHITE, 16);
-    	Paint_Clear(WHITE);
-        Paint_SetRotate(ROTATE_90);
-
-	GUI_ReadBmp("vpet/cat3.bmp");
-    	LCD_1IN3_Display(CatImage);
-    	DEV_Delay_ms(2000);
-
-   	/* Module Exit */
-    	free(CatImage);
-    	CatImage = NULL;
-
-}
-
 
 static void *take_input( void *arg ) {
-	bool *running = (bool *)arg;
-	
-	//set input flags to be non-blocking
-	//need this so that the program can terminate (doesn't hang on getchar)
-	int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
-	fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+	bool *running = (bool *)arg; 
 
 	while(*running) {
-		int c = toupper(getchar());
-		
-		switch(c) {
-			case 'S':
-				print_hearts();
-				print_hearts_pi();
-				break;
-			case 'F':
-				feed();
-				break;
-			case 'C':
-				clean();
-				break;
-			case 'P':
-				play();
-				break;
-			case 'G':
+		//keypress actions
+		//need to sleep for some milliseconds to avoid 
+		//repeatedly calling the functions
+
+		if(GET_KEY_UP == 0) {
+			while(*running && GET_KEY_UP == 0) {
+				display_hearts();
+			}
+		}
+
+		if(GET_KEY_PRESS == 0) {
+			while(*running && GET_KEY_PRESS == 0) {
+				usleep(WAIT_TIME_MICROS);
 				gift();
-				break;
-		}	
+			}
+		}
+
+		if(GET_KEY1 == 0){
+			while(*running && GET_KEY1 == 0) {
+				usleep(WAIT_TIME_MICROS);
+				clean();
+			}
+		}
+
+		if(GET_KEY2 == 0){
+			while(*running && GET_KEY2 == 0) {
+				usleep(WAIT_TIME_MICROS);
+				play();
+			}
+		}
+
+		if(GET_KEY3 == 0){
+			while(*running && GET_KEY3 == 0) {
+				usleep(WAIT_TIME_MICROS);
+				feed();
+			}
+		}
 	}
 
-	//restore the original flags
-	fcntl(STDIN_FILENO, F_SETFL, flags);
 
 	return NULL;
 }
@@ -106,13 +83,18 @@ static void *take_input( void *arg ) {
 int main(void) {
 
 	init();
-	display(); 
+	init_display(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
 
 	bool running = 1;
 
 	//initialise money
 	coins = 0;
+
+	//bools for printing warnings
+	bool cleanliness_warning = false;
+	bool happiness_warning = false;
+	bool hunger_warning = false;
 		
  	//thread for incrementing coins
 	pthread_t coin_thread;
@@ -128,10 +110,6 @@ int main(void) {
 	pthread_create(&happiness_thread, NULL, decrease_happiness, (void*)&running);
 
 	while(1) {
-		//temporary code here
-		//printf("Sleeping....\n");
-		//sleep(15);
-		//vpet->alive = false;
 
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
@@ -141,13 +119,30 @@ int main(void) {
 
 		//warn user if any category has 1 heart remaining
 		if(vpet->cleanliness == 1){
-			print_warning(CLEANLINESS);
+			if(!cleanliness_warning) {
+				cleanliness_warning = true;
+				print_warning(CLEANLINESS);
+			}
+		} else {
+			cleanliness_warning = false;
 		}
+
 		if(vpet->happiness == 1){
-			print_warning(HAPPINESS);
+			if(!happiness_warning) {
+				happiness_warning = true;
+				print_warning(HAPPINESS);
+			}
+		} else {
+			happiness_warning = false;
 		}
+
 		if(vpet->hunger == 1){
-			print_warning(HUNGER);
+			if(!hunger_warning) {
+				hunger_warning = true;
+				print_warning(HUNGER);
+			}
+		} else {
+			hunger_warning = false;
 		}
 
 		//check if level needs to be updated
@@ -157,10 +152,11 @@ int main(void) {
 		}	
 
 		//dies if any stat = 0 (or all, can change)
-		check_bounds();
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
+
+		usleep(50000);
 	}
 
 	//join the coin thread if infinite loop exited
@@ -170,7 +166,8 @@ int main(void) {
 	pthread_join(cleanliness_thread, NULL);
 	pthread_join(hunger_thread, NULL);
 	pthread_join(happiness_thread, NULL);
-	
+
+	free_display();
 	free_pet(); 
         return EXIT_SUCCESS;
 }

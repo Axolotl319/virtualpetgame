@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "pet.h"
 #include "user-actions.h"
 #include "coins.h"
@@ -9,51 +10,53 @@
 extern pet vpet;
 extern int coins;
 
-int feed(void) {
+void feed(void) {
+	pthread_mutex_lock(&hunger_mutex);
 	if(vpet->hunger++ >= vpet->max_hearts){
 		fprintf(stdout, "%s is full!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s savours the delicious meal\n", vpet->name);
 		vpet->num_actions++;
 	}
-	check_bounds();
-	return EXIT_SUCCESS;
-       //I can't think of a failure situation - feel free to correct	
+	check_bounds(HUNGER);	
+	pthread_mutex_unlock(&hunger_mutex);
 }
 
-int play(void) {
+void play(void) {
+	pthread_mutex_lock(&happiness_mutex);
 	if(vpet->happiness++ >= vpet->max_hearts){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
 		vpet->num_actions++;
 	}
-	check_bounds();
-	return EXIT_SUCCESS; 
+	check_bounds(HAPPINESS); 
+	pthread_mutex_unlock(&happiness_mutex);
 }
 
-int clean(void) {
+void clean(void) {
+	pthread_mutex_lock(&cleanliness_mutex);
 	if(vpet->cleanliness++ >= vpet->max_hearts){
 		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
 	}else{
 		fprintf(stdout, "%s calmly enjoys the bubbles\n", vpet->name);
 		vpet->num_actions++;
 	}
-	check_bounds();
-	return EXIT_SUCCESS; 
+	check_bounds(CLEANLINESS); 
+	pthread_mutex_unlock(&cleanliness_mutex);
 }
 
-//returns 1 if not enough money or error, else 0
-int gift(void) {
+void gift(void) {
 
 	if(decrement_coins(5)){
 		fprintf(stdout, "%s doesn't have enough money!\n", vpet->name);
-		return EXIT_FAILURE;
+		return;
 	}
 	
+	pthread_mutex_lock(&happiness_mutex);
 	vpet->happiness = vpet->max_hearts;
+	pthread_mutex_unlock(&happiness_mutex);
+
 	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
-	vpet->num_actions++;
-	//will work out gift design
-	return EXIT_SUCCESS; 
+	vpet->num_actions++; 
 }
