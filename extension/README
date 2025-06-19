@@ -2,12 +2,30 @@ There are three versions of our virtual pet. Each version has approximately
 the same functionality, but there are minor differences in their source code 
 and Makefiles, so we placed each version in their own folder.   
 
-Text-only: no GUI, can only interact with the pet through the terminal.
-	   More explicit multi-threading than the other versions.  
+text-based-pet: 
+	No GUI, can only interact with the pet through the terminal.
+	More explicit multi-threading than the other versions.  
 
-GUI: an image of the pet is displayed in a separate window. The images 
-     change depending on how the user interacts with the pet. For 
-     example, cleaning the pet will show an image of the pet with 
-     bubbles in the background. 
+	If you wish to convert the decay interval from hours to seconds 
+	when playing with the pet: 
+	- Go to file pet.c and scroll to the bottom. 
+	- Remove the "HOURS" macro from around CLEANLINESS_DECAY_HOURS, 
+ 	  HUNGER_DECAY_HOURS, and HAPPINESS_DECAY_HOURS in the functions 
+	  decrease_cleanliness, decrease_hunger, and decrease_happiness, 
+	  respectively. 
+	- Exit the file. Use the command "make" to re-make the executable. 
+
+gui-pet: 
+	An image of the pet is displayed in a separate window. Click on the 
+	window to activate key press events. Do not type commands in the 
+	terminal. The images change depending on how the user interacts with 
+	the pet. For example, cleaning the pet will show an image of the pet 
+	with bubbles in the background. 
+
+	If you wish to convert the decay interval from hours to seconds: 
+	- Go to file virtual-pet-exe.c and scroll to the function "activate" 
+          on line 97. 
+	- Remove the HOURS macro and any division from the lines 115 to 120.
+	- Exit the file. Use the command "make" to re-make the file.  
 
 Raspberry Pi: 
