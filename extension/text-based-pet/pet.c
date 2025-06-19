@@ -8,7 +8,7 @@
 #include "coins.h"
 
 //helper macro to convert hours to seconds
-#define HOURS(x) ((x) * 3600)
+//#define HOURS(x) ((x) * 3600)
 
 //lock
 pthread_mutex_t vpet_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -144,11 +144,11 @@ void free_pet(void) {
 	free(vpet);
 }
 
-//Cleanliness droppine one bar every 12 hours
+//Cleanliness droppine one bar every 12 seconds
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+        sleep(CLEANLINESS_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->cleanliness--;
@@ -159,11 +159,11 @@ void *decrease_cleanliness(void *arg) {
     return NULL;
 }
 
-//Hunger dropping one bar every 5 hours
+//Hunger dropping one bar every 5 seconds
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HUNGER_DECAY_HOURS));
+        sleep(HUNGER_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->hunger--;
@@ -174,11 +174,11 @@ void *decrease_hunger(void *arg) {
     return NULL;
 }
 
-//Happiness dropping one bar every 8 hours
+//Happiness dropping one bar every 8 seconds
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HAPPINESS_DECAY_HOURS));
+        sleep(HAPPINESS_DECAY_TIME);
 		//Lock shared state
 		pthread_mutex_lock(&vpet_mutex);
         vpet->happiness--;
