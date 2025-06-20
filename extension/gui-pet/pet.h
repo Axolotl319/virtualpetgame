@@ -15,10 +15,10 @@ struct pet {
 	unsigned int cleanliness;
 	unsigned int happiness;
 	unsigned int hunger;
-	unsigned int max_hearts; 
+	unsigned int max_hearts;
 	unsigned int num_actions;
-	level curr_level; 
-	bool level_up; 
+	level curr_level;
+	bool level_up;
 	bool alive;
 };
 
@@ -52,10 +52,10 @@ extern void print_warning(int category);
 
 extern void increase_level(void);
 
-extern int check_health(void *app); 
+extern int check_health(void *app);
 
-extern int dec_cleanliness(void *app); 
+extern int dec_cleanliness(void *app);
 
-extern int dec_happiness(void *app); 
+extern int dec_happiness(void *app);
 
-extern int dec_hunger(void *app); 
+extern int dec_hunger(void *app);

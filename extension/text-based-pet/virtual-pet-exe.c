@@ -25,9 +25,9 @@ static void init(void) {
 	vpet = new_pet(petname);
 }
 
+
 static void *take_input( void *arg ) {
-	bool *running = (bool *)arg;
-	
+	bool *running = (bool *)arg; 
 	//set input flags to be non-blocking
 	//need this so that the program can terminate (doesn't hang on getchar)
 	int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
@@ -149,3 +149,5 @@ int main(void) {
 	free_pet(); 
         return EXIT_SUCCESS;
 }
+
+
