@@ -116,7 +116,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 	g_timeout_add_seconds(HOURS(CLEANLINESS_DECAY_HOURS), dec_cleanliness, NULL); 
 	g_timeout_add_seconds(HOURS(HAPPINESS_DECAY_HOURS), dec_happiness, NULL); 
 	g_timeout_add_seconds(HOURS(CHECK_STAT_INTERVAL)/2, check_health, app); 
-	g_timeout_add_seconds(HOURS(COIN_TIME), increment_coins, NULL); 
+	g_timeout_add_seconds(COIN_TIME, increment_coins, NULL); 
 	g_timeout_add_seconds(HOURS(CHECK_STAT_INTERVAL)/2, check_level, NULL); 
 
 	// Show the window and default pet 
@@ -135,10 +135,11 @@ static int init(void) {
 	}
 	vpet = new_pet(petname);
 	printf("%s is happy to meet you!\n", vpet->name);
+	printf("Press F to feed, P to play, C to clean, G to gift, S for stats\n");
         printf("\n"); 	
 
 	//initialise money
-	coins = 0;
+	coins = 15;
 		
 	// Initialise and run the GUI application 
 	GtkApplication *app; 
