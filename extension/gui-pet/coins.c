@@ -15,7 +15,7 @@ int increment_coins( void *arg ) {
 
 // decrements the coin variable by a set amount
 // checks whether there is enough money
-// returns 1 if fail, 0 if success
+// returns EXIT_FAILURE if fail, EXIT_SUCCESS if success
 int decrement_coins( int amount ) {
 	if (coins >= amount) {
 		coins -= amount;

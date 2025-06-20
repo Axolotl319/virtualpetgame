@@ -64,15 +64,14 @@ static void *take_input( void *arg ) {
 
 int main(void) {
 
-	init();
-	init_display(); 
+	init(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
 
 	bool running = 1;
 
 	//initialise money
 	coins = 0;
-
+		
  	//thread for incrementing coins
 	pthread_t coin_thread;
 	pthread_create(&coin_thread, NULL, increment_coins, (void*)&running);
@@ -92,7 +91,7 @@ int main(void) {
 	bool hunger_warning_reported = false;
 
 	while(1) {
-
+	
 		pthread_mutex_lock(&vpet_mutex);
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
@@ -102,23 +101,25 @@ int main(void) {
 
 		//warn user if any category has 1 heart remaining
 		if(vpet->cleanliness == 1 && !clean_warning_reported){
-			clean_warning_reported = true;
 			print_warning(CLEANLINESS);
-		} else if (vpet->cleanliness > 1){
+			
+			//prevents warning being printed repeatedly while
+			//vpet->cleanliness == 1
+			clean_warning_reported = true;
+		}else if(vpet->cleanliness > 1){
+			//reset if user increases cleanliness
 			clean_warning_reported = false;
 		}
-
 		if(vpet->happiness == 1 && !happy_warning_reported){
-			happy_warning_reported = true;
 			print_warning(HAPPINESS);
-		} else {
+			happy_warning_reported = true;
+		}else if(vpet->happiness > 1){
 			happy_warning_reported = false;
 		}
-
 		if(vpet->hunger == 1 && !hunger_warning_reported){
-			hunger_warning_reported = true;
 			print_warning(HUNGER);
-		} else {
+			hunger_warning_reported = true;
+		}else if(vpet->hunger > 1){
 			hunger_warning_reported = false;
 		}
 
@@ -128,13 +129,12 @@ int main(void) {
 			increase_level();
 		}	
 
+		//dies if any stat = 0 (or all, can change)
 		check_bounds();
-
-		//dies if any stat = 0
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
-
+		
 		pthread_mutex_unlock(&vpet_mutex);
 	}
 
@@ -145,7 +145,9 @@ int main(void) {
 	pthread_join(cleanliness_thread, NULL);
 	pthread_join(hunger_thread, NULL);
 	pthread_join(happiness_thread, NULL);
-
+	
 	free_pet(); 
         return EXIT_SUCCESS;
 }
+
+

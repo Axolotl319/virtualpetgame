@@ -94,15 +94,15 @@ void print_warning(int category){
 	fprintf(stdout, "Warning! Only 1 heart remaining for ");
 	switch(category){
 		case CLEANLINESS: 
-			fprintf(stdout, "cleanliness. Press C to boost!");
+			fprintf(stdout, "cleanliness. Press C to boost!\n");
 			return;
 
 		case HAPPINESS: 
-			fprintf(stdout, "happiness. Press P to boost!");
+			fprintf(stdout, "happiness. Press P to boost!\n");
 			return;
 
 		case HUNGER: 
-			fprintf(stdout, "hunger. Press F to boost!");
+			fprintf(stdout, "hunger. Press F to boost!\n");
 			return;
 
 		default: fprintf(stderr, "UNKNOWN CATEGORY");
@@ -138,7 +138,7 @@ void free_pet(void) {
 	free(vpet);
 }
 
-//Cleanliness droppine one bar every 12 hours
+//Cleanliness droppine one bar every 12 seconds
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
@@ -153,7 +153,7 @@ void *decrease_cleanliness(void *arg) {
     return NULL;
 }
 
-//Hunger dropping one bar every 5 hours
+//Hunger dropping one bar every 5 seconds
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
@@ -168,7 +168,7 @@ void *decrease_hunger(void *arg) {
     return NULL;
 }
 
-//Happiness dropping one bar every 8 hours
+//Happiness dropping one bar every 8 seconds
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {

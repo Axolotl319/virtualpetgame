@@ -10,7 +10,6 @@ typedef struct {
 	int num_actions; 
 } level; 
 
-
 struct pet {
 	char *name; 
 	unsigned int cleanliness;
@@ -37,7 +36,7 @@ typedef enum {
 	HUNGER,
 } stats;
 
-extern const level levels[MAX_LEVEL - 1];
+extern const level levels[MAX_LEVEL - 1]; 
 
 //if any hearts are set to > 5 or < 0
 //check_bounds changes them to 0/5

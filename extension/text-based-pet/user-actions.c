@@ -51,7 +51,7 @@ int clean(void) {
 	return EXIT_SUCCESS; 
 }
 
-//returns 1 if not enough money or error, else 0
+//returns EXIT_FAILURE if not enough money or error, else EXIT_SUCCESS
 int gift(void) {
 	pthread_mutex_lock(&vpet_mutex);
 	if(decrement_coins(5)){
