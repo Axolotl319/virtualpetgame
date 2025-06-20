@@ -151,32 +151,26 @@ int main(void) {
 		}
 
 		//warn user if any category has 1 heart remaining
-		if(vpet->cleanliness == 1){
-			if(!cleanliness_warning) {
-				cleanliness_warning = true;
-				print_warning(CLEANLINESS);
-				display_temp_img(CLEANLINESS_WARNING_PATH);
-			}
+		if(vpet->cleanliness == 1 && !cleanliness_warning){
+			cleanliness_warning = true;
+			print_warning(CLEANLINESS);
+			display_temp_img(CLEANLINESS_WARNING_PATH);
 		} else {
 			cleanliness_warning = false;
 		}
 
-		if(vpet->happiness == 1){
-			if(!happiness_warning) {
-				happiness_warning = true;
-				print_warning(HAPPINESS);
-				display_temp_img(HAPPINESS_WARNING_PATH);
-			}
+		if(vpet->happiness == 1 && !happiness_warning){
+			happiness_warning = true;
+			print_warning(HAPPINESS);
+			display_temp_img(HAPPINESS_WARNING_PATH);
 		} else {
 			happiness_warning = false;
 		}
 
-		if(vpet->hunger == 1){
-			if(!hunger_warning) {
-				hunger_warning = true;
-				print_warning(HUNGER);
-				display_temp_img(HUNGER_WARNING_PATH);
-			}
+		if(vpet->hunger == 1 && !hunger_warning){
+			hunger_warning = true;
+			print_warning(HUNGER);
+			display_temp_img(HUNGER_WARNING_PATH);
 		} else {
 			hunger_warning = false;
 		}
