@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <fcntl.h>
+#include <termios.h>
 #include <signal.h>
 #include "DEV_Config.h"
 #include "GUI_Paint.h"
@@ -19,19 +19,50 @@
 #define MAX_NAME_LEN 100
 #define WAIT_TIME_MICROS 200000
 
-static void init(void) {
-	printf("Welcome to your virtual pet!\n"); 
-	printf("Name your pet (100 characters max): ");
-	char petname[MAX_NAME_LEN]; 
-	scanf("%s", petname); 
-	while (strlen(petname) >= MAX_NAME_LEN) {
-		printf("Sorry, that name is too long! Please try again: "); 
-		scanf("%s", petname); 
-	}
-	vpet = new_pet(petname);
-	init_display();
+//reads in a name. displays it char by char
+static void read_name(char *name) {
+	//need termios to read character by character
+        struct termios old_term, new_term;
+	//get old state
+	tcgetattr(STDIN_FILENO, &old_term);
+	//set new state
+	new_term = old_term;
+	new_term.c_lflag &= ~(ECHO | ICANON);
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &new_term);
+
+	//read in name (has to be letter/number)
+	char c;
+        int len = 0;
+        while((c = getchar()) != '\n' && c != EOF) {
+                if (len < 10 && (isalpha(c) || isdigit(c))) {
+                        name[len] = c;
+			display_name_char(c, len);
+			len++;
+                }
+
+		//if the character is backspace, erase the last character
+		else if ((c == '\b' || c == 127) && len > 0) {
+			name[len--] = '\0';
+			remove_name_char(len);
+		}
+
+		usleep(10000);
+        }
+        name[len] = '\0';
+	if (!strcmp(name, "")) { display_name_pg(); read_name(name); }
+
+	//restore old terminal state
+	tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
 }
 
+
+static void init(void) {
+	init_display();
+	char name[15];
+	read_name(name);
+	vpet = new_pet(name);
+	display_cat();
+}
 
 static void *take_input( void *arg ) {
 	bool *running = (bool *)arg; 
@@ -115,6 +146,7 @@ int main(void) {
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
+			display_death_msg();
 			break;
 		}
 
@@ -163,7 +195,7 @@ int main(void) {
 		usleep(50000);
 	}
 
-	//join the coin thread if infinite loop exited
+	//join the threads if infinite loop exited
 	running = 0;
 	pthread_join(coin_thread, NULL);
 	pthread_join(input_thread, NULL);
