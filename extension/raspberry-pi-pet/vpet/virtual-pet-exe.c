@@ -194,13 +194,20 @@ int main(void) {
 
 	//join the threads if infinite loop exited
 	running = 0;
+	printf("Exiting coin thread\n");
 	pthread_join(coin_thread, NULL);
+	printf("Exiting input thread\n");
 	pthread_join(input_thread, NULL);
+	printf("Exiting cleanliness thread\n");
 	pthread_join(cleanliness_thread, NULL);
+	printf("Exiting hunger thread\n");
 	pthread_join(hunger_thread, NULL);
+	printf("Exiting happiness thread\n");
 	pthread_join(happiness_thread, NULL);
 
+	printf("freeing display\n");
 	free_display();
+	printf("freeing pet\n");
 	free_pet(); 
         return EXIT_SUCCESS;
 }

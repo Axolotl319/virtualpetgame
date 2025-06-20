@@ -136,7 +136,7 @@ void free_pet(void) {
 //Cleanliness droppine one bar every 12 hours
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
-    while (*running && vpet->alive) {
+    while (*running) {
         sleep(HOURS(CLEANLINESS_DECAY_HOURS));
 	//lock before decrementing
 	pthread_mutex_lock(&cleanliness_mutex);
@@ -150,7 +150,7 @@ void *decrease_cleanliness(void *arg) {
 //Hunger dropping one bar every 5 hours
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
-    while (*running && vpet->alive) {
+    while (*running) {
         sleep(HOURS(HUNGER_DECAY_HOURS));
 	//lock before decrementing
 	pthread_mutex_lock(&hunger_mutex);
@@ -164,7 +164,7 @@ void *decrease_hunger(void *arg) {
 //Happiness dropping one bar every 8 hours
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
-    while (*running && vpet->alive) {
+    while (*running) {
         sleep(HOURS(HAPPINESS_DECAY_HOURS));
 	pthread_mutex_lock(&happiness_mutex);
 	vpet->happiness--;
