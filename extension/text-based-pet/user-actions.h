@@ -1,4 +1,4 @@
-extern int feed(void);
-extern int play(void); 
-extern int clean(void); 
-extern int gift(void);  
+extern void feed(void);
+extern void play(void); 
+extern void clean(void); 
+extern void gift(void);  

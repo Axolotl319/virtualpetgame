@@ -8,7 +8,7 @@ DIR_BIN      = ./bin
 OBJ_C = $(wildcard ${DIR_EPD}/*.c ${DIR_Config}/*.c ${DIR_GUI}/*.c ${DIR_Pet}/*.c ${DIR_FONTS}/*.c)
 OBJ_O = $(patsubst %.c,${DIR_BIN}/%.o,$(notdir ${OBJ_C}))
 
-TARGET = virtual-pet-exe
+TARGET = virtual-pi-pet-exe
 
 # USELIB = USE_BCM2835_LIB
 # USELIB = USE_WIRINGPI_LIB

@@ -66,11 +66,12 @@ int main(void) {
 
 	init(); 
 	printf("%s is happy to meet you!\n", vpet->name); 
+	printf("Press F to feed, P to play, C to clean, G to gift, S for stats\n");
 
 	bool running = 1;
 
 	//initialise money
-	coins = 0;
+	coins = 15;
 		
  	//thread for incrementing coins
 	pthread_t coin_thread;
@@ -96,6 +97,7 @@ int main(void) {
 		//break out of the loop if it's dead
 		if (!vpet->alive) {
 			printf("Your virtual pet is dead :(\n");
+			pthread_mutex_unlock(&vpet_mutex);
 			break;
 		}
 

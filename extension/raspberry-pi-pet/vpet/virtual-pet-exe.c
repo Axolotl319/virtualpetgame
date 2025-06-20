@@ -120,7 +120,7 @@ int main(void) {
 	bool running = 1;
 
 	//initialise money
-	coins = 0;
+	coins = 15;
 
 	//bools for printing warnings
 	bool cleanliness_warning = false;
