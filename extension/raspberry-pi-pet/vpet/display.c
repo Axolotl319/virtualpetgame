@@ -14,9 +14,10 @@
 #define LEFT_INDEX     5
 #define TOP_24         20
 #define TOP_48         40
-#define CHAR_SPACE     24
+#define CHAR_SPACE     28
 #define WIDTH_48       24
 #define HEIGHT_48      48
+#define NAME_TOP       190
 
 UWORD *CatImage;
 
@@ -40,7 +41,7 @@ void init_display( void ) {
         UDOUBLE Imagesize = LCD_1IN3_HEIGHT*LCD_1IN3_WIDTH*2;
         printf("Imagesize = %d\r\n", Imagesize);
         if((CatImage = (UWORD *)malloc(Imagesize)) == NULL) {
-                printf("Failed to apply for memory...\r\n");
+                fprintf(stderr, "Failed to allocate memory\n");
                 exit(0);
         }
 
@@ -62,7 +63,7 @@ void display_start(void) {
 	Paint_DrawString_EN(10*LEFT_INDEX, TOP_48 + 2*NEWLINE_GAP_48, "PET!", &Font48, WHITE, BLACK);
 	LCD_1IN3_Display(CatImage);
 	DEV_Delay_ms(2000);
-	
+
 	//screen to enter name
 	display_name_pg();
 }
@@ -76,15 +77,15 @@ void display_name_pg(void) {
 
 //displays a character once it is typed as a name
 void display_name_char(char c, int pos) {
-	Paint_DrawChar(CHAR_SPACE*pos, TOP_48 + NEWLINE_GAP_48, c, &Font48, BLACK, WHITE);
+	Paint_DrawChar(CHAR_SPACE*pos + LEFT_INDEX, TOP_48 + NEWLINE_GAP_48, c, &Font48, BLACK, WHITE);
 	LCD_1IN3_Display(CatImage);
 }
 
 //removes a character when backspace is pressed
 void remove_name_char(int pos) {
-	Paint_DrawRectangle(CHAR_SPACE * pos, 
+	Paint_DrawRectangle(CHAR_SPACE * pos + LEFT_INDEX, 
 		    	    TOP_48 + NEWLINE_GAP_48,
-			    CHAR_SPACE * pos + WIDTH_48, 
+			    CHAR_SPACE * pos + LEFT_INDEX + WIDTH_48, 
 			    TOP_48 + NEWLINE_GAP_48 + HEIGHT_48,	
 			    WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
 	LCD_1IN3_Display(CatImage);
@@ -95,7 +96,7 @@ void display_cat(void) {
 	Paint_Clear(WHITE);
 	LCD_1IN3_Clear(WHITE);
 	GUI_ReadBmp(DEFAULT_CAT_PATH);
-	Paint_DrawString_EN(0, 235 - TOP_48, vpet->name, &Font48, WHITE, BLACK);
+	Paint_DrawString_EN(LEFT_INDEX, NAME_TOP, vpet->name, &Font48, WHITE, BLACK);
 	LCD_1IN3_Display(CatImage);
 }
 

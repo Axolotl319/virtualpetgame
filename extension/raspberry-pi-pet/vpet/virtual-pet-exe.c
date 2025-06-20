@@ -34,7 +34,7 @@ static void read_name(char *name) {
 	char c;
         int len = 0;
         while((c = getchar()) != '\n' && c != EOF) {
-                if (len < 10 && (isalpha(c) || isdigit(c))) {
+                if (len < 8 && (isalpha(c) || isdigit(c))) {
                         name[len] = c;
 			display_name_char(c, len);
 			len++;

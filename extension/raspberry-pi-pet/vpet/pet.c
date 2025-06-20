@@ -44,28 +44,22 @@ void check_bounds(int category){
 		case CLEANLINESS:
 			if(vpet->cleanliness > vpet->max_hearts){
 				vpet->cleanliness = vpet->max_hearts;
-				printf("debug: cleanliness set to > 5, reset to 5\n");
 			}else if(vpet->cleanliness < 0){
 				vpet->cleanliness = 0;
-				printf("debug: cleanliness set to < 0, reset to 0\n");
 			}
 
 		case HAPPINESS:
 			if(vpet->happiness > vpet->max_hearts){
 				vpet->happiness = vpet->max_hearts;
-				printf("debug: happiness set to > 5, reset to 5\n");
 			}else if(vpet->happiness < 0){
 				vpet->happiness = 0;
-				printf("debug: happiness set to < 0, reset to 0\n");
 			}
 
 		case HUNGER:
 			if(vpet->hunger > vpet->max_hearts){
 				vpet->hunger = vpet->max_hearts;
-				printf("debug: hunger set to > 5, reset to 5\n");
 			}else if(vpet->hunger < 0){
 				vpet->hunger = 0;
-				printf("debug: hunger set to < 0, reset to 0\n");
 			}
 	}
 }
@@ -143,8 +137,7 @@ void free_pet(void) {
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        //sleep(HOURS(CLEANLINESS_DECAY_HOURS));
-        sleep(10);
+        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
 	//lock before decrementing
 	pthread_mutex_lock(&cleanliness_mutex);
 	vpet->cleanliness--;
@@ -158,8 +151,7 @@ void *decrease_cleanliness(void *arg) {
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        //sleep(HOURS(HUNGER_DECAY_HOURS));
-        sleep(10);
+        sleep(HOURS(HUNGER_DECAY_HOURS));
 	//lock before decrementing
 	pthread_mutex_lock(&hunger_mutex);
 	vpet->hunger--;
@@ -173,8 +165,7 @@ void *decrease_hunger(void *arg) {
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        //sleep(HOURS(HAPPINESS_DECAY_HOURS));
-        sleep(10);
+        sleep(HOURS(HAPPINESS_DECAY_HOURS));
 	pthread_mutex_lock(&happiness_mutex);
 	vpet->happiness--;
         check_bounds(HAPPINESS);
