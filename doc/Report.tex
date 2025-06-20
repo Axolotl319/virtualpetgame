@@ -11,7 +11,7 @@
 
 \section{Assembler Implementation}
 
-Our assembler is composed of three main components: the emulate file, where
+Our assembler is composed of three main components: the assemble file, where
 instruction fetch and encode is performed; the modules, which consist of 
 all instruction-encoding functions; and the data structures. The first data 
 structure is the dynamic \texttt{symtable}, a dictionary of labels to addresses. 
@@ -117,10 +117,10 @@ studies, self-care, hobbies, and more.
 \subsection{Virtual Pet Design}
 
 Our extension includes three iterations of the virtual pet: one text-only version, one with a graphical
-display of the pet in a separate window, and one with the pet displayed on an LED HAT on a Raspberry
+display of the pet in a separate window, and one with the pet displayed on an LCD HAT on a Raspberry
 Pi. The three iterations create three layers of accessibility: one for those who cannot load the GUI or 
 download external libraries, one for those without a Raspberry Pi, and one for those who prefer a tiny, 
-physical companion. All three versions share similar functionality, but each design also had its own
+physical companion. All three versions share similar functionality, but each design also has its own
 additional features. The GUI displays images of the virtual pet which changes depending on the 
 interaction. For example, at the beginning, a default 8-bit cat is displayed. If the 
 user feeds their virtual pet by pressing `F', the image changes to the same cat holding a fish. 
@@ -155,33 +155,30 @@ Initially, we ran into some problems implementing the pet as a global structure 
 Eventually, we realised the main issue was how the files were linked, which led to multiple 
 declarations of the same variable. We fixed it by ensuring the virtual pet would only be 
 created once, at the start of the program. This proved particularly helpful when we implemented 
-in-game coins as a separate global variable, which involved some similar C syntax. Another 
-challenge we faced was working out how to perform the background tasks of incrementing coins 
-at a set interval, and decrementing pet statistics at set intervals while also allowing 
-the user to play the game simultaneously. To solve this problem, we decided to launch 
-separate threads for each background task we wanted to perform, ensuring that the execution 
-of the threads did not interfere with the execution of the main program.
+in-game coins as a separate global variable. Another challenge we faced was working out how to 
+perform the background tasks of incrementing coins at a set interval, and decrementing pet 
+statistics at set intervals while also allowing the user to play the game simultaneously. To 
+solve this problem, we decided to launch separate threads for each background task we wanted 
+to perform, ensuring that the execution of the threads did not interfere with the execution 
+of the main program.
 
 When creating the GUI version of our virtual pet, the primary challenge was setting up the 
-packages and dependencies of our chosen graphical user interface toolkit, GTK. During setup, 
-most online tutorials recommended using \texttt{sudo} commands. However, these commands are 
-blocked on the lab computers. As a result, we needed to find a workaround, which involved 
-pulling multiple GitHub repositories that GTK depended on. The next challenge was setting up 
-the makefile to compile C source code that used GTK. This involved much trial and error, and 
-a deeper understanding of Makefile flags and macros. In addition, we learned the importance 
-of verifying the existence of vital libraries after setup; when we tried to compile the C 
-source code using version \texttt{gtk4}, as suggested by the GTK documentation, the compilation 
-failed. After checking the GTK version, we discovered that the GitHub repository only 
-contained \texttt{gtk+-3.0}. If we had checked the version at the very beginning, we could 
-have saved valuable time. Lastly, overcoming the initial GTK learning curve required watching 
-a few YouTube tutorials, but we were able to implement our basic required functionality 
-using just the GTK documentation afterwards.
+packages and dependencies of our chosen graphical user interface toolkit, GTK. What we found 
+difficult was setting up the Makefile to compile C source code that used GTK. This involved 
+much trial and error, and a deeper understanding of Makefile flags and macros. In addition, 
+we learned the importance of verifying the existence of vital libraries after setup; when we 
+tried to compile the C source code using version \texttt{gtk4}, as suggested by the GTK 
+documentation, the compilation failed. After checking the GTK version, we discovered that the 
+GitHub repository only contained \texttt{gtk+-3.0}. If we had checked the version at the 
+beginning, we could have saved valuable time. Lastly, overcoming the initial GTK learning curve 
+required watching a few YouTube tutorials, but we were able to implement our required 
+functionality using just the GTK documentation afterwards.
 
 The Raspberry Pi implementation was difficult at first, since it required a thorough reading 
 of the LCD HAT manual, as well as an understanding of the libraries provided with it. The 
 use of these libraries also involved modifying our Makefile to link them, and this was a 
 challenging task. To overcome this, we examined the Makefile provided in the demonstration 
-code for the LCD HAT, understanding the purpose of each line to craft our own program’s Makefile. 
+code for the LCD HAT, understanding the purpose of each line to craft our Makefile. 
 Furthermore, after writing code to take user input from the buttons on the LCD HAT, a button 
 press triggered too many calls to the user actions functions, causing the statistics of the 
 pet to maximise with only a single press of the button. To solve this problem, we had to 
@@ -196,17 +193,15 @@ decreasing the various category statistics (such as happiness) at regular time i
 and limiting the number of hearts in each category to be between zero and five. Later, we referred 
 back to this checklist to thoroughly test the program. 
 
-First, we confirmed that the stats would decrease at regular intervals. Since it would take too 
-long to check if the stats decreased every five, eight, and twelve hours, we chose to decrease the stats
+First, we confirmed that the stats would decrease at regular intervals. We chose to decrease the stats
 every twelve seconds for cleanliness, eight seconds for happiness, and five seconds for hunger for 
 testing and demonstration purposes. To check whether the stats decremented as expected, we started 
-the game without interacting with the category being tested. We printed the stats at the expected 
+the game without interacting with the pet. We printed the stats at the expected 
 time intervals to test if the stat for the current category was decrementing each time, and 
 observed the final outcome of the virtual pet dying when the category reached zero hearts. Although 
-the stats do decrease at regular intervals, this test is not a good enough substitute for testing 
-decrements every five, eight, and twelve hours; the countdown or program may behave 
-differently or unexpectedly for much longer periods. In the future when there is more time, a 
-more effective test is to check regular decrements over multiple days. 
+the stats do decrease at regular intervals, this test is not an adequate substitute for testing 
+decrements over hours; the program may behave unexpectedly when used for much longer periods. 
+In the future when there is more time, a more effective test is to check regular decrements over multiple days. 
 
 To test the user inputs, we waited for a particular category to have fewer than five hearts, 
 then input the appropriate character. This test succeeds if we obtain an output message stating 
@@ -224,49 +219,38 @@ In the future, we hope to test more rigorously by creating a test suite, as was 
 emulator and assembler, to test many possible states of our program and ensure it always 
 operates in a predictable and desirable way. Since our extension is made as a type of game for 
 the general public, it would also be effective to have a pool of beta testers to inform us about 
-the game's design, accessibility, and engagement. Due to time restrictions in this project, we 
-decided it would be better to test the program in some of the most likely scenarios, and confirm 
-if the main functionality works rather than risk running out of time building a test suite and 
-being unable to test anything at all.
+the game's design, accessibility, and engagement. 
 
 \section{Group Reflection}
 
 From the beginning, we recognised clear and consistent communication was essential for Git 
 coordination. When it came to Git branching within a group project, it was not something many of us 
-had encountered before so we were initially intimidated. However, we overcame any apprehensions by 
-starting to utilise our group chat for daily check-ins. These conversations allowed us to report on 
-completed tasks and devise our next steps for upcoming tasks. As this allowed everyone to be aware 
-of the progress made within the project, we were able to prevent our branches from diverging and 
-ensured we met every deadline set on schedule, reinforcing both our confidence and the reliability of 
-our initial plan. 
+had encountered before. However, we overcame any apprehensions by having daily check-ins. 
+These conversations allowed us to report on completed tasks and devise our next steps. As this 
+allowed everyone to be aware of the progress made within the project, we were able to prevent our 
+branches from diverging and ensured we met every deadline on schedule.
 
 We allocated some core tasks at our initial meeting and then allowed the rest to be picked up when a 
 member completed their piece. However, this led to an imbalance in the distribution of work completed 
 by each member as some finished early and took on a higher workload, whilst others remained on their 
 original tasks. Although this helped resolve urgent issues and accelerate progress, it left some 
 members under-utilised. To address this, in future projects, we will assign tasks on a rolling basis. 
-We will start by decomposing the project into smaller, manageable tasks, with each having an estimated 
-equal amount of effort required, which will then be assigned. Then by setting a timeframe for 
+We will start by decomposing the project into manageable tasks, with each having an estimated 
+equal amount of effort required, which will then be assigned. Then, by setting a timeframe for 
 those tasks, we will guarantee that all members are on the same page by the deadline, and group members 
-can offer support with roadblocks faced to reach a collective solution. After we verify each member has 
+can offer support with roadblocks faced to reach a collective solution. After each member has 
 finished, we can delegate the next division of tasks and this will allow us to keep workloads balanced. 
 During the assignment, we tracked tasks on a shared Google Doc which enabled us to see outstanding work, 
 and through constant updates, prevented duplication. Due to its effectiveness, this is something we would 
-implement again but, in the future, we would reallocate the remaining tasks only after another group 
-discussion.
+implement again but, in the future, we would allocate the remaining tasks after another group discussion.
 
-One of the most impactful practices we adopted was pair programming in person at the labs for complex 
-challenges. Our members tackled the assembler’s integer arithmetic logic together as some assembler 
-instructions were not executing correctly. Working side-by-side, we stepped through the code and identified 
-the erroneous function where we mixed up operand flags and orders. We then refactored the code into two 
-distinct functions and this taught us the value of clear, single-responsibility routines. By working in 
-unison, we maximised efficiency in creating code by bouncing off ideas and debugging our project. Moving 
-forward, we will schedule at least two structured pair-programming sessions per milestone to establish a 
-more group-collaborative approach and ensure equal contribution.
-
-Overall, our group demonstrated strong teamwork and realistic planning. By refining task delegation through 
-embedding more collaborative coding practices, we are confident that our next group assignment will proceed even 
-more smoothly and efficiently.
+One of the most impactful practices we adopted was pair programming in person for complex 
+challenges. For example, we tackled the assembler’s integer arithmetic logic together as it was not 
+executing correctly. After stepping through the code together, we realised the problem stemmed from 
+our incorrect use of unsigned integer arithmetic. By working in unison, we maximised programming 
+efficiency by bouncing off ideas. Moving forward, we will schedule at least two structured 
+pair-programming sessions per milestone to establish a more group-collaborative approach and ensure 
+equal contribution.
 
 \section{Individual Reflections}
 
@@ -296,16 +280,15 @@ doing by asking questions and using other resources, such as Scientia.
 
 \subsection{Shriya Sistla}
 
-Throughout the project, I feel I fit into the group well. As well as programming my assigned sections
-of the project, I have been writing utility functions and spending a lot of time cleaning up the code
-to make sure that it is organised and neat. As well as this, I have been dedicated to the project and
-I have been available to my groupmates both online and in person. However, I have realised that I
-struggle to balance all of the tasks needed for submission, since I tend to spend too long working
-on the programming aspect and disregarding other aspects until later on, such as the report. As well 
-as this, based on the peer review feedback, I should write more helpful documentation for the code that
-I write, so that it is more understandable and easier for other people to find and use. For future
-group projects, I will focus on spending more time working on the project holistically, paying equal
-attention to programming, report writing, and documentation. 
+Throughout the project, I feel I fit into the group well. As well as programming my assigned sections,
+I have been writing utility functions and spending time cleaning up the code to make sure that it is 
+organised. As well as this, I have been dedicated to the project and available to my peers both online 
+and in person. However, I have realised that I struggle to balance all of the tasks needed for submission, 
+since I tend to spend too long working on the programming aspect and disregarding other aspects until 
+later on, such as the report. As well as this, based on the peer review feedback, I should write more 
+helpful documentation my code, so that it is easier for other people to find and use. For future group 
+projects, I will focus on spending more time working on the project holistically, paying equal attention 
+to programming, report writing, and documentation. 
 
 \subsection{Yao Tong}
 
