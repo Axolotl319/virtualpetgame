@@ -95,7 +95,8 @@ void display_cat(void) {
 	Paint_Clear(WHITE);
 	LCD_1IN3_Clear(WHITE);
 	GUI_ReadBmp(DEFAULT_CAT_PATH);
-        LCD_1IN3_Display(CatImage);
+	Paint_DrawString_EN(0, 235 - TOP_48, vpet->name, &Font48, WHITE, BLACK);
+	LCD_1IN3_Display(CatImage);
 }
 
 //displays an image for 2 seconds
