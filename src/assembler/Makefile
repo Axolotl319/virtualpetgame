@@ -17,7 +17,6 @@ INSTR_HEADERS = int-directives.h branch.h data-processing.h data-transfer.h
 
 
 all: assemble
-	cp assemble ~/armv8_testsuite/solution
 
 assemble: $(OBJS) 
 
