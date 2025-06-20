@@ -59,8 +59,21 @@ void display_start(void) {
 
 	//welcome message
 	Paint_DrawString_EN(4*LEFT_INDEX, TOP_48, "WELCOME", &Font48, WHITE, BLACK);
-	Paint_DrawString_EN(4*LEFT_INDEX, TOP_48 + NEWLINE_GAP_48, "TO YOUR", &Font48, WHITE, BLACK);
-	Paint_DrawString_EN(10*LEFT_INDEX, TOP_48 + 2*NEWLINE_GAP_48, "PET!", &Font48, WHITE, BLACK);
+	Paint_DrawString_EN(
+			4*LEFT_INDEX, 
+			TOP_48 + NEWLINE_GAP_48, 
+			"TO YOUR", 
+			&Font48, 
+			WHITE, 
+			BLACK);
+
+	Paint_DrawString_EN(
+			10*LEFT_INDEX, 
+			TOP_48 + 2*NEWLINE_GAP_48, 
+			"PET!", 
+			&Font48, 
+			WHITE, BLACK);
+
 	LCD_1IN3_Display(CatImage);
 	DEV_Delay_ms(2000);
 
@@ -77,7 +90,13 @@ void display_name_pg(void) {
 
 //displays a character once it is typed as a name
 void display_name_char(char c, int pos) {
-	Paint_DrawChar(CHAR_SPACE*pos + LEFT_INDEX, TOP_48 + NEWLINE_GAP_48, c, &Font48, BLACK, WHITE);
+	Paint_DrawChar(
+		CHAR_SPACE*pos + LEFT_INDEX, 
+		TOP_48 + NEWLINE_GAP_48, 
+		c, 
+		&Font48, 
+		BLACK, WHITE);
+
 	LCD_1IN3_Display(CatImage);
 }
 
@@ -129,14 +148,61 @@ void display_hearts(void) {
 	get_stat_string(HAPPINESS, vpet->happiness, happiness_str);
 	get_stat_string(HUNGER, vpet->hunger, hunger_str);
 
-        Paint_DrawString_EN(LEFT_INDEX, TOP_24, level_str, &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + NEWLINE_GAP_24, "Cleanliness:", &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 2*NEWLINE_GAP_24, cleanliness_str, &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 3*NEWLINE_GAP_24, "Happiness:", &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 4*NEWLINE_GAP_24, happiness_str, &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 5*NEWLINE_GAP_24, "Hunger:", &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 6*NEWLINE_GAP_24, hunger_str, &Font24, WHITE, BLACK);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_24 + 7*NEWLINE_GAP_24, coins_str, &Font24, WHITE, BLACK);
+        Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24, 
+			level_str, 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + NEWLINE_GAP_24, 
+			"Cleanliness:", 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 2*NEWLINE_GAP_24, 
+			cleanliness_str, 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 3*NEWLINE_GAP_24, 
+			"Happiness:", 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 4*NEWLINE_GAP_24, 
+			happiness_str, 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 5*NEWLINE_GAP_24, 
+			"Hunger:", 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 6*NEWLINE_GAP_24,
+		       	hunger_str, 
+			&Font24, 
+			WHITE, BLACK);
+
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_24 + 7*NEWLINE_GAP_24, 
+			coins_str, 
+			&Font24, 
+			WHITE, BLACK);
 
         LCD_1IN3_Display(CatImage);
         DEV_Delay_ms(2000);
@@ -146,9 +212,27 @@ void display_hearts(void) {
 //displays the death message
 void display_death_msg(void) {
 	Paint_Clear(WHITE);
-	Paint_DrawString_EN(LEFT_INDEX, TOP_48, "YOUR PET", &Font48, WHITE, BLUE);
-	Paint_DrawString_EN(3*LEFT_INDEX, TOP_48 + NEWLINE_GAP_48, "IS DEAD", &Font48, WHITE, BLUE);
-	Paint_DrawString_EN(18*LEFT_INDEX, TOP_48 + 2*NEWLINE_GAP_48, ":(", &Font48, WHITE, BLUE);
+	Paint_DrawString_EN(
+			LEFT_INDEX, 
+			TOP_48, 
+			"YOUR PET", 
+			&Font48, 
+			WHITE, BLUE);
+
+	Paint_DrawString_EN(
+			3*LEFT_INDEX, 
+			TOP_48 + NEWLINE_GAP_48, 
+			"IS DEAD", 
+			&Font48, 
+			WHITE, BLUE);
+
+	Paint_DrawString_EN(
+			18*LEFT_INDEX, 
+			TOP_48 + 2*NEWLINE_GAP_48, 
+			":(", 
+			&Font48, 
+			WHITE, BLUE);
+
 	LCD_1IN3_Display(CatImage);
 }
 

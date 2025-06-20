@@ -137,7 +137,10 @@ int main(void) {
 	
 	//threads to decrease levels
 	pthread_t cleanliness_thread, hunger_thread, happiness_thread;
-	pthread_create(&cleanliness_thread, NULL, decrease_cleanliness, (void*)&running);
+	pthread_create(&cleanliness_thread, 
+		       NULL, 
+		       decrease_cleanliness, 
+		       (void*)&running);
 	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
 	pthread_create(&happiness_thread, NULL, decrease_happiness, (void*)&running);
 
