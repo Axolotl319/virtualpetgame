@@ -9,7 +9,7 @@
 extern pet vpet;
 extern int coins;
 
-int feed(void) {
+void feed(void) {
 	pthread_mutex_lock(&vpet_mutex);
 	if(vpet->hunger >= vpet->max_hearts){
 		fprintf(stdout, "%s is full!\n", vpet->name);
@@ -20,10 +20,9 @@ int feed(void) {
 	}
 	check_bounds();
 	pthread_mutex_unlock(&vpet_mutex);
-	return EXIT_SUCCESS;
 }
 
-int play(void) {
+void play(void) {
 	pthread_mutex_lock(&vpet_mutex);
 	if(vpet->happiness >= vpet->max_hearts){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
@@ -34,10 +33,9 @@ int play(void) {
 	}
 	check_bounds();
 	pthread_mutex_unlock(&vpet_mutex);
-	return EXIT_SUCCESS; 
 }
 
-int clean(void) {
+void clean(void) {
 	pthread_mutex_lock(&vpet_mutex);
 	if(vpet->cleanliness >= vpet->max_hearts){
 		fprintf(stdout, "%s is already squeaky clean!\n", vpet->name);
@@ -48,22 +46,20 @@ int clean(void) {
 	}
 	check_bounds();
 	pthread_mutex_unlock(&vpet_mutex);
-	return EXIT_SUCCESS; 
 }
 
 //returns EXIT_FAILURE if not enough money or error, else EXIT_SUCCESS
-int gift(void) {
+void gift(void) {
 	pthread_mutex_lock(&vpet_mutex);
+	
 	if(decrement_coins(5)){
 		pthread_mutex_unlock(&vpet_mutex);
 		fprintf(stdout, "%s doesn't have enough money!\n", vpet->name);
-		return EXIT_FAILURE;
+	} else {
+		vpet->happiness = vpet->max_hearts;
+		fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
+		vpet->num_actions++;
 	}
-	
-	vpet->happiness = vpet->max_hearts;
-	fprintf(stdout, "%s is super happy! Thanks for the gift!\n", vpet->name);
-	vpet->num_actions++;
 
 	pthread_mutex_unlock(&vpet_mutex);
-	return EXIT_SUCCESS; 
 }
