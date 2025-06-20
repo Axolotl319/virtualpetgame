@@ -47,20 +47,20 @@ extern pthread_mutex_t vpet_mutex;
 
 //if hearts in a category are set to > 5 or < 0
 //check_bounds changes them to 0/5
-extern void check_bounds(int category);
+extern void check_bounds(void);
 
-extern void get_stat_string(int category, int amt, char *stat_str);
+extern void print_hearts( void );
 
-extern void free_pet(void); 
-
-extern pet new_pet(char *name); 
-
-extern void print_warning(int category);
+extern void print_warning( int category );
 
 extern void increase_level( void );
 
-extern void *decrease_cleanliness(void *arg);
+extern pet new_pet( char * name );
 
-extern void *decrease_hunger(void *arg);
+extern void free_pet( void );
 
-extern void *decrease_happiness(void *arg);
+extern void * decrease_cleanliness( void * arg );
+
+extern void * decrease_hunger( void * arg );
+
+extern void * decrease_happiness( void * arg );
