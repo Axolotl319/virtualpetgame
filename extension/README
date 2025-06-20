@@ -4,7 +4,7 @@ and Makefiles, so we placed each version in their own folder.
 
 text-based-pet: 
 	No GUI, can only interact with the pet through the terminal.
-	More explicit multi-threading than the other versions.  
+	More explicit multi-threading than the GUI version.  
 
 	If you wish to convert the decay interval from hours to seconds 
 	when playing with the pet: 
@@ -28,4 +28,20 @@ gui-pet:
 	- Remove the HOURS macro and any division from the lines 115 to 120.
 	- Exit the file. Use the command "make" to re-make the file.  
 
-Raspberry Pi: 
+raspberry-pi-pet: 
+	This is played using a Raspberry Pi Model 3B along with a 1.3 Inch LCD 
+	WaveShare HAT. Refer to the Manual on the WaveShare Wiki to install the
+	dependencies needed onto the Raspberry Pi. At the start of the game, you
+	will need a keyboard attached to the Raspberry Pi to type a name for 
+	your pet. You will not need this afterwards. To play, press Key 1 to 
+	clean, Key 2 to play, and Key 3 to feed. Press down on the joystick to 
+	feed, and move the joystick upwards to see statistics.
+
+	If you wish to convert the decay interval from hours to seconds 
+	when playing with the pet: 
+	- Go to file pet.c and scroll to the bottom. 
+	- Remove the "HOURS" macro from around CLEANLINESS_DECAY_HOURS, 
+ 	  HUNGER_DECAY_HOURS, and HAPPINESS_DECAY_HOURS in the functions 
+	  decrease_cleanliness, decrease_hunger, and decrease_happiness, 
+	  respectively. 
+	- Exit the file. Use the command "make" to re-make the executable.
