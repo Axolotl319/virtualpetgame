@@ -124,7 +124,9 @@ physical companion. All three versions share similar functionality, but each des
 additional features. The GUI displays images of the virtual pet which changes depending on the 
 interaction. For example, at the beginning, a default 8-bit cat is displayed. If the 
 user feeds their virtual pet by pressing `F', the image changes to the same cat holding a fish. 
-The Raspberry Pi version is similar, but is implemented differently because it involves hardware. 
+The Raspberry Pi version is similar, but is implemented differently because it involves hardware.
+The Raspberry Pi version includes a library made by Waveshare for their 1.3 inch LCD HAT. We did not
+author the code within the \texttt{lib} directory. 
 
 The virtual pet has three main categories that the user can interact with: cleanliness, 
 happiness, and hunger. Each category decrements by one bar over a fixed amount of time: every twelve 
