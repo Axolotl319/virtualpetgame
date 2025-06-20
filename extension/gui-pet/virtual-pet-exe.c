@@ -24,26 +24,32 @@ bool action_keypress(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 	switch (event->keyval) {
 		case (GDK_KEY_s):  
 			print_hearts(); 
-			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/default.jpg"); 
+			gtk_image_set_from_file(GTK_IMAGE(data), 
+					        "cat_images/default.jpg"); 
 			break; 
 		case (GDK_KEY_f): 
 		        feed();
-			gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/feed.png"); 
+			gtk_image_set_from_file(GTK_IMAGE(data), 
+						"cat_images/feed.png"); 
 			break;  
 		case (GDK_KEY_c):  
 			clean();
-		       	gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/clean.png"); 	
+		       	gtk_image_set_from_file(GTK_IMAGE(data), 
+						"cat_images/clean.png"); 	
 			break;  
 		case (GDK_KEY_p):  
 			if (play()) {
-				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/sleep.png"); 
+				gtk_image_set_from_file(GTK_IMAGE(data), 
+							"cat_images/sleep.png"); 
 			} else {
-				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/happy.png"); 
+				gtk_image_set_from_file(GTK_IMAGE(data), 
+							"cat_images/happy.png"); 
 			}	
 			break;  
 		case (GDK_KEY_g): 
 			if (!gift()) {
-				gtk_image_set_from_file(GTK_IMAGE(data), "cat_images/gift.png"); 
+				gtk_image_set_from_file(GTK_IMAGE(data), 
+							"cat_images/gift.png"); 
 			}	
 			break;  
 		default: 
@@ -109,9 +115,14 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
 	// connect a keyboard press event to the window 
 	gtk_widget_add_events(window, GDK_KEY_PRESS_MASK); 
-	g_signal_connect(G_OBJECT(window), "key_press_event", G_CALLBACK(action_keypress), image); 
+	g_signal_connect(
+			G_OBJECT(window), 
+			"key_press_event", 
+			G_CALLBACK(action_keypress), image
+			); 
 
-	// add functions to decrement health, check for death, increment coins, and level up 
+	// add functions to decrement health, check for death, 
+	// increment coins, and level up 
 	g_timeout_add_seconds(HOURS(HUNGER_DECAY_HOURS), dec_hunger, NULL); 
 	g_timeout_add_seconds(HOURS(CLEANLINESS_DECAY_HOURS), dec_cleanliness, NULL); 
 	g_timeout_add_seconds(HOURS(HAPPINESS_DECAY_HOURS), dec_happiness, NULL); 

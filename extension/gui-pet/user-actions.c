@@ -29,7 +29,8 @@ int play(void) {
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 		return EXIT_FAILURE; 
 	}else{
-		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
+		fprintf(stdout, "%s is super excited to spend time with you!\n", 
+			vpet->name);
 		vpet->happiness++;
 		vpet->num_actions++;
 	}

@@ -32,7 +32,8 @@ void play(void) {
 	if(vpet->happiness++ >= vpet->max_hearts){
 		fprintf(stdout, "%s is too tired to play\n", vpet->name);
 	}else{
-		fprintf(stdout, "%s is super excited to spend time with you!\n", vpet->name);
+		fprintf(stdout, "%s is super excited to spend time with you!\n", 
+			vpet->name);
 		display_temp_img(HAPPY_CAT_PATH);
 		vpet->num_actions++;
 	}
