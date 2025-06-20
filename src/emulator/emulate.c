@@ -45,7 +45,7 @@ static void print_state(armv8_state *armv8, FILE *outFile) {
 	//Memory
 	fprintf(outFile, "Non-zero memory:\n");
 	for (int addr = 0; addr < (MEM_SIZE-WORD_SIZE_32); addr+=WORD_SIZE_32){
-		uint64_t word;
+		uint64_t word = 0;
 		get_memory_data(armv8, addr, WORD_SIZE_32, &word);
 
 		if (word != 0) {
@@ -190,6 +190,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 	assert(armv8->memory != NULL);
+	memset(armv8->memory, 0, MEM_SIZE);
 	
 	// Reads contents of file into buffer 
 	fread(armv8->memory, 1, MEM_SIZE, inFile);	

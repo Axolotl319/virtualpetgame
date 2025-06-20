@@ -14,7 +14,6 @@ OBJS = emulate.o data-processing.o data-transfer.o branch.o armv8.o emulator-uti
 UTIL_HEADERS := ../utils/instr-formats.h ../utils/constants.h emulator-utils.h armv8.h
 
 all: emulate
-	cp emulate ~/armv8_testsuite/solution
 
 emulate: $(OBJS)
 
