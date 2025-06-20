@@ -36,26 +36,20 @@ const level levels[MAX_LEVEL - 1] = {
 void check_bounds(void){
 	if(vpet->cleanliness > vpet->max_hearts){
 		vpet->cleanliness = vpet->max_hearts;
-		printf("debug: cleanliness set to > 5, reset to 5\n");
 	}else if(vpet->cleanliness < 0){
 		vpet->cleanliness = 0;
-		printf("debug: cleanliness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->happiness > vpet->max_hearts){
 		vpet->happiness = vpet->max_hearts;
-		printf("debug: happiness set to > 5, reset to 5\n");
 	}else if(vpet->happiness < 0){
 		vpet->happiness = 0;
-		printf("debug: happiness set to < 0, reset to 0\n");
 	}
 
 	if(vpet->hunger > vpet->max_hearts){
 		vpet->hunger = vpet->max_hearts;
-		printf("debug: hunger set to > 5, reset to 5\n");
 	}else if(vpet->hunger < 0){
 		vpet->hunger = 0;
-		printf("debug: hunger set to < 0, reset to 0\n");
 	}
 }
 
@@ -148,13 +142,13 @@ void free_pet(void) {
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(CLEANLINESS_DECAY_HOURS));
-		//Lock shared state
-		pthread_mutex_lock(&vpet_mutex);
-        vpet->cleanliness--;
-        check_bounds();
-		//Unlock shared state
-		pthread_mutex_unlock(&vpet_mutex);  
+	    sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+	    //Lock shared state
+	    pthread_mutex_lock(&vpet_mutex);
+	    vpet->cleanliness--;
+	    check_bounds();
+	    //Unlock shared state
+	    pthread_mutex_unlock(&vpet_mutex);  
     }
     return NULL;
 }
@@ -163,13 +157,13 @@ void *decrease_cleanliness(void *arg) {
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HUNGER_DECAY_HOURS));
-		//Lock shared state
-		pthread_mutex_lock(&vpet_mutex);
-        vpet->hunger--;
-        check_bounds();
-		//Unlock shared state
-		pthread_mutex_unlock(&vpet_mutex);
+	    sleep(HOURS(HUNGER_DECAY_HOURS));
+	    //Lock shared state
+	    pthread_mutex_lock(&vpet_mutex);
+	    vpet->hunger--;
+	    check_bounds();
+	    //Unlock shared state
+	    pthread_mutex_unlock(&vpet_mutex);
     }
     return NULL;
 }
@@ -178,13 +172,13 @@ void *decrease_hunger(void *arg) {
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running && vpet->alive) {
-        sleep(HOURS(HAPPINESS_DECAY_HOURS));
-		//Lock shared state
-		pthread_mutex_lock(&vpet_mutex);
-        vpet->happiness--;
-        check_bounds();
-		//Unlock shared state
-		pthread_mutex_unlock(&vpet_mutex);
+	    sleep(HOURS(HAPPINESS_DECAY_HOURS));
+	    //Lock shared state
+	    pthread_mutex_lock(&vpet_mutex);
+	    vpet->happiness--;
+	    check_bounds();
+	    //Unlock shared state
+	    pthread_mutex_unlock(&vpet_mutex);
     }
     return NULL;
 }

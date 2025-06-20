@@ -22,4 +22,4 @@ pet.o: pet.c coins.h
 coins.o: coins.c
 
 clean:
-	$(RM) *.o virtul-pet-exe
+	$(RM) *.o virtual-pet-exe

@@ -28,47 +28,35 @@ static void init(void) {
 
 static void *take_input( void *arg ) {
 	bool *running = (bool *)arg; 
+	//set input flags to be non-blocking
+	//need this so that the program can terminate (doesn't hang on getchar)
+	int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
+	fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
 	while(*running) {
-		//keypress actions
-		//need to sleep for some milliseconds to avoid 
-		//repeatedly calling the functions
-
-		if(GET_KEY_UP == 0) {
-			while(*running && GET_KEY_UP == 0) {
-				display_hearts();
-			}
-		}
-
-		if(GET_KEY_PRESS == 0) {
-			while(*running && GET_KEY_PRESS == 0) {
-				usleep(WAIT_TIME_MICROS);
-				gift();
-			}
-		}
-
-		if(GET_KEY1 == 0){
-			while(*running && GET_KEY1 == 0) {
-				usleep(WAIT_TIME_MICROS);
-				clean();
-			}
-		}
-
-		if(GET_KEY2 == 0){
-			while(*running && GET_KEY2 == 0) {
-				usleep(WAIT_TIME_MICROS);
-				play();
-			}
-		}
-
-		if(GET_KEY3 == 0){
-			while(*running && GET_KEY3 == 0) {
-				usleep(WAIT_TIME_MICROS);
+		int c = toupper(getchar());
+		
+		switch(c) {
+			case 'S':
+				print_hearts();
+				break;
+			case 'F':
 				feed();
-			}
-		}
+				break;
+			case 'C':
+				clean();
+				break;
+			case 'P':
+				play();
+				break;
+			case 'G':
+				gift();
+				break;
+		}	
 	}
 
+	//restore the original flags
+	fcntl(STDIN_FILENO, F_SETFL, flags);
 
 	return NULL;
 }
@@ -85,11 +73,6 @@ int main(void) {
 	//initialise money
 	coins = 0;
 
-	//bools for printing warnings
-	bool cleanliness_warning = false;
-	bool happiness_warning = false;
-	bool hunger_warning = false;
-		
  	//thread for incrementing coins
 	pthread_t coin_thread;
 	pthread_create(&coin_thread, NULL, increment_coins, (void*)&running);
@@ -104,6 +87,10 @@ int main(void) {
 	pthread_create(&hunger_thread, NULL, decrease_hunger, (void*)&running);
 	pthread_create(&happiness_thread, NULL, decrease_happiness, (void*)&running);
 
+	bool clean_warning_reported = false;
+	bool happy_warning_reported = false;
+	bool hunger_warning_reported = false;
+
 	while(1) {
 
 		pthread_mutex_lock(&vpet_mutex);
@@ -114,31 +101,25 @@ int main(void) {
 		}
 
 		//warn user if any category has 1 heart remaining
-		if(vpet->cleanliness == 1){
-			if(!cleanliness_warning) {
-				cleanliness_warning = true;
-				print_warning(CLEANLINESS);
-			}
-		} else {
-			cleanliness_warning = false;
+		if(vpet->cleanliness == 1 && !clean_warning_reported){
+			clean_warning_reported = true;
+			print_warning(CLEANLINESS);
+		} else if (vpet->cleanliness > 1){
+			clean_warning_reported = false;
 		}
 
-		if(vpet->happiness == 1){
-			if(!happiness_warning) {
-				happiness_warning = true;
-				print_warning(HAPPINESS);
-			}
+		if(vpet->happiness == 1 && !happy_warning_reported){
+			happy_warning_reported = true;
+			print_warning(HAPPINESS);
 		} else {
-			happiness_warning = false;
+			happy_warning_reported = false;
 		}
 
-		if(vpet->hunger == 1){
-			if(!hunger_warning) {
-				hunger_warning = true;
-				print_warning(HUNGER);
-			}
+		if(vpet->hunger == 1 && !hunger_warning_reported){
+			hunger_warning_reported = true;
+			print_warning(HUNGER);
 		} else {
-			hunger_warning = false;
+			hunger_warning_reported = false;
 		}
 
 		//check if level needs to be updated
@@ -147,7 +128,9 @@ int main(void) {
 			increase_level();
 		}	
 
-		//dies if any stat = 0 (or all, can change)
+		check_bounds();
+
+		//dies if any stat = 0
 		vpet->alive = ((vpet->cleanliness > 0) && 
 			       (vpet->happiness > 0)   && 
 			       (vpet->hunger > 0));
@@ -163,7 +146,6 @@ int main(void) {
 	pthread_join(hunger_thread, NULL);
 	pthread_join(happiness_thread, NULL);
 
-	free_display();
 	free_pet(); 
         return EXIT_SUCCESS;
 }

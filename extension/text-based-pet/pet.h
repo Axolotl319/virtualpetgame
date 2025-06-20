@@ -5,7 +5,6 @@
 #define CLEANLINESS_DECAY_HOURS 12  
 #define HUNGER_DECAY_HOURS 5  
 #define HAPPINESS_DECAY_HOURS 8
-#define MAX_STAT_LEN 12
 
 //struct for level info
 typedef struct {
@@ -43,9 +42,8 @@ typedef enum {
 extern pthread_mutex_t vpet_mutex;
 
 extern const level levels[MAX_LEVEL - 1];
-extern pthread_mutex_t hunger_mutex;
-extern pthread_mutex_t cleanliness_mutex;
-extern pthread_mutex_t happiness_mutex;
+
+extern pthread_mutex_t vpet_mutex;
 
 //if hearts in a category are set to > 5 or < 0
 //check_bounds changes them to 0/5
