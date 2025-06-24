@@ -142,7 +142,8 @@ void free_pet(void) {
 void *decrease_cleanliness(void *arg) {
     bool *running = (bool *)arg;
     while (*running) {
-	    sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+//	    sleep(HOURS(CLEANLINESS_DECAY_HOURS));
+	    sleep(CLEANLINESS_DECAY_HOURS);
 	    //Lock shared state
 	    pthread_mutex_lock(&vpet_mutex);
 	    vpet->cleanliness--;
@@ -157,7 +158,8 @@ void *decrease_cleanliness(void *arg) {
 void *decrease_hunger(void *arg) {
     bool *running = (bool *)arg;
     while (*running) {
-	    sleep(HOURS(HUNGER_DECAY_HOURS));
+//	    sleep(HOURS(HUNGER_DECAY_HOURS));
+	    sleep(HUNGER_DECAY_HOURS);
 	    //Lock shared state
 	    pthread_mutex_lock(&vpet_mutex);
 	    vpet->hunger--;
@@ -172,7 +174,8 @@ void *decrease_hunger(void *arg) {
 void *decrease_happiness(void *arg) {
     bool *running = (bool *)arg;
     while (*running) {
-	    sleep(HOURS(HAPPINESS_DECAY_HOURS));
+//	    sleep(HOURS(HAPPINESS_DECAY_HOURS));
+	    sleep(HAPPINESS_DECAY_HOURS);
 	    //Lock shared state
 	    pthread_mutex_lock(&vpet_mutex);
 	    vpet->happiness--;
