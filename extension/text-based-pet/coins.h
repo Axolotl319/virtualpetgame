@@ -1,4 +1,5 @@
-#define COIN_TIME 28800 //8 hrs
+//#define COIN_TIME 28800 //8 hrs
+#define COIN_TIME 8
 #define COIN_AMT  5
 
 #ifndef COINS_GLOBAL
